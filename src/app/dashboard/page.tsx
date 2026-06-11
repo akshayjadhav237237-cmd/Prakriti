@@ -73,6 +73,7 @@ export default function Dashboard() {
   const [isEditingGoal, setIsEditingGoal] = useState<boolean>(false);
   const [goalInput, setGoalInput] = useState<string>("38.46");
   const [sparklineData, setSparklineData] = useState<Array<{ name: string; co2: number }>>([]);
+  const [trendData, setTrendData] = useState<Array<{ week: string; co2: number }>>([]);
 
   // Adventure State
   const [activeAdventure, setActiveAdventure] = useState<Adventure | null>(null);
@@ -205,6 +206,14 @@ export default function Dashboard() {
     localStorage.setItem("prakriti_city", DEMO_DATA.user.city);
     localStorage.setItem("prakriti_pebbles", DEMO_DATA.ecosystem.pebbles.toString());
 
+    const weeklyTrend = [
+      { week: 'May 19', co2: 42.3 },
+      { week: 'May 26', co2: 38.1 },
+      { week: 'Jun 2',  co2: 35.6 },
+      { week: 'Jun 9',  co2: 34.8 },
+    ];
+    localStorage.setItem('prakriti_weekly_trend', JSON.stringify(weeklyTrend));
+
     window.dispatchEvent(new Event("prakriti_state_changed"));
   };
 
@@ -315,6 +324,18 @@ export default function Dashboard() {
       { name: "Last Week", co2: Number(weekTotals[w1Str].toFixed(1)) },
       { name: "This Week", co2: Number(weekTotals[currentWeekStr].toFixed(1)) }
     ]);
+
+    // Load historical trendData from localStorage
+    if (typeof window !== "undefined") {
+      const trendStr = localStorage.getItem("prakriti_weekly_trend");
+      if (trendStr) {
+        try {
+          setTrendData(JSON.parse(trendStr));
+        } catch (e) {
+          console.error("Failed to parse weekly trend:", e);
+        }
+      }
+    }
 
     // 4. Load Active Adventure
     const adventures = await dbService.getAdventures(uid);
@@ -769,40 +790,52 @@ export default function Dashboard() {
 
             {/* Sparkline History Trend */}
             <div className="space-y-2 pt-2">
-              <span className="text-xs font-semibold text-foreground/50 uppercase tracking-widest block">Last 4 Weeks Trend</span>
-              <div className="h-24 w-full bg-background/30 border border-border/40 rounded-xl p-2 flex items-center justify-center">
-                {sparklineData.length > 0 ? (
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-foreground/50 uppercase tracking-widest block">Last 4 Weeks Trend</span>
+                <span className="text-xs font-medium text-emerald-500">↓ 18% reduction over 4 weeks 🌿</span>
+              </div>
+              <div className="w-full h-40">
+                {trendData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={sparklineData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
+                    <AreaChart data={trendData}
+                      margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="colorCo2" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.25}/>
-                          <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.01}/>
+                        <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#4ade80" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: "var(--surface)", 
-                          borderColor: "var(--border)", 
-                          color: "var(--foreground)", 
-                          borderRadius: "8px",
-                          fontSize: "11px",
-                          fontFamily: "monospace"
+                      <XAxis 
+                        dataKey="week" 
+                        tick={{ fill: 'var(--foreground)', fontSize: 11 }}
+                      />
+                      <YAxis 
+                        tick={{ fill: 'var(--foreground)', fontSize: 11 }}
+                        domain={['dataMin - 5', 'dataMax + 5']}
+                      />
+                      <Tooltip
+                        formatter={(v) => [`${v} kg`, 'CO₂']}
+                        contentStyle={{
+                          backgroundColor: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                          color: 'var(--foreground)'
                         }}
-                        formatter={(val) => [`${val} kg`, "CO₂"]}
                       />
                       <Area 
                         type="monotone" 
                         dataKey="co2" 
-                        stroke="var(--primary)" 
-                        strokeWidth={2} 
-                        fillOpacity={1} 
-                        fill="url(#colorCo2)" 
+                        stroke="#4ade80" 
+                        strokeWidth={2}
+                        fill="url(#trendGrad)"
+                        dot={{ fill: '#4ade80', r: 4 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <span className="text-xs text-foreground/40 font-mono">Aggregating history...</span>
+                  <div className="h-full w-full bg-background/30 border border-border/40 rounded-xl flex items-center justify-center">
+                    <span className="text-xs text-foreground/40 font-mono">Aggregating history...</span>
+                  </div>
                 )}
               </div>
 
@@ -816,9 +849,9 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sparklineData.map((d, i) => (
+                  {trendData.map((d, i) => (
                     <tr key={i}>
-                      <td>{d.name}</td>
+                      <td>{d.week}</td>
                       <td>{d.co2} kg</td>
                     </tr>
                   ))}
@@ -843,20 +876,44 @@ export default function Dashboard() {
             </p>
 
             {/* Horizontal Bar Chart */}
-            <div className="h-[250px] w-full" aria-label="Horizontal bar chart comparing monthly footprints">
+            <div className="w-full h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={benchmarks}>
-                  <XAxis type="number" unit=" kg" />
-                  <YAxis type="category" dataKey="name" width={90} />
-                  <Bar dataKey="value" radius={4}>
-                    {benchmarks.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill} />
+                <BarChart
+                  layout="vertical"
+                  data={benchmarks}
+                  margin={{ top: 5, right: 40, left: 10, bottom: 5 }}
+                >
+                  <XAxis 
+                    type="number" 
+                    tickFormatter={(v) => `${v}`}
+                    tick={{ fill: 'var(--foreground)', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    width={100}
+                    tick={{ fill: 'var(--foreground)', fontSize: 12 }}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`${value} kg CO₂/month`, 'Footprint']}
+                    contentStyle={{ 
+                      backgroundColor: 'var(--surface)',
+                      border: '1px solid var(--border)',
+                      borderRadius: '8px',
+                      color: 'var(--foreground)'
+                    }}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                    {benchmarks.map((entry, index) => (
+                      <Cell key={index} fill={entry.fill} />
                     ))}
                   </Bar>
-                  <Tooltip formatter={(v) => `${v} kg CO2/month`} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            <p className="text-xs text-center mt-2 opacity-60">
+              Sources: CEA India, WRI, IPCC AR6, Paris Agreement
+            </p>
 
             {/* Benchmarks Accessible Fallback */}
             <table className="sr-only">
@@ -876,11 +933,6 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
-
-            <div className="flex items-center justify-between text-[10px] text-foreground/40 pt-1">
-              <span>*Estimated from daily logs of the last 30 days</span>
-              <span>Sources: CEA India, WRI, IPCC AR6, Paris Agreement</span>
-            </div>
           </div>
         </section>
 
