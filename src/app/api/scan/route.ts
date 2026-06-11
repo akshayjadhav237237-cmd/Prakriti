@@ -7,16 +7,23 @@ export const dynamic = "force-dynamic";
 // Helper to clean and parse JSON response from Gemini
 function cleanAndParseJson(text: string) {
   try {
-    // Strip markdown code block wrappers if present
-    const cleaned = text
-      .trim()
-      .replace(/^```json\s*/i, "")
-      .replace(/```$/, "")
+    const clean = text
+      .replace(/```json\n?/g, "")
+      .replace(/```\n?/g, "")
       .trim();
-    return JSON.parse(cleaned);
-  } catch (e) {
+
+    try {
+      return JSON.parse(clean);
+    } catch (innerErr) {
+      const jsonMatch = clean.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("No JSON in response: " + text);
+      }
+      return JSON.parse(jsonMatch[0]);
+    }
+  } catch (e: any) {
     console.error("Failed to parse JSON from Gemini text output:", text, e);
-    throw new Error("Invalid JSON returned from Gemini");
+    throw new Error("Failed to parse Gemini response: " + e.message);
   }
 }
 
@@ -35,6 +42,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { imageBase64, mimeType } = body;
 
+    console.log('1. API Key present:', !!apiKey);
+    console.log('2. Image received:', !!imageBase64);
+    console.log('3. MimeType:', mimeType);
+
     if (!imageBase64) {
       return NextResponse.json(
         { error: "Missing imageBase64 parameter in the request body." },
@@ -49,7 +60,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let base64Data = imageBase64;
+    // Strip the data URL prefix if present
+    const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, "");
+
+    let base64Data = cleanBase64;
     let actualMimeType = mimeType;
     if (base64Data.startsWith("data:")) {
       const match = base64Data.match(/^data:([^;]+);base64,(.+)$/);
@@ -83,24 +97,37 @@ Return ONLY valid JSON, no markdown:
   "confidence": "high"|"medium"|"low"
 }`;
 
-    const imagePart = {
-      inlineData: {
-        data: base64Data,
-        mimeType: actualMimeType
-      }
-    };
+    const modelNames = [
+      "gemini-1.5-flash",
+      "gemini-1.5-flash-latest",
+      "gemini-flash-latest",
+      "gemini-pro-vision"
+    ];
 
-    let text = "";
-    let model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    try {
-      const result = await model.generateContent([prompt, imagePart]);
-      text = result.response.text();
-    } catch (err: any) {
-      console.warn("gemini-1.5-flash failed, falling back to gemini-1.5-pro. Error:", err.message);
-      model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const result = await model.generateContent([prompt, imagePart]);
-      text = result.response.text();
+    let result, lastError;
+    for (const name of modelNames) {
+      try {
+        const model = genAI.getGenerativeModel({ model: name });
+        result = await model.generateContent([
+          prompt,
+          {
+            inlineData: {
+              mimeType: actualMimeType,
+              data: base64Data
+            }
+          }
+        ]);
+        console.log("Model that worked:", name);
+        break;
+      } catch (e: any) {
+        console.log("Model failed:", name, e.message);
+        lastError = e;
+      }
     }
+    if (!result) throw lastError;
+
+    const text = result.response.text();
+    console.log("4. Raw Gemini response:", text);
 
     const geminiJson = cleanAndParseJson(text);
     

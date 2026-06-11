@@ -25,7 +25,7 @@ import {
 import { dbService, DailyLog } from "@/core/supabase";
 import confetti from "canvas-confetti";
 
-type ScanState = "idle" | "camera" | "preview" | "loading" | "results" | "success";
+type ScanState = "idle" | "camera" | "preview" | "loading" | "results" | "success" | "fallback";
 type CategoryType = "transport" | "food" | "energy" | "lifestyle";
 
 interface ExtractedItem {
@@ -52,6 +52,36 @@ const LOADING_MESSAGES = [
   "Mapping footprint to envelope budgets..."
 ];
 
+// Utility to compress image to a max dimension of 1024px and return a base64 data URL
+const compressImage = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1024;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) {
+          h = (h * MAX) / w;
+          w = MAX;
+        } else {
+          w = (w * MAX) / h;
+          h = MAX;
+        }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, w, h);
+      }
+      resolve(canvas.toDataURL("image/jpeg", 0.8));
+    };
+    img.src = url;
+  });
+};
+
 export default function ScanPage() {
   const router = useRouter();
   const [scanState, setScanState] = useState<ScanState>("idle");
@@ -71,6 +101,8 @@ export default function ScanPage() {
   const [scanResult, setScanResult] = useState<ScanResultData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState<string>("arjun-mumbai-uuid");
+  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
 
   // Chips mapping to backend category hints
   const chips = [
@@ -142,15 +174,30 @@ export default function ScanPage() {
   const capturePhoto = () => {
     if (videoRef.current) {
       const canvas = document.createElement("canvas");
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
+      const video = videoRef.current;
+      const MAX = 1024;
+      let w = video.videoWidth;
+      let h = video.videoHeight;
+      if (w > MAX || h > MAX) {
+        if (w > h) {
+          h = (h * MAX) / w;
+          w = MAX;
+        } else {
+          w = (w * MAX) / h;
+          h = MAX;
+        }
+      }
+      canvas.width = w;
+      canvas.height = h;
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg");
+        ctx.drawImage(video, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
         setPreviewImage(dataUrl);
         stopCamera();
         setScanState("preview");
+        setStatus(null);
+        setError(null);
       }
     }
   };
@@ -162,15 +209,22 @@ export default function ScanPage() {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
+      setScanState("loading");
+      setStatus("Compressing image...");
+      try {
+        const compressed = await compressImage(file);
+        setPreviewImage(compressed);
         setScanState("preview");
-      };
-      reader.readAsDataURL(file);
+        setStatus(null);
+        setError(null);
+      } catch (err: any) {
+        console.error("Compression error:", err);
+        setError("Failed to process image: " + (err.message || "Unknown error"));
+        setScanState("idle");
+      }
     }
   };
 
@@ -179,16 +233,23 @@ export default function ScanPage() {
     e.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
+      setScanState("loading");
+      setStatus("Compressing image...");
+      try {
+        const compressed = await compressImage(file);
+        setPreviewImage(compressed);
         setScanState("preview");
-      };
-      reader.readAsDataURL(file);
+        setStatus(null);
+        setError(null);
+      } catch (err: any) {
+        console.error("Compression error:", err);
+        setError("Failed to process image: " + (err.message || "Unknown error"));
+        setScanState("idle");
+      }
     }
   };
 
@@ -198,6 +259,8 @@ export default function ScanPage() {
 
     setScanState("loading");
     setLoadingMsgIdx(0);
+    setError(null);
+    setStatus("Analyzing bill using Gemini AI...");
 
     try {
       let base64string = previewImage;
@@ -222,19 +285,33 @@ export default function ScanPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Server scan request failed");
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.error || "Server scan request failed");
       }
 
       const result = await response.json();
       if (result.success && result.data) {
-        setScanResult(result.data);
-        setScanState("results");
+        // If low confidence (< 0.6) or empty items array, trigger fallback UI state
+        if (result.data.confidence < 0.6 || !result.data.items || result.data.items.length === 0) {
+          setScanResult(result.data);
+          setScanState("fallback");
+          setError(null);
+          setStatus(null);
+        } else {
+          setScanResult(result.data);
+          setScanState("results");
+          setError(null);
+          setStatus(null);
+        }
       } else {
         throw new Error(result.error || "OCR extraction failed");
       }
-    } catch (err) {
-      console.error("Scanning failed:", err);
-      alert("Failed to read the bill. Returning to main state.");
+    } catch (error: any) {
+      console.error("Scan error:", error);
+      setError(error?.message || JSON.stringify(error) || "Unknown error");
+      // Show the actual error message in the UI temporarily
+      setScanResult(null);
+      setStatus(`Error: ${error?.message || "Unknown"}`);
       setScanState("idle");
     }
   };
@@ -309,6 +386,8 @@ export default function ScanPage() {
     setPreviewImage(null);
     stopCamera();
     setScanState("idle");
+    setError(null);
+    setStatus(null);
   };
 
   // Category Icon mapper for UI
@@ -441,6 +520,20 @@ export default function ScanPage() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Error / Status Alert */}
+        {error && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-sm flex items-center space-x-2 animate-pulse">
+            <AlertTriangle className="w-5 h-5 shrink-0 text-red-400" />
+            <span>{error}</span>
+          </div>
+        )}
+        {status && !error && (
+          <div className="p-4 bg-primary/10 border border-primary/20 text-primary rounded-2xl text-sm flex items-center space-x-2">
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+            <span>{status}</span>
           </div>
         )}
 
@@ -653,10 +746,39 @@ export default function ScanPage() {
             </motion.div>
           )}
 
+          {/* STATE 6: FALLBACK VIEW (Low Confidence / Empty Items) */}
+          {scanState === "fallback" && (
+            <div className="flex flex-col items-center justify-center p-8 space-y-6 text-center w-full">
+              <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto">
+                <AlertTriangle className="w-8 h-8 animate-pulse" />
+              </div>
+              <div className="space-y-2 max-w-sm mx-auto">
+                <h3 className="text-lg font-bold text-white">Couldn't read receipt clearly</h3>
+                <p className="text-xs text-text/60">
+                  Prakriti couldn't read this bill clearly. Try better lighting or a clearer photo.
+                </p>
+              </div>
+              <div className="flex gap-4 w-full max-w-xs pt-2">
+                <button
+                  onClick={resetScanner}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-surface hover:bg-border border border-border text-xs font-bold text-white transition-all active:scale-95"
+                >
+                  Try Again
+                </button>
+                <button
+                  onClick={() => router.push("/log")}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/95 text-background text-xs font-black transition-all active:scale-95 shadow-md shadow-primary/10"
+                >
+                  Log Manually
+                </button>
+              </div>
+            </div>
+          )}
+
         </div>
 
         {/* BOTTOM ACTION BUTTONS */}
-        {scanState !== "loading" && (
+        {scanState !== "loading" && scanState !== "fallback" && (
           <div className="flex gap-4">
             
             {/* IDLE state controls */}
