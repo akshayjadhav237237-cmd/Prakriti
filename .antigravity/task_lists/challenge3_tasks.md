@@ -1,0 +1,45 @@
+# Tasks Checklist - Challenge 3: Prakriti
+
+- [ ] Project Initialization & Dependency Setup
+  - [ ] Initialize Next.js 14 App Router with Tailwind CSS & TS
+  - [ ] Install dependencies (`framer-motion`, `recharts`, `lucide-react`, `@google/generative-ai`, `@supabase/supabase-js`, `canvas-confetti`)
+- [ ] Core Logic & Calculators
+  - [ ] Implement JSDoc-documented emission factors in `src/core/constants.ts`
+  - [ ] Implement typed calculators in `src/core/calculators.ts`
+  - [ ] Create Vitest/Jest unit tests in `tests/unit/calculators.test.ts`
+- [ ] Database Wrapper (Supabase + LocalStorage fallback)
+  - [ ] Implement unified DB interface in `src/core/supabase.ts`
+  - [ ] Pre-seed Arjun Mumbai demo data on first application visit
+- [ ] Core Layout & Onboarding (/onboarding)
+  - [ ] Global styling and color theme config in `src/app/globals.css`
+  - [ ] Main layout & Navbar (with Pebbles, city indicator, and Reset button)
+  - [ ] Multi-step onboarding form (City, Transit, Diet)
+  - [ ] Onboarding animation transition
+- [ ] Dashboard Page (/dashboard)
+  - [ ] Segmented Budget Progress Bar
+  - [ ] Western Ghats macaque companion and adventure panel
+  - [ ] Quick Actions cards
+- [ ] Budget Envelope Page (/budget)
+  - [ ] Envelope sub-allocations sliders and description text
+  - [ ] Save budget functionality
+  - [ ] Inline compassionate overspend notification banner
+- [ ] Scanner page (/scan)
+  - [ ] Camera viewfinder with corner brackets and file upload zone
+  - [ ] `/api/scan` Next.js server endpoint with Gemini 1.5 Flash Vision API call
+  - [ ] Scanning overlay loader and confirmation screen
+- [ ] Manual Logger (/log)
+  - [ ] Four tabs for Transport, Food, Energy, Lifestyle
+  - [ ] Sliders, toggles, Diwali mode modifier
+  - [ ] Add to logs and trigger confetti if under 2 kg CO2
+- [ ] Insights Page (/insights)
+  - [ ] `/api/insights` Next.js server endpoint calling Gemini 1.5 Flash for coach feedback
+  - [ ] Insights list cards with difficulty level and implementation intention
+  - [ ] Seasonal banners (AC, Diwali, IPL, Weddings)
+- [ ] Ecosystem Page (/ecosystem)
+  - [ ] Parallax scrolling layers
+  - [ ] Species unlock checklist and locked states grid
+  - [ ] Adventure circular progress timer and rewards trigger
+- [ ] Documentation, CI/CD, & final touches
+  - [ ] Create `AGENTS.md`
+  - [ ] Create `CLAUDE.md`
+  - [ ] Create GitHub CI workflow `.github/workflows/ci.yml`
