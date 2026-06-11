@@ -57,13 +57,21 @@ export const ExtractedItemSchema = z.object({
 
 // ScanResult schema
 export const ScanResultSchema = z.object({
-  bill_type: z.string().min(1),
-  merchant: z.string().min(1),
-  date: z.string().min(1),
-  total_co2_kg: z.number().nonnegative(),
-  breakdown: z.array(ExtractedItemSchema),
-  envelope_category: z.enum(["transport", "food", "energy", "lifestyle"]),
-  confidence: z.enum(["high", "medium", "low"]),
+  bill_type: z.string().default('other'),
+  merchant: z.string().nullable().optional(),
+  date: z.string().nullable().optional(),
+  total_co2_kg: z.number().min(0),
+  breakdown: z.array(z.object({
+    item: z.string(),
+    category: z.string(),
+    co2_kg: z.number().min(0),
+  })).default([]),
+  envelope_category: z.enum([
+    'transport', 'food', 'energy', 'lifestyle'
+  ]).default('lifestyle'),
+  confidence: z.enum([
+    'high', 'medium', 'low'
+  ]).default('medium'),
 });
 
 // ImplementationIntention sub-schema
