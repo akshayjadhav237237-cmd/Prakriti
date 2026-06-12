@@ -79,6 +79,7 @@ export default function Onboarding() {
   const selectCityVal = (val: string) => {
     setCity(val);
     setValidationError("");
+    setIsOpenDropdown(false);
   };
 
   const selectTransportVal = (val: string) => {
