@@ -52,7 +52,6 @@ const LOADING_MESSAGES = [
   "Mapping footprint to envelope budgets..."
 ];
 
-// Utility to compress image to a max dimension of 1024px and return a base64 data URL
 const compressImage = (file: File): Promise<string> => {
   return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
@@ -88,23 +87,18 @@ export default function ScanPage() {
   const [selectedChip, setSelectedChip] = useState<string>("Electricity");
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>("energy");
   
-  // Camera & File Streams
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Loading indicator messages
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
-
-  // API Results
   const [scanResult, setScanResult] = useState<ScanResultData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userId, setUserId] = useState<string>("arjun-mumbai-uuid");
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
-  // Chips mapping to backend category hints
   const chips = [
     { name: "Electricity", category: "energy" as CategoryType, icon: Zap },
     { name: "Petrol / Fuel", category: "transport" as CategoryType, icon: Fuel },
@@ -113,7 +107,6 @@ export default function ScanPage() {
     { name: "Groceries", category: "lifestyle" as CategoryType, icon: ShoppingBag }
   ];
 
-  // Get current user id on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("prakriti_user_id");
@@ -123,7 +116,6 @@ export default function ScanPage() {
     }
   }, []);
 
-  // Cycle loading messages when in loading state
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (scanState === "loading") {
@@ -134,7 +126,6 @@ export default function ScanPage() {
     return () => clearInterval(interval);
   }, [scanState]);
 
-  // Clean up camera stream on unmount
   useEffect(() => {
     return () => {
       if (stream) {
@@ -143,7 +134,6 @@ export default function ScanPage() {
     };
   }, [stream]);
 
-  // Camera handling
   const startCamera = async () => {
     setPreviewImage(null);
     setScanState("camera");
@@ -158,7 +148,6 @@ export default function ScanPage() {
       }
     } catch (err) {
       console.error("Camera capture access denied/failed:", err);
-      // Fallback to file picker state
       setScanState("idle");
       alert("Could not access camera. Please upload an image instead.");
     }
@@ -202,7 +191,6 @@ export default function ScanPage() {
     }
   };
 
-  // File Upload handling
   const triggerFileSelect = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -228,7 +216,6 @@ export default function ScanPage() {
     }
   };
 
-  // Drag and drop events
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
@@ -253,7 +240,6 @@ export default function ScanPage() {
     }
   };
 
-  // API trigger
   const runScanOCR = async () => {
     if (!previewImage) return;
 
@@ -291,7 +277,6 @@ export default function ScanPage() {
 
       const result = await response.json();
       if (result.success && result.data) {
-        // If low confidence (< 0.6) or empty items array, trigger fallback UI state
         if (result.data.confidence < 0.6 || !result.data.items || result.data.items.length === 0) {
           setScanResult(result.data);
           setScanState("fallback");
@@ -309,14 +294,12 @@ export default function ScanPage() {
     } catch (error: any) {
       console.error("Scan error:", error);
       setError(error?.message || JSON.stringify(error) || "Unknown error");
-      // Show the actual error message in the UI temporarily
       setScanResult(null);
       setStatus(`Error: ${error?.message || "Unknown"}`);
       setScanState("idle");
     }
   };
 
-  // Save scan details to database envelopes
   const addLogToEnvelope = async () => {
     if (!scanResult) return;
     setIsSubmitting(true);
@@ -334,10 +317,8 @@ export default function ScanPage() {
         source: "scan"
       };
 
-      // 1. Save log via dbService
       await dbService.addDailyLog(logObj);
 
-      // 2. Sync to local storage weekly budget spent totals (to update dashboard immediately)
       if (typeof window !== "undefined") {
         const stored = localStorage.getItem("prakriti_budget");
         if (stored) {
@@ -349,13 +330,11 @@ export default function ScanPage() {
             }
             localStorage.setItem("prakriti_budget", JSON.stringify(budgetObj));
             
-            // Sync pebbles
             const currentPebbles = parseInt(localStorage.getItem("prakriti_pebbles") || "150", 10);
-            const awardPebbles = 15; // Award 15 pebbles for logging a digital scan
+            const awardPebbles = 15; 
             const newPebbles = currentPebbles + awardPebbles;
             localStorage.setItem("prakriti_pebbles", newPebbles.toString());
             
-            // Dispatch state change to sync navbar balance
             window.dispatchEvent(new Event("prakriti_state_changed"));
           } catch (e) {
             console.error("Local budget sync error:", e);
@@ -363,7 +342,6 @@ export default function ScanPage() {
         }
       }
 
-      // Success confetti triggers
       confetti({
         particleCount: 140,
         spread: 70,
@@ -380,7 +358,6 @@ export default function ScanPage() {
     }
   };
 
-  // Reset page
   const resetScanner = () => {
     setScanResult(null);
     setPreviewImage(null);
@@ -390,7 +367,6 @@ export default function ScanPage() {
     setStatus(null);
   };
 
-  // Category Icon mapper for UI
   const getCategoryIcon = (cat: CategoryType) => {
     switch (cat) {
       case "energy": return Zap;
@@ -400,7 +376,6 @@ export default function ScanPage() {
     }
   };
 
-  // Chip selection changes category hints
   const selectChip = (chipName: string, category: CategoryType) => {
     setSelectedChip(chipName);
     setSelectedCategory(category);
@@ -409,7 +384,6 @@ export default function ScanPage() {
   return (
     <div className="flex-1 flex flex-col items-center p-4 sm:p-6 bg-gradient-to-b from-background to-surface min-h-[calc(100vh-4rem)]">
       
-      {/* Toast Alert / Success overlay */}
       <AnimatePresence>
         {scanState === "success" && (
           <motion.div
@@ -418,7 +392,7 @@ export default function ScanPage() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-background/95 flex items-center justify-center p-4 backdrop-blur-md"
           >
-            <div className="w-full max-w-md bg-surface border border-primary/20 rounded-2xl p-8 text-center space-y-6 shadow-2xl relative">
+            <div className="w-full max-w-md bg-surface border border-primary/20 rounded-3xl p-8 text-center space-y-6 shadow-2xl relative">
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-emerald-400"></div>
               <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto">
                 <CheckCircle2 className="w-8 h-8 animate-bounce" />
@@ -446,13 +420,13 @@ export default function ScanPage() {
               <div className="flex gap-4 pt-2">
                 <button
                   onClick={resetScanner}
-                  className="flex-1 py-3 px-4 rounded-xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-95"
+                  className="flex-1 py-3.5 px-4 rounded-2xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-95"
                 >
                   Scan Another
                 </button>
                 <button
                   onClick={() => router.push("/dashboard")}
-                  className="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary/90 text-background font-extrabold transition-all active:scale-95 shadow-md shadow-primary/10"
+                  className="flex-1 py-3.5 px-4 rounded-2xl bg-primary hover:bg-primary/90 text-background font-extrabold transition-all active:scale-95 shadow-md shadow-primary/10"
                 >
                   Go to Dashboard
                 </button>
@@ -464,26 +438,24 @@ export default function ScanPage() {
 
       <div className="w-full max-w-xl space-y-6">
         
-        {/* HEADER SECTION */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => {
               stopCamera();
               router.push("/dashboard");
             }}
-            className="p-2.5 rounded-xl bg-surface border border-border text-text/75 hover:text-white hover:border-border/80 transition-all flex items-center space-x-2 text-xs font-bold"
+            className="p-3 rounded-2xl bg-surface border border-border text-text/75 hover:text-white hover:border-border/80 transition-all flex items-center space-x-2 text-xs font-bold"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Dashboard</span>
           </button>
           <div className="flex items-center space-x-2 text-primary font-bold text-sm">
-            <span className="px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-xs font-mono">
+            <span className="px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-mono">
               OCR Core v1.5
             </span>
           </div>
         </div>
 
-        {/* TITLE */}
         <div className="text-center md:text-left space-y-1">
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary via-accent to-emerald-300 bg-clip-text text-transparent tracking-tight flex items-center justify-center md:justify-start space-x-2">
             <ScanLine className="w-6 h-6 text-primary shrink-0 animate-pulse" />
@@ -494,7 +466,6 @@ export default function ScanPage() {
           </p>
         </div>
 
-        {/* CHIP SECTION */}
         {scanState !== "loading" && scanState !== "results" && (
           <div className="space-y-2">
             <label className="text-xs font-semibold text-text/50 uppercase tracking-widest block">
@@ -523,7 +494,6 @@ export default function ScanPage() {
           </div>
         )}
 
-        {/* Error / Status Alert */}
         {error && (
           <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-sm flex items-center space-x-2 animate-pulse">
             <AlertTriangle className="w-5 h-5 shrink-0 text-red-400" />
@@ -538,9 +508,8 @@ export default function ScanPage() {
         )}
 
         {/* MAIN VIEWFINDER CONTAINER */}
-        <div className="relative bg-surface/40 border border-border/60 rounded-2xl overflow-hidden shadow-2xl min-h-[340px] flex flex-col items-center justify-center p-4">
+        <div className="relative bg-surface/40 border border-border/60 rounded-3xl overflow-hidden shadow-2xl min-h-[340px] flex flex-col items-center justify-center p-4">
           
-          {/* Pure CSS corner brackets for Finder framing */}
           {scanState !== "loading" && scanState !== "results" && (
             <>
               <div className="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg pointer-events-none" />
@@ -550,16 +519,17 @@ export default function ScanPage() {
             </>
           )}
 
-          {/* STATE 1: IDLE / PICKER */}
+          {/* STATE 1: IDLE / PICKER WITH 240PX HEIGHT, DASHED GREEN BORDER AND TRANSITION STATES */}
           {scanState === "idle" && (
             <div
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              className="w-full flex flex-col items-center justify-center p-8 space-y-6 text-center border-2 border-dashed border-border/60 rounded-xl hover:border-primary/40 hover:bg-surface/10 transition-all cursor-pointer"
+              style={{ border: "2px dashed rgba(34,197,94,0.4)" }}
+              className="w-full h-[240px] flex flex-col items-center justify-center p-6 text-center rounded-2xl hover:border-emerald-500 hover:bg-emerald-500/5 transition-all duration-300 cursor-pointer group"
               onClick={triggerFileSelect}
             >
-              <div className="w-16 h-16 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center text-primary/70">
-                <UploadCloud className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 mb-3 group-hover:scale-110 transition-transform">
+                <UploadCloud className="w-8 h-8 animate-pulse text-emerald-500" />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-bold text-white">Drag & drop receipt image here</p>
@@ -585,7 +555,6 @@ export default function ScanPage() {
                 className="w-full max-h-[300px] object-cover rounded-xl border border-border/60"
               />
               
-              {/* Scanline Animation */}
               <motion.div
                 className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_8px_#4ade80] pointer-events-none"
                 animate={{ top: ["5%", "95%", "5%"] }}
@@ -594,17 +563,15 @@ export default function ScanPage() {
             </div>
           )}
 
-          {/* STATE 3: IMAGE PREVIEW (Captured or Uploaded) */}
+          {/* STATE 3: IMAGE PREVIEW */}
           {scanState === "preview" && previewImage && (
             <div className="w-full h-full relative flex flex-col items-center space-y-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewImage}
                 alt="Receipt Preview"
                 className="w-full max-h-[300px] object-contain rounded-xl border border-border"
               />
               
-              {/* Scanline Animation */}
               <motion.div
                 className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_8px_#4ade80] pointer-events-none"
                 animate={{ top: ["5%", "90%", "5%"] }}
@@ -624,19 +591,18 @@ export default function ScanPage() {
                 <h3 className="text-lg font-bold text-white">Prakriti is reading...</h3>
                 <AnimatePresence mode="wait">
                   <motion.p
-                    key={loadingMsgIdx}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3 }}
-                    className="text-xs text-primary font-mono"
+                     key={loadingMsgIdx}
+                     initial={{ opacity: 0, y: 10 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     exit={{ opacity: 0, y: -10 }}
+                     transition={{ duration: 0.3 }}
+                     className="text-xs text-primary font-mono"
                   >
                     {LOADING_MESSAGES[loadingMsgIdx]}
                   </motion.p>
                 </AnimatePresence>
               </div>
               
-              {/* Loading progress bar */}
               <div className="h-1.5 w-48 bg-background border border-border rounded-full overflow-hidden">
                 <motion.div
                   className="h-full bg-gradient-to-r from-primary to-accent"
@@ -647,34 +613,35 @@ export default function ScanPage() {
             </div>
           )}
 
-          {/* STATE 5: SCAN RESULTS CARD */}
+          {/* STATE 5: SCAN RESULTS WITH SLIDE-UP TRANSITION, LARGE CO2 DISPLAY, AND CLEAN LIST CARDS */}
           {scanState === "results" && scanResult && (
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full space-y-5"
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="w-full space-y-6"
             >
               {/* Prominent Total CO2 Card */}
-              <div className="relative p-6 overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-transparent border border-primary/35 shadow-lg flex flex-col items-center justify-center text-center space-y-2">
-                <div className="absolute top-0 right-0 p-3 text-primary/10">
+              <div className="relative p-6 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500/15 via-teal-500/5 to-transparent border border-emerald-500/30 shadow-lg flex flex-col items-center justify-center text-center space-y-2">
+                <div className="absolute top-0 right-0 p-3 text-emerald-500/10">
                   <ScanLine className="w-24 h-24 stroke-[1]" />
                 </div>
-                <span className="text-xs font-extrabold text-primary uppercase tracking-widest">
+                <span className="text-xs font-extrabold text-emerald-400 uppercase tracking-widest">
                   Total Carbon Footprint
                 </span>
-                <div className="flex items-baseline space-x-1">
-                  <span className="text-5xl font-black text-primary font-mono tracking-tight animate-pulse">
+                <div className="flex items-baseline space-x-1.5">
+                  <span className="text-6xl font-black text-emerald-400 font-mono tracking-tight animate-pulse">
                     {scanResult.co2eKg.toFixed(2)}
                   </span>
-                  <span className="text-sm font-bold text-text/80">kg CO₂e</span>
+                  <span className="text-base font-bold text-text/80">kg CO₂e</span>
                 </div>
-                <p className="text-xs text-text/50 max-w-xs">
+                <p className="text-xs text-text/50 max-w-xs leading-relaxed">
                   This transaction is calculated using the official emission factor guidelines for India.
                 </p>
               </div>
 
               {/* Metadata Card */}
-              <div className="p-4 bg-background/80 rounded-xl border border-border/80 space-y-3">
+              <div className="p-4 bg-background/80 rounded-2xl border border-border/80 space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="text-lg font-extrabold text-white">{scanResult.merchant}</h3>
@@ -705,7 +672,6 @@ export default function ScanPage() {
                     </span>
                   </div>
                   
-                  {/* Confidence rating */}
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
                     scanResult.confidence >= 0.85 
                       ? "text-primary border-primary/20 bg-primary/5" 
@@ -722,7 +688,7 @@ export default function ScanPage() {
                   Extracted Items Breakdown
                 </span>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[240px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1">
                   {scanResult.items.map((item, idx) => (
                     <div key={idx} className="p-3 bg-surface/60 border border-border/60 hover:border-primary/40 rounded-xl transition-all flex flex-col justify-between space-y-2 shadow-sm">
                       <div className="flex justify-between items-start gap-2">
@@ -746,7 +712,7 @@ export default function ScanPage() {
             </motion.div>
           )}
 
-          {/* STATE 6: FALLBACK VIEW (Low Confidence / Empty Items) */}
+          {/* STATE 6: FALLBACK VIEW */}
           {scanState === "fallback" && (
             <div className="flex flex-col items-center justify-center p-8 space-y-6 text-center w-full">
               <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto">
@@ -781,57 +747,54 @@ export default function ScanPage() {
         {scanState !== "loading" && scanState !== "fallback" && (
           <div className="flex gap-4">
             
-            {/* IDLE state controls */}
             {scanState === "idle" && (
               <>
                 <button
                   onClick={startCamera}
-                  className="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary/95 text-background font-extrabold flex items-center justify-center space-x-2 transition-all active:scale-[0.98] shadow-lg shadow-primary/10"
+                  className="flex-1 py-3.5 px-4 rounded-2xl bg-primary hover:bg-primary/95 text-background font-extrabold flex items-center justify-center space-x-2 transition-all active:scale-[0.98] shadow-lg shadow-primary/10"
                 >
                   <Camera className="w-4 h-4" />
                   <span>Start Camera</span>
                 </button>
                 <button
                   onClick={triggerFileSelect}
-                  className="flex-1 py-3 px-4 rounded-xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-[0.98]"
+                  className="flex-1 py-3.5 px-4 rounded-2xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-[0.98]"
                 >
                   Choose Local File
                 </button>
               </>
             )}
 
-            {/* CAMERA state controls */}
             {scanState === "camera" && (
               <>
                 <button
                   onClick={capturePhoto}
-                  className="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary/95 text-background font-extrabold flex items-center justify-center space-x-2 transition-all active:scale-[0.98] shadow-lg shadow-primary/10"
+                  className="flex-1 py-3.5 px-4 rounded-2xl bg-primary hover:bg-primary/95 text-background font-extrabold flex items-center justify-center space-x-2 transition-all active:scale-[0.98] shadow-lg shadow-primary/10"
                 >
                   <Camera className="w-4 h-4" />
                   <span>Capture Photo</span>
                 </button>
                 <button
                   onClick={resetScanner}
-                  className="py-3 px-4 rounded-xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-[0.98]"
+                  className="py-3.5 px-4 rounded-2xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-[0.98]"
                 >
                   Cancel
                 </button>
               </>
             )}
 
-            {/* PREVIEW state controls */}
             {scanState === "preview" && (
               <>
                 <button
                   onClick={runScanOCR}
-                  className="flex-1 py-3.5 px-4 rounded-xl bg-primary hover:bg-primary/95 text-background font-black flex items-center justify-center space-x-2 transition-all active:scale-[0.98] shadow-lg shadow-primary/10"
+                  className="flex-1 py-3.5 px-4 rounded-2xl bg-primary hover:bg-primary/95 text-background font-black flex items-center justify-center space-x-2 transition-all active:scale-[0.98] shadow-lg shadow-primary/10"
                 >
                   <ScanLine className="w-4 h-4" />
                   <span>Scan & Analyze Bill</span>
                 </button>
                 <button
                   onClick={resetScanner}
-                  className="py-3 px-4 rounded-xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-[0.98]"
+                  className="py-3.5 px-4 rounded-2xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-[0.98]"
                   title="Scan Different Image"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -839,13 +802,12 @@ export default function ScanPage() {
               </>
             )}
 
-            {/* RESULTS state controls */}
             {scanState === "results" && (
               <>
                 <button
                   onClick={addLogToEnvelope}
                   disabled={isSubmitting}
-                  className="flex-1 py-3.5 px-4 rounded-xl bg-primary hover:bg-primary/95 text-background font-black flex items-center justify-center space-x-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/10 text-base"
+                  className="flex-1 py-4 px-6 rounded-2xl bg-primary hover:bg-primary/95 hover:scale-[1.01] text-background font-black flex items-center justify-center space-x-2 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/10 text-base"
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -858,7 +820,7 @@ export default function ScanPage() {
                 <button
                   onClick={resetScanner}
                   disabled={isSubmitting}
-                  className="py-3.5 px-4 rounded-xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="py-4 px-6 rounded-2xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Discard
                 </button>
@@ -868,7 +830,6 @@ export default function ScanPage() {
           </div>
         )}
 
-        {/* OCR India Accounting Notes */}
         {scanState === "idle" && (
           <div className="bg-surface/30 border border-border/40 rounded-xl p-4 text-xs text-text/50 space-y-1.5">
             <span className="font-bold text-text/70 flex items-center space-x-1">

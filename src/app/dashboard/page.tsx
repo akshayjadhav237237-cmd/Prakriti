@@ -19,7 +19,11 @@ import {
   Apple,
   Lightbulb,
   Gamepad2,
-  Edit2
+  Edit2,
+  Sun,
+  CloudSun,
+  CloudLightning,
+  Cloud
 } from "lucide-react";
 import { BudgetEnvelope } from "@/lib/db";
 import { 
@@ -46,10 +50,123 @@ import confetti from "canvas-confetti";
 
 type EnvelopeKey = "transport" | "food" | "energy" | "lifestyle";
 
+// Envelope Card Subcomponent for Isolated 3D Tilt Rendering
+interface EnvelopeCardProps {
+  id: string;
+  name: string;
+  spent: number;
+  max: number;
+  icon: React.ComponentType<any>;
+  color: string;
+  desc: string;
+  shouldReduceMotion: boolean;
+  getEnvelopeDetails: (spent: number, max: number) => {
+    remaining: number;
+    percent: number;
+    remainingPercent: number;
+    colorClass: string;
+    textClass: string;
+    status: string;
+  };
+}
+
+function EnvelopeCard({ id, name, spent, max, icon: Icon, color, desc, shouldReduceMotion, getEnvelopeDetails }: EnvelopeCardProps) {
+  const [transform, setTransform] = useState("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
+  const details = getEnvelopeDetails(spent, max);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (shouldReduceMotion) return;
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    // Max rotation 10 degrees
+    const rotateX = -(y / (rect.height / 2)) * 10;
+    const rotateY = (x / (rect.width / 2)) * 10;
+    setTransform(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`);
+  };
+
+  const handleMouseLeave = () => {
+    setTransform("perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)");
+  };
+
+  let iconBgColor = "bg-emerald-500/10 text-emerald-500";
+  let barColor = "bg-emerald-500";
+
+  if (id === "transport") {
+    iconBgColor = "bg-blue-500/10 text-blue-500";
+    barColor = "bg-blue-500";
+  } else if (id === "food") {
+    iconBgColor = "bg-green-500/10 text-green-500";
+    barColor = "bg-green-500";
+  } else if (id === "energy") {
+    iconBgColor = "bg-amber-500/10 text-amber-500";
+    barColor = "bg-amber-500";
+  } else if (id === "lifestyle") {
+    iconBgColor = "bg-purple-500/10 text-purple-500";
+    barColor = "bg-purple-500";
+  }
+
+  if (details.status === "Warning") {
+    barColor = "bg-amber-500";
+  } else if (details.status === "Critical") {
+    barColor = "bg-red-500";
+  }
+
+  return (
+    <div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ transform, transition: "transform 0.1s ease-out" }}
+      className="card-premium p-6 flex flex-col justify-between h-full relative overflow-hidden transition-all duration-300 border border-border/80 hover:border-primary/40 shadow-lg group"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center space-x-3">
+          <div className={`p-3 rounded-full ${iconBgColor} flex items-center justify-center flex-shrink-0`}>
+            <Icon className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="font-bold text-base text-foreground">{name}</h4>
+            <p className="text-xs text-foreground/50">{desc}</p>
+          </div>
+        </div>
+        <span className={`px-2.5 py-0.5 text-[10px] font-bold border rounded-full uppercase tracking-wider ${details.textClass}`}>
+          {details.status}
+        </span>
+      </div>
+
+      <div className="mt-4 space-y-3">
+        <div>
+          <span className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
+            {spent.toFixed(1)}
+          </span>
+          <span className="text-xs font-semibold text-foreground/50 ml-1.5">kg CO₂ spent</span>
+        </div>
+
+        <div className="space-y-1.5">
+          {/* 8px progress bar */}
+          <div className="h-2 w-full bg-background border border-border/60 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${barColor} transition-all duration-500`}
+              style={{ width: `${Math.min(100, (spent / max) * 100)}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[11px] font-mono text-foreground/50">
+            <span>Spent: {spent.toFixed(1)} kg</span>
+            <span>Allocated: {max.toFixed(1)} kg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
+  
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("Arjun");
   const [city, setCity] = useState<string>("Mumbai");
   const [pebbles, setPebbles] = useState<number>(50);
   const [budget, setBudget] = useState<BudgetEnvelope>({
@@ -82,6 +199,12 @@ export default function Dashboard() {
   const [totalDuration, setTotalDuration] = useState<number>(30); 
   const [adventureStatus, setAdventureStatus] = useState<string>("Resting in the canopy");
   const [rewardClaimed, setRewardClaimed] = useState<string | null>(null);
+
+  // Master Progress Bar load animation state
+  const [masterBarLoaded, setMasterBarLoaded] = useState(false);
+
+  // Canopy Parallax Coordinates
+  const [canopyCoordinates, setCanopyCoordinates] = useState({ x: 0, y: 0 });
 
   // Get current Monday date
   const getMondayDate = () => {
@@ -225,6 +348,7 @@ export default function Dashboard() {
     if (user) {
       setCity(user.city);
       setPebbles(user.pebbles_balance);
+      setUserName(user.name || "Arjun");
       localStorage.setItem("prakriti_city", user.city);
       localStorage.setItem("prakriti_pebbles", user.pebbles_balance.toString());
     }
@@ -374,6 +498,9 @@ export default function Dashboard() {
       setUserId(activeUserId);
       loadDashboardData(activeUserId);
 
+      // Trigger animation for progress bar
+      const pTimer = setTimeout(() => setMasterBarLoaded(true), 150);
+
       // Listen for custom state changes
       const handleStateChange = () => {
         const uId = localStorage.getItem("prakriti_user_id") || "demo-user-arjun";
@@ -382,6 +509,7 @@ export default function Dashboard() {
       window.addEventListener("prakriti_state_changed", handleStateChange);
       return () => {
         window.removeEventListener("prakriti_state_changed", handleStateChange);
+        clearTimeout(pTimer);
       };
     }
   }, [router]);
@@ -481,27 +609,27 @@ export default function Dashboard() {
     const remaining = Math.max(0, max - spent);
     const remainingPercent = spent >= max ? 0 : (remaining / max) * 100;
     
-    let colorClass = "bg-primary"; 
-    let textClass = "text-primary border-primary/20";
+    let colorClass = "bg-emerald-500"; 
+    let textClass = "text-emerald-500 border-emerald-500/20 bg-emerald-500/5";
     let status = "Healthy";
 
     if (spent > max) {
       if (spent <= max * 1.3) {
         colorClass = "bg-amber-500";
-        textClass = "text-amber-500 border-amber-500/20";
+        textClass = "text-amber-500 border-amber-500/20 bg-amber-500/5";
         status = "Warning";
       } else {
         colorClass = "bg-red-500";
-        textClass = "text-red-400 border-red-500/20";
+        textClass = "text-red-400 border-red-500/20 bg-red-500/5";
         status = "Critical";
       }
     } else if (remainingPercent < 20) {
       colorClass = "bg-red-500";
-      textClass = "text-red-400 border-red-500/20";
+      textClass = "text-red-400 border-red-500/20 bg-red-500/5";
       status = "Critical";
     } else if (remainingPercent <= 50) {
       colorClass = "bg-amber-500";
-      textClass = "text-amber-500 border-amber-500/20";
+      textClass = "text-amber-500 border-amber-500/20 bg-amber-500/5";
       status = "Warning";
     }
 
@@ -513,6 +641,43 @@ export default function Dashboard() {
       textClass,
       status
     };
+  };
+
+  const getCO2WeatherDetails = () => {
+    const ratio = totalBudgetMax > 0 ? (totalBudgetSpent / totalBudgetMax) : 0;
+    let icon = <Sun className="w-5 h-5 text-emerald-400 animate-pulse" />;
+    let statusText = "Sunny / Low Impact";
+    let bgClass = "bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
+    let desc = "Atmosphere is clean and clear.";
+    let colorIndicator = "text-emerald-400";
+    
+    if (ratio > 1.2) {
+      icon = <CloudLightning className="w-5 h-5 text-red-400 animate-bounce" />;
+      statusText = "Severe Storm";
+      bgClass = "bg-red-500/15 border-red-500/30 text-red-400";
+      desc = "Critical emissions overhead.";
+      colorIndicator = "text-red-400";
+    } else if (ratio > 1.0) {
+      icon = <Cloud className="w-5 h-5 text-rose-400 animate-pulse" />;
+      statusText = "Cloudy / Over Limit";
+      bgClass = "bg-rose-500/10 border-rose-500/30 text-rose-400";
+      desc = "Over your weekly limit.";
+      colorIndicator = "text-rose-400";
+    } else if (ratio > 0.8) {
+      icon = <CloudSun className="w-5 h-5 text-amber-400 animate-bounce" />;
+      statusText = "Overcast";
+      bgClass = "bg-amber-500/10 border-amber-500/30 text-amber-400";
+      desc = "Approaching weekly budget limit.";
+      colorIndicator = "text-amber-400";
+    } else if (ratio > 0.5) {
+      icon = <CloudSun className="w-5 h-5 text-sky-400" />;
+      statusText = "Partly Cloudy";
+      bgClass = "bg-sky-500/10 border-sky-500/30 text-sky-400";
+      desc = "Moderate carbon accumulation.";
+      colorIndicator = "text-sky-400";
+    }
+    
+    return { icon, statusText, bgClass, desc, colorIndicator };
   };
 
   const envelopes = [
@@ -557,7 +722,7 @@ export default function Dashboard() {
   // Calculate total budget metrics
   const totalBudgetMax = envelopes.reduce((acc, curr) => acc + curr.max, 0);
   const totalBudgetSpent = envelopes.reduce((acc, curr) => acc + curr.spent, 0);
-  const totalRemainingPercent = ((totalBudgetMax - totalBudgetSpent) / totalBudgetMax) * 100;
+  const totalRemainingPercent = totalBudgetMax > 0 ? (((totalBudgetMax - totalBudgetSpent) / totalBudgetMax) * 100) : 0;
 
   // Goal calculations
   const goalDiff = totalBudgetSpent - reductionGoal;
@@ -566,15 +731,15 @@ export default function Dashboard() {
 
   // Regional Benchmarks
   const benchmarks = [
-    { name: 'You', value: userMonthlyKg, fill: '#4ade80' },
-    { name: '1.5°C Target', value: 167, fill: '#86efac' },
-    { name: 'India National', value: 183, fill: '#fbbf24' },
-    { name: 'India Urban', value: 290, fill: '#f97316' },
-    { name: 'Global Avg', value: 392, fill: '#ef4444' },
+    { name: 'You', value: userMonthlyKg, fill: '#10b981' },
+    { name: '1.5°C Target', value: 167, fill: '#0d9488' },
+    { name: 'India National', value: 183, fill: '#f59e0b' },
+    { name: 'India Urban', value: 290, fill: '#ea580c' },
+    { name: 'Global Avg', value: 392, fill: '#e11d48' },
   ];
 
-  // Circular progress math
-  const radius = 40;
+  // Circular progress math for adventure timer
+  const radius = 20;
   const circumference = 2 * Math.PI * radius;
   
   let progressPercent = 100;
@@ -588,8 +753,46 @@ export default function Dashboard() {
   }
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
+  // Energy Circular Progress math
+  const energyRadius = 20;
+  const energyCircumference = 2 * Math.PI * energyRadius;
+  const energyStrokeDashoffset = energyCircumference - (companionEnergy / 100) * energyCircumference;
+
+  // Parallax Event Handlers
+  const handleCanopyMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (shouldReduceMotion) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    // Set coordinates (moving opposite to cursor offset)
+    setCanopyCoordinates({
+      x: -x / 20,
+      y: -y / 20
+    });
+  };
+
+  const handleCanopyMouseLeave = () => {
+    setCanopyCoordinates({ x: 0, y: 0 });
+  };
+
   return (
     <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Styles block to handle card-premium definition dynamically */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .card-premium {
+          background-color: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 1rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+          transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease-out;
+          transform-style: preserve-3d;
+          will-change: transform;
+        }
+        .card-premium:hover {
+          box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08), 0 8px 12px -8px rgba(0, 0, 0, 0.04);
+        }
+      `}} />
+
       {/* Alert banner for adventure reward */}
       {rewardClaimed && (
         <div 
@@ -601,113 +804,146 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* TOP SECTION: Weekly Carbon Budget Bar */}
-      <section className="bg-surface border border-border rounded-2xl p-6 shadow-xl relative overflow-hidden">
-        {/* Glow effect */}
-        {!shouldReduceMotion && (
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
-        )}
+      {/* PAGE HEADER */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border/60 pb-6">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground flex items-center gap-2">
+            Good morning, {userName} 👋
+          </h1>
+          <p className="text-xs sm:text-sm text-foreground/50 mt-1.5 flex items-center flex-wrap gap-x-2 gap-y-1">
+            <span className="font-semibold text-foreground/70">Monday Cycle: {getMondayDate()}</span>
+            <span className="text-foreground/30">•</span>
+            <span className="flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+              {city}
+            </span>
+            <span className="text-foreground/30">•</span>
+            <span className="flex items-center gap-1">
+              <Coins className="w-3.5 h-3.5 text-warm fill-warm/20" />
+              <span className="font-semibold">{pebbles} Pebbles</span>
+            </span>
+          </p>
+        </div>
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        {/* Weather-style CO2 Badge */}
+        {(() => {
+          const weather = getCO2WeatherDetails();
+          return (
+            <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl border backdrop-blur-md shadow-lg ${weather.bgClass} max-w-sm w-full md:w-80`}>
+              <div className="p-2.5 rounded-xl bg-background/40 flex items-center justify-center flex-shrink-0">
+                {weather.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Carbon Climate</span>
+                  <span className={`text-[11px] font-bold ${weather.colorIndicator}`}>{weather.statusText}</span>
+                </div>
+                <p className="text-[10px] text-foreground/75 truncate mt-0.5">{weather.desc}</p>
+                <div className="text-[11px] font-mono mt-1 text-foreground/90 font-bold flex justify-between">
+                  <span>Spent: {totalBudgetSpent.toFixed(1)} kg</span>
+                  <span className="opacity-50">Limit: {totalBudgetMax.toFixed(0)} kg</span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </header>
+
+      {/* MASTER Segmented Progress Bar */}
+      <section className="card-premium p-6 border border-border/80 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <div>
-            <div className="flex items-center space-x-2 text-foreground/60 text-xs font-semibold uppercase tracking-wider mb-1">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span>Weekly Budget Cycle</span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              Week of {getMondayDate()}
-            </h2>
-            <div className="flex flex-wrap items-center gap-2 mt-1.5">
-              <span className="text-xs px-2 py-0.5 rounded bg-background border border-border/80 text-foreground/70 flex items-center space-x-1">
-                <MapPin className="w-3 h-3 text-primary" />
-                <span>{city}</span>
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-background border border-border/80 text-foreground/70 flex items-center space-x-1">
-                <Coins className="w-3 h-3 text-warm fill-warm/20" />
-                <span>{pebbles} Pebbles</span>
-              </span>
-            </div>
+            <h3 className="font-extrabold text-lg text-foreground flex items-center gap-2">
+              <Leaf className="w-5 h-5 text-emerald-500" />
+              Master Carbon Allocation
+            </h3>
+            <p className="text-xs text-foreground/50">Overall progress relative to total weekly carbon envelopes</p>
           </div>
-
-          <div className="flex items-center space-x-4 bg-background border border-border/80 rounded-xl px-4 py-2.5">
-            <div>
-              <span className="block text-[10px] text-foreground/50 uppercase tracking-widest font-mono">Spent / Budget</span>
-              <span className="text-sm font-bold text-foreground/90">
-                {totalBudgetSpent.toFixed(1)} / {totalBudgetMax.toFixed(0)} <span className="text-xs text-foreground/60 font-normal">kg CO₂</span>
-              </span>
+          <div className="flex items-center gap-4 text-xs font-mono">
+            <div className="bg-background/60 border border-border/60 px-3 py-1.5 rounded-xl">
+              <span className="text-foreground/40 mr-1.5 uppercase text-[10px]">Total Spent:</span>
+              <span className="font-bold text-foreground">{totalBudgetSpent.toFixed(1)} kg</span>
             </div>
-            <div className="h-6 w-[1px] bg-border" />
-            <div>
-              <span className="block text-[10px] text-foreground/50 uppercase tracking-widest font-mono">Remaining</span>
-              <span className={`text-sm font-extrabold ${totalRemainingPercent > 50 ? "text-primary" : totalRemainingPercent >= 20 ? "text-warm" : "text-red-400"}`}>
-                {(totalBudgetMax - totalBudgetSpent).toFixed(1)} kg
-              </span>
+            <div className="bg-background/60 border border-border/60 px-3 py-1.5 rounded-xl">
+              <span className="text-foreground/40 mr-1.5 uppercase text-[10px]">Budget Limit:</span>
+              <span className="font-bold text-foreground">{totalBudgetMax.toFixed(0)} kg</span>
             </div>
           </div>
         </div>
 
-        {/* Master Segmented Progress Bar */}
         <div className="space-y-4">
-          <div className="h-4 w-full bg-background border border-border/80 rounded-full flex overflow-hidden p-0.5">
+          {/* Master Segmented Progress Bar - Loads from 0% to Target */}
+          <div className="h-5 w-full bg-background/50 border border-border/80 rounded-full flex overflow-hidden p-0.5 relative">
             {envelopes.map((env) => {
               const details = getEnvelopeDetails(env.spent, env.max);
-              const segmentWidth = (env.max / totalBudgetMax) * 100;
-              const innerWidth = (env.spent / env.max) * 100;
+              const segmentWidth = totalBudgetMax > 0 ? ((env.max / totalBudgetMax) * 100) : 0;
+              const innerWidth = env.max > 0 ? ((env.spent / env.max) * 100) : 0;
+              const Icon = env.icon;
 
               return (
                 <div 
                   key={env.id} 
-                  className="h-full border-r border-background/25 last:border-0 relative"
-                  style={{ width: `${segmentWidth}%` }}
+                  className="h-full border-r border-background/20 last:border-0 relative group flex-1"
+                  style={{ 
+                    width: masterBarLoaded ? `${segmentWidth}%` : "0%", 
+                    transition: 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)' 
+                  }}
                 >
+                  {/* Spent Fill */}
                   <div 
-                    className={`h-full rounded-sm ${details.colorClass} opacity-85 transition-all duration-500`}
-                    style={{ width: `${Math.min(100, innerWidth)}%` }}
+                    className={`h-full rounded-full ${details.colorClass} opacity-90 transition-all`}
+                    style={{ 
+                      width: masterBarLoaded ? `${Math.min(100, innerWidth)}%` : "0%", 
+                      transition: 'width 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s' 
+                    }}
                   />
-                  <div className="absolute inset-0 bg-surface/20 hover:bg-transparent transition-colors pointer-events-none" />
+                  {/* Hover Highlight Overlay */}
+                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity cursor-help" />
+                  
+                  {/* Customized Hover Tooltip */}
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-50 w-56 p-3 bg-slate-900/95 border border-emerald-500/30 rounded-xl shadow-2xl backdrop-blur-md opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 transform scale-95 group-hover:scale-100 origin-bottom flex flex-col gap-1.5 text-xs text-white">
+                    <div className="flex items-center justify-between border-b border-white/10 pb-1.5">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <Icon className="w-3.5 h-3.5 text-emerald-400" />
+                        {env.name}
+                      </span>
+                      <span className={`px-1.5 py-0.25 text-[9px] font-bold border rounded-md uppercase tracking-wider ${details.textClass}`}>
+                        {details.status}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Allocation:</span>
+                      <span className="font-semibold font-mono text-white/95">{env.max.toFixed(1)} kg ({Math.round(segmentWidth)}%)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/60">Spent:</span>
+                      <span className="font-semibold font-mono text-white/95">{env.spent.toFixed(1)} kg ({Math.round(innerWidth)}%)</span>
+                    </div>
+                    <div className="flex justify-between border-t border-white/10 pt-1.5">
+                      <span className="text-white/60">Remaining:</span>
+                      <span className="font-semibold font-mono text-emerald-400">{(env.max - env.spent).toFixed(1)} kg</span>
+                    </div>
+                    {/* Arrow */}
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900/95" />
+                  </div>
                 </div>
               );
             })}
           </div>
-
-          {/* Individual envelopes display */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+          
+          <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-xs">
             {envelopes.map((env) => {
-              const details = getEnvelopeDetails(env.spent, env.max);
-              const Icon = env.icon;
-              return (
-                <div 
-                  key={env.id}
-                  className="bg-background/40 border border-border/60 hover:border-border rounded-xl p-3.5 flex flex-col justify-between space-y-3 transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-2.5">
-                      <div className="p-2 rounded-lg bg-surface text-foreground/80">
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-sm text-foreground/90">{env.name}</h3>
-                        <span className="text-[10px] text-foreground/50">{env.desc}</span>
-                      </div>
-                    </div>
-                    
-                    <span className={`px-2 py-0.5 text-[9px] font-bold border rounded-md uppercase tracking-wider ${details.textClass}`}>
-                      {details.status}
-                    </span>
-                  </div>
+              let labelColor = "text-emerald-500";
+              if (env.id === "transport") labelColor = "text-blue-500";
+              else if (env.id === "food") labelColor = "text-green-500";
+              else if (env.id === "energy") labelColor = "text-amber-500";
+              else if (env.id === "lifestyle") labelColor = "text-purple-500";
 
-                  <div className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-mono text-foreground/60">
-                      <span>Spent: <strong className="text-foreground/90 font-sans">{env.spent.toFixed(1)}</strong></span>
-                      <span>Allocated: <strong className="text-foreground/90 font-sans">{env.max}</strong></span>
-                    </div>
-                    <div className="h-1.5 bg-background rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${details.colorClass} transition-all duration-500`}
-                        style={{ width: `${Math.min(100, (env.spent / env.max) * 100)}%` }}
-                      />
-                    </div>
-                  </div>
+              return (
+                <div key={env.id} className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full bg-current ${labelColor}`} />
+                  <span className="text-foreground/75 font-medium">{env.name}:</span>
+                  <span className="font-mono text-foreground/50 font-semibold">{env.spent.toFixed(1)} / {env.max.toFixed(0)} kg</span>
                 </div>
               );
             })}
@@ -715,11 +951,35 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* NEW SECTION: Goal Tracking & Regional Benchmarks */}
+      {/* YOUR CARBON ENVELOPES */}
+      <section className="space-y-4">
+        <h2 className="text-base sm:text-lg font-black tracking-wider text-green-600 uppercase">
+          YOUR CARBON ENVELOPES
+        </h2>
+        {/* Responsive: Stacks vertically on mobile, 2x2 grid on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {envelopes.map((env) => (
+            <EnvelopeCard 
+              key={env.id}
+              id={env.id}
+              name={env.name}
+              spent={env.spent}
+              max={env.max}
+              icon={env.icon}
+              color={env.color}
+              desc={env.desc}
+              shouldReduceMotion={shouldReduceMotion ?? false}
+              getEnvelopeDetails={getEnvelopeDetails}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* Goal Tracking & Regional Benchmarks (Charts wrapped in card-premium) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Card 1: Goal Tracker */}
-        <section aria-label="Reduction Goal Tracker" className="bg-surface border border-border rounded-2xl p-6 shadow-xl space-y-6 flex flex-col justify-between relative overflow-hidden">
+        <section aria-label="Reduction Goal Tracker" className="card-premium p-6 shadow-xl space-y-6 flex flex-col justify-between relative overflow-hidden">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -797,12 +1057,14 @@ export default function Dashboard() {
               <div className="w-full h-40">
                 {trendData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={trendData}
-                      margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <AreaChart 
+                      data={trendData}
+                      margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+                    >
                       <defs>
                         <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#4ade80" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <XAxis 
@@ -825,10 +1087,11 @@ export default function Dashboard() {
                       <Area 
                         type="monotone" 
                         dataKey="co2" 
-                        stroke="#4ade80" 
+                        stroke="#10b981" 
                         strokeWidth={2}
                         fill="url(#trendGrad)"
-                        dot={{ fill: '#4ade80', r: 4 }}
+                        dot={{ fill: '#10b981', r: 4 }}
+                        animationDuration={800}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -862,7 +1125,7 @@ export default function Dashboard() {
         </section>
 
         {/* Card 2: Regional Benchmarks Compare Card */}
-        <section aria-label="Regional Benchmarks" className="bg-surface border border-border rounded-2xl p-6 shadow-xl space-y-5 flex flex-col justify-between relative overflow-hidden">
+        <section aria-label="Regional Benchmarks" className="card-premium p-6 shadow-xl space-y-5 flex flex-col justify-between relative overflow-hidden">
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <div className="p-2 rounded-lg bg-primary/10 text-primary">
@@ -903,7 +1166,7 @@ export default function Dashboard() {
                       color: 'var(--foreground)'
                     }}
                   />
-                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} animationDuration={800}>
                     {benchmarks.map((entry, index) => (
                       <Cell key={index} fill={entry.fill} />
                     ))}
@@ -938,18 +1201,43 @@ export default function Dashboard() {
 
       </div>
 
-      {/* MIDDLE SECTION: Prakriti Companion card */}
-      <section className="bg-surface border border-border rounded-2xl overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12">
-        {/* Parallax Canopy Viewport */}
-        <div className="lg:col-span-7 h-64 sm:h-80 lg:h-96 relative misty-shola-bg border-b lg:border-b-0 lg:border-r border-border">
-          <div className="absolute inset-0 z-0 bg-gradient-to-t from-[#080d16] to-[#0d1424]">
-            <svg className="absolute bottom-0 w-full h-[60%] opacity-20 text-[#162740] fill-current" viewBox="0 0 400 100" preserveAspectRatio="none">
+      {/* Prakriti Companion card */}
+      <section className="card-premium overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-border/80 shadow-xl gap-0">
+        
+        {/* Parallax Canopy Viewport - Crops height on mobile */}
+        <div 
+          onMouseMove={handleCanopyMouseMove}
+          onMouseLeave={handleCanopyMouseLeave}
+          className="lg:col-span-7 h-56 sm:h-72 lg:h-96 relative misty-shola-bg border-b lg:border-b-0 lg:border-r border-border overflow-hidden"
+        >
+          {/* Layer 1: Sky / Deep Background */}
+          <div 
+            className="absolute inset-0 z-0 bg-gradient-to-t from-[#0b1329] to-[#050814]"
+            style={{ 
+              transform: `translate3d(${-canopyCoordinates.x * 0.2}px, ${-canopyCoordinates.y * 0.2}px, 0)`,
+              transition: 'transform 0.25s ease-out'
+            }}
+          >
+            {/* Stars or moon in background */}
+            <div className="absolute top-8 left-8 w-2 h-2 bg-yellow-100 rounded-full opacity-60 animate-pulse" />
+            <div className="absolute top-16 right-12 w-1 h-1 bg-white rounded-full opacity-80" />
+            <div className="absolute top-6 right-24 w-1.5 h-1.5 bg-yellow-200 rounded-full opacity-40 animate-pulse" />
+            
+            {/* Distant Mountains */}
+            <svg className="absolute bottom-0 w-full h-[55%] opacity-25 text-[#14233c] fill-current" viewBox="0 0 400 100" preserveAspectRatio="none">
               <path d="M0,80 L80,30 L160,70 L240,25 L320,65 L400,30 L400,100 L0,100 Z" />
             </svg>
           </div>
 
-          <div className="absolute inset-0 z-1 pointer-events-none">
-            <svg className="absolute bottom-0 w-full h-[50%] opacity-35 text-[#0f3027] fill-current" viewBox="0 0 400 100" preserveAspectRatio="none">
+          {/* Layer 2: Mid Hills & Forest */}
+          <div 
+            className="absolute inset-0 z-1 pointer-events-none"
+            style={{ 
+              transform: `translate3d(${-canopyCoordinates.x * 0.1}px, ${-canopyCoordinates.y * 0.1}px, 0)`,
+              transition: 'transform 0.2s ease-out'
+            }}
+          >
+            <svg className="absolute bottom-0 w-full h-[45%] opacity-35 text-[#0a2620] fill-current" viewBox="0 0 400 100" preserveAspectRatio="none">
               <path d="M0,90 L60,50 L140,80 L220,45 L300,75 L400,40 L400,100 L0,100 Z" />
             </svg>
             {!shouldReduceMotion && (
@@ -957,20 +1245,53 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="absolute inset-0 z-2 pointer-events-none flex flex-col justify-end">
-            <svg className="w-full h-[35%] opacity-70 text-[#091b15] fill-current" viewBox="0 0 400 100" preserveAspectRatio="none">
+          {/* Layer 3: Closer Canopy Layer */}
+          <div 
+            className="absolute inset-0 z-2 pointer-events-none flex flex-col justify-end"
+            style={{ 
+              transform: `translate3d(${canopyCoordinates.x * 0.2}px, ${canopyCoordinates.y * 0.2}px, 0)`,
+              transition: 'transform 0.18s ease-out'
+            }}
+          >
+            <svg className="w-full h-[30%] opacity-60 text-[#071813] fill-current" viewBox="0 0 400 100" preserveAspectRatio="none">
               <path d="M0,95 L100,75 L200,90 L300,70 L400,95 L400,100 L0,100 Z" />
-            </svg>
-            <svg className="absolute bottom-2 left-0 w-full h-8 text-[#2e1d0c] fill-current opacity-90" viewBox="0 0 400 20" preserveAspectRatio="none">
-              <path d="M0,5 Q100,12 250,5 T400,12 L400,20 L0,20 Z" />
             </svg>
           </div>
 
+          {/* Layer 4: Close Hanging Vines / Canopy Branch */}
+          <div 
+            className="absolute inset-0 z-3 pointer-events-none"
+            style={{ 
+              transform: `translate3d(${canopyCoordinates.x * 0.4}px, ${canopyCoordinates.y * 0.4}px, 0)`,
+              transition: 'transform 0.12s ease-out'
+            }}
+          >
+            {/* The Main Branch Chiku sits on */}
+            <svg className="absolute bottom-1 left-0 w-full h-10 text-[#1e140a] fill-current opacity-95" viewBox="0 0 400 20" preserveAspectRatio="none">
+              <path d="M0,5 Q100,12 250,5 T400,12 L400,20 L0,20 Z" />
+            </svg>
+            
+            {/* Hanging leaves/vines overlay */}
+            <div className="absolute top-0 left-0 right-0 flex justify-between px-10 opacity-30">
+              <Leaf className="w-8 h-8 text-emerald-800 rotate-180" />
+              <Leaf className="w-10 h-10 text-emerald-950 rotate-90" />
+              <Leaf className="w-6 h-6 text-green-900 rotate-45" />
+            </div>
+          </div>
+
+          {/* Mist / Atmospheric Layer */}
           {!shouldReduceMotion && (
-            <div className="absolute bottom-1 right-[-20%] w-[100%] h-8 bg-white/5 blur-sm rounded-full mist-fast z-3" />
+            <div className="absolute bottom-1 right-[-20%] w-[100%] h-8 bg-white/5 blur-sm rounded-full mist-fast z-4 pointer-events-none" />
           )}
 
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-4 flex flex-col items-center">
+          {/* Macaque Sprite (Moving opposite to cursor coordinates) */}
+          <div 
+            className="absolute bottom-5 left-1/2 -translate-x-1/2 z-10"
+            style={{ 
+              transform: `translate3d(${canopyCoordinates.x}px, ${canopyCoordinates.y}px, 0)`,
+              transition: 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            }}
+          >
             <motion.svg 
               width="140" 
               height="140" 
@@ -1060,55 +1381,87 @@ export default function Dashboard() {
             </div>
 
             <div className="bg-background border border-border/80 rounded-xl p-4 space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-foreground/50">Status</span>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${adventureActive ? "bg-accent/10 text-accent" : "bg-primary/10 text-primary"}`}>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-foreground/50 font-medium">Status</span>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${adventureActive ? "bg-accent/15 text-accent border border-accent/20" : "bg-primary/10 text-primary border border-primary/20"}`}>
                   {adventureStatus}
                 </span>
               </div>
 
               <div className="flex justify-between items-center border-t border-border/40 pt-2 text-xs">
-                <span className="text-foreground/50">Companion Stage</span>
+                <span className="text-foreground/50 font-medium">Companion Stage</span>
                 <span className="font-semibold text-foreground/90 capitalize">{companionStage}</span>
               </div>
 
               <div className="flex justify-between items-center border-t border-border/40 pt-2 text-xs">
-                <span className="text-foreground/50">Energy</span>
-                <div className="flex items-center space-x-1.5">
-                  <span className="font-semibold text-foreground/90">{companionEnergy}%</span>
-                  <div className="w-12 h-1.5 bg-border rounded-full overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: `${companionEnergy}%` }} />
-                  </div>
+                <span className="text-foreground/50 font-medium">Pebbles Balance</span>
+                <span className="font-bold text-warm">{pebbles} Pebbles</span>
+              </div>
+
+              {/* Energy Circular Progress Ring */}
+              <div className="flex items-center gap-4 border-t border-border/40 pt-3">
+                <div className="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle 
+                      cx="24" 
+                      cy="24" 
+                      r={energyRadius} 
+                      className="text-border fill-none" 
+                      strokeWidth="3.5" 
+                    />
+                    <motion.circle 
+                      cx="24" 
+                      cy="24" 
+                      r={energyRadius} 
+                      className="text-emerald-500 fill-none"
+                      strokeWidth="3.5" 
+                      strokeDasharray={energyCircumference}
+                      strokeDashoffset={energyStrokeDashoffset}
+                      strokeLinecap="round"
+                      initial={{ strokeDashoffset: energyCircumference }}
+                      animate={{ strokeDashoffset: energyStrokeDashoffset }}
+                      transition={{ duration: 0.8 }}
+                    />
+                  </svg>
+                  <span className="absolute text-[10px] font-bold font-mono">
+                    {companionEnergy}%
+                  </span>
+                </div>
+                <div className="text-xs">
+                  <span className="text-foreground/50 block font-semibold uppercase tracking-wider text-[9px]">Macaque Energy</span>
+                  <p className="text-foreground/80 font-medium leading-normal mt-0.5">
+                    {companionEnergy >= 80 
+                      ? "Bursting with vitality!"
+                      : companionEnergy >= 40 
+                        ? "Rested. Ready to explore." 
+                        : "Exhausted. Let them rest."}
+                  </p>
                 </div>
               </div>
 
-              <div className="flex justify-between items-center border-t border-border/40 pt-2 text-xs">
-                <span className="text-foreground/50">Pebbles Balance</span>
-                <span className="font-semibold text-warm">{pebbles} Pebbles</span>
-              </div>
-
-              <div className="flex items-center space-x-4 border-t border-border/40 pt-2">
-                <div className="relative w-16 h-16 flex items-center justify-center flex-shrink-0">
+              {/* Adventure Active Timer Progress Ring */}
+              <div className="flex items-center gap-4 border-t border-border/40 pt-3">
+                <div className="relative w-12 h-12 flex items-center justify-center flex-shrink-0">
                   <svg className="w-full h-full transform -rotate-90">
                     <circle 
-                      cx="32" 
-                      cy="32" 
+                      cx="24" 
+                      cy="24" 
                       r={radius} 
                       className="text-border fill-none" 
-                      strokeWidth="4" 
+                      strokeWidth="3.5" 
                     />
                     <motion.circle 
-                      cx="32" 
-                      cy="32" 
+                      cx="24" 
+                      cy="24" 
                       r={radius} 
                       className={`${adventureActive ? "text-accent" : "text-primary"} fill-none`}
-                      strokeWidth="4" 
+                      strokeWidth="3.5" 
                       strokeDasharray={circumference}
                       strokeDashoffset={strokeDashoffset}
                       strokeLinecap="round"
                     />
                   </svg>
-                  <span className="absolute text-xs font-bold font-mono">
+                  <span className="absolute text-[9px] font-bold font-mono">
                     {activeAdventure && activeAdventure.completed && !activeAdventure.claimed 
                       ? "Done!" 
                       : adventureActive 
@@ -1117,21 +1470,21 @@ export default function Dashboard() {
                   </span>
                 </div>
 
-                <div className="text-xs space-y-1 text-foreground/75">
+                <div className="text-xs space-y-0.5 text-foreground/75 flex-1">
                   {activeAdventure && activeAdventure.completed && !activeAdventure.claimed ? (
                     <>
-                      <p className={`font-semibold text-accent ${shouldReduceMotion ? "" : "animate-pulse"}`}>Adventure Completed!</p>
-                      <p className="text-foreground/50">Chiku has returned from the Shola forest with a harvest of pebbles.</p>
+                      <p className={`font-semibold text-accent ${shouldReduceMotion ? "" : "animate-pulse"}`}>Adventure Complete!</p>
+                      <p className="text-[11px] text-foreground/50 font-normal">Chiku found a pouch of pebbles.</p>
                     </>
                   ) : adventureActive ? (
                     <>
-                      <p className="font-semibold text-accent">Gathering seeds...</p>
-                      <p className="text-foreground/50">Chiku is wandering around the Shola forest looking for flora samples.</p>
+                      <p className="font-semibold text-accent font-medium">Exploring forest...</p>
+                      <p className="text-[11px] text-foreground/50">Collecting Shola seed pods...</p>
                     </>
                   ) : (
                     <>
-                      <p className="font-semibold text-primary">Fully Rested</p>
-                      <p className="text-foreground/50">Ready to go on a new exploration to collect Pebbles and plant seeds.</p>
+                      <p className="font-semibold text-primary font-medium">Ready for Adventure</p>
+                      <p className="text-[11px] text-foreground/50">Send Chiku to gather Pebbles.</p>
                     </>
                   )}
                 </div>
@@ -1139,54 +1492,56 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {activeAdventure && activeAdventure.completed && !activeAdventure.claimed ? (
-            <button
-              onClick={claimReward}
-              className={`w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 transition-all bg-accent text-background hover:brightness-110 active:scale-[0.98] shadow-lg shadow-accent/20 min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary focus:outline-none ${shouldReduceMotion ? "" : "animate-pulse"}`}
-            >
-              <span>Claim Adventure Reward (+{activeAdventure.reward_pebbles} Pebbles)</span>
-              <Sparkles className="w-4 h-4 fill-current text-background" />
-            </button>
-          ) : (
-            <button
-              onClick={startAdventure}
-              disabled={adventureActive}
-              className={`w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 transition-all min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary focus:outline-none ${
-                adventureActive 
-                  ? "bg-border text-foreground/30 cursor-not-allowed" 
-                  : "bg-primary text-background hover:brightness-110 active:scale-[0.98] shadow-lg shadow-primary/10"
-              }`}
-            >
-              <span>{adventureActive ? `Chiku is exploring (${timeLeft}s remaining)...` : "Send Chiku on adventure"}</span>
-              {!adventureActive && <ArrowRight className="w-4 h-4" />}
-            </button>
-          )}
+          <div className="pt-2">
+            {activeAdventure && activeAdventure.completed && !activeAdventure.claimed ? (
+              <button
+                onClick={claimReward}
+                className={`w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 transition-all bg-gradient-to-r from-amber-500 to-yellow-400 text-background hover:brightness-110 active:scale-[0.98] shadow-lg hover:shadow-amber-500/25 min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary focus:outline-none ${shouldReduceMotion ? "" : "animate-pulse"}`}
+              >
+                <span>Claim Adventure Reward (+{activeAdventure.reward_pebbles} Pebbles)</span>
+                <Sparkles className="w-4 h-4 fill-current text-background animate-spin" />
+              </button>
+            ) : (
+              <button
+                onClick={startAdventure}
+                disabled={adventureActive}
+                className={`w-full py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center space-x-2 transition-all min-h-[44px] focus-visible:ring-2 focus-visible:ring-primary focus:outline-none ${
+                  adventureActive 
+                    ? "bg-border text-foreground/30 cursor-not-allowed" 
+                    : "bg-gradient-to-r from-emerald-600 to-teal-500 text-background hover:brightness-110 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.98]"
+                }`}
+              >
+                <span>{adventureActive ? `Chiku is exploring (${timeLeft}s remaining)...` : "Send Chiku on adventure"}</span>
+                {!adventureActive && <ArrowRight className="w-4 h-4" />}
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* BOTTOM SECTION: Quick Action Grid */}
+      {/* QUICK ACTIONS - Compressed for Mobile Grid (2 Columns on Mobile, 4 on Desktop) */}
       <section className="space-y-4">
         <h3 className="text-lg font-bold tracking-tight text-foreground">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* 1. Receipt Scanner */}
           <button 
             onClick={() => router.push("/scan")}
             aria-label="Open Receipt Scanner"
-            className="group bg-surface hover:bg-surface/80 border border-border hover:border-primary/50 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-1 shadow-md hover:shadow-primary/5 flex flex-col justify-between h-40 w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none min-h-[44px]"
+            className="group bg-surface hover:bg-surface/80 border border-border hover:border-primary/50 rounded-xl p-4 sm:p-5 cursor-pointer transition-all hover:-translate-y-1 shadow-md hover:shadow-primary/5 flex flex-col justify-between h-36 sm:h-40 w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none min-h-[44px]"
           >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <ScanLine className="w-5 h-5" />
+            <div className="space-y-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <ScanLine className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-foreground/90 group-hover:text-primary transition-colors">Receipt Scanner</h4>
-                <p className="text-xs text-foreground/50 mt-1">Scan transport or grocery bills to calculate carbon footprint using Gemini.</p>
+                <h4 className="font-bold text-xs sm:text-sm text-foreground/90 group-hover:text-primary transition-colors truncate">Receipt Scanner</h4>
+                <p className="text-[10px] sm:text-xs text-foreground/50 mt-0.5 line-clamp-2 leading-tight">Scan transport or grocery bills to calculate footprint.</p>
               </div>
             </div>
-            <div className="flex items-center text-[10px] font-bold text-primary group-hover:underline uppercase tracking-wider">
+            <div className="flex items-center text-[9px] sm:text-[10px] font-bold text-primary group-hover:underline uppercase tracking-wider">
               <span>Open Scanner</span>
-              <ArrowRight className="w-3 h-3 ml-1" />
+              <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-1" />
             </div>
           </button>
 
@@ -1194,20 +1549,20 @@ export default function Dashboard() {
           <button 
             onClick={() => router.push("/log")}
             aria-label="Open manual activity logger"
-            className="group bg-surface hover:bg-surface/80 border border-border hover:border-primary/50 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-1 shadow-md hover:shadow-primary/5 flex flex-col justify-between h-40 w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none min-h-[44px]"
+            className="group bg-surface hover:bg-surface/80 border border-border hover:border-primary/50 rounded-xl p-4 sm:p-5 cursor-pointer transition-all hover:-translate-y-1 shadow-md hover:shadow-primary/5 flex flex-col justify-between h-36 sm:h-40 w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none min-h-[44px]"
           >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <FileSpreadsheet className="w-5 h-5" />
+            <div className="space-y-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <FileSpreadsheet className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-foreground/90 group-hover:text-primary transition-colors">Log Footprint</h4>
-                <p className="text-xs text-foreground/50 mt-1">Manually enter a vehicle ride, flight, electricity bill, or diet item.</p>
+                <h4 className="font-bold text-xs sm:text-sm text-foreground/90 group-hover:text-primary transition-colors truncate">Log Footprint</h4>
+                <p className="text-[10px] sm:text-xs text-foreground/50 mt-0.5 line-clamp-2 leading-tight">Manually enter a vehicle ride, flight, or diet item.</p>
               </div>
             </div>
-            <div className="flex items-center text-[10px] font-bold text-primary group-hover:underline uppercase tracking-wider">
+            <div className="flex items-center text-[9px] sm:text-[10px] font-bold text-primary group-hover:underline uppercase tracking-wider">
               <span>Log Entry</span>
-              <ArrowRight className="w-3 h-3 ml-1" />
+              <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-1" />
             </div>
           </button>
 
@@ -1215,20 +1570,20 @@ export default function Dashboard() {
           <button 
             onClick={() => router.push("/insights")}
             aria-label="Open AI coach insights and intention settings"
-            className="group bg-surface hover:bg-surface/80 border border-border hover:border-primary/50 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-1 shadow-md hover:shadow-primary/5 flex flex-col justify-between h-40 w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none min-h-[44px]"
+            className="group bg-surface hover:bg-surface/80 border border-border hover:border-primary/50 rounded-xl p-4 sm:p-5 cursor-pointer transition-all hover:-translate-y-1 shadow-md hover:shadow-primary/5 flex flex-col justify-between h-36 sm:h-40 w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none min-h-[44px]"
           >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <TrendingUp className="w-5 h-5" />
+            <div className="space-y-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-foreground/90 group-hover:text-primary transition-colors">Insights & Path</h4>
-                <p className="text-xs text-foreground/50 mt-1">Compare your weekly averages against India&apos;s target trajectory.</p>
+                <h4 className="font-bold text-xs sm:text-sm text-foreground/90 group-hover:text-primary transition-colors truncate">Insights & Path</h4>
+                <p className="text-[10px] sm:text-xs text-foreground/50 mt-0.5 line-clamp-2 leading-tight">Compare your weekly averages against target trajectory.</p>
               </div>
             </div>
-            <div className="flex items-center text-[10px] font-bold text-primary group-hover:underline uppercase tracking-wider">
+            <div className="flex items-center text-[9px] sm:text-[10px] font-bold text-primary group-hover:underline uppercase tracking-wider">
               <span>View Analytics</span>
-              <ArrowRight className="w-3 h-3 ml-1" />
+              <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-1" />
             </div>
           </button>
 
@@ -1236,20 +1591,20 @@ export default function Dashboard() {
           <button 
             onClick={() => router.push("/budget")}
             aria-label="Open carbon budget envelope management"
-            className="group bg-surface hover:bg-surface/80 border border-border hover:border-primary/50 rounded-xl p-5 cursor-pointer transition-all hover:-translate-y-1 shadow-md hover:shadow-primary/5 flex flex-col justify-between h-40 w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none min-h-[44px]"
+            className="group bg-surface hover:bg-surface/80 border border-border hover:border-primary/50 rounded-xl p-4 sm:p-5 cursor-pointer transition-all hover:-translate-y-1 shadow-md hover:shadow-primary/5 flex flex-col justify-between h-36 sm:h-40 w-full text-left focus-visible:ring-2 focus-visible:ring-primary focus:outline-none min-h-[44px]"
           >
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                <PiggyBank className="w-5 h-5" />
+            <div className="space-y-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                <PiggyBank className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-sm text-foreground/90 group-hover:text-primary transition-colors">Carbon Budget</h4>
-                <p className="text-xs text-foreground/50 mt-1">Allocate carbon envelopes and modify weekly carbon targets.</p>
+                <h4 className="font-bold text-xs sm:text-sm text-foreground/90 group-hover:text-primary transition-colors truncate">Carbon Budget</h4>
+                <p className="text-[10px] sm:text-xs text-foreground/50 mt-0.5 line-clamp-2 leading-tight">Allocate carbon envelopes and modify weekly carbon targets.</p>
               </div>
             </div>
-            <div className="flex items-center text-[10px] font-bold text-primary group-hover:underline uppercase tracking-wider">
+            <div className="flex items-center text-[9px] sm:text-[10px] font-bold text-primary group-hover:underline uppercase tracking-wider">
               <span>Manage Budget</span>
-              <ArrowRight className="w-3 h-3 ml-1" />
+              <ArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 ml-1" />
             </div>
           </button>
 

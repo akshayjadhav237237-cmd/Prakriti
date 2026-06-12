@@ -29,9 +29,7 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Info,
-  Calendar, 
-  Flame, 
-  Share2 
+  Flame 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -151,18 +149,11 @@ export default function LogActivityPage() {
         return Number(result.toFixed(3));
       }
       case "energy": {
-        // AC Consumption: kW based on star rating * hours
-        // 1 Star AC: 1.45 kW, 2 Star: 1.30 kW, 3 Star: 1.15 kW, 4 Star: 1.00 kW, 5 Star: 0.85 kW
         const kwRating = 1.6 - (0.15 * acStarRating);
         const acKwh = acHours * kwRating;
         const acCo2 = calculateElectricityFootprint({ consumptionKwh: acKwh }).co2eKg;
-        
-        // DG Set Generator: 2.7 kg/L x 0.5 L/hr = 1.35 kg CO2e / hr
         const dgCo2 = dgSetToggle ? acHours * 0.5 * 2.7 : 0;
-        
-        // Direct grid electricity
         const gridCo2 = calculateElectricityFootprint({ consumptionKwh: gridElectricityUnits }).co2eKg;
-        
         return Number((acCo2 + dgCo2 + gridCo2).toFixed(3));
       }
       case "lifestyle": {
@@ -227,26 +218,6 @@ export default function LogActivityPage() {
     const envelope = activeTab;
     const activityName = getActivityName();
     
-    // Detailed metadata for logs
-    const details: any = {
-      tab: activeTab
-    };
-    if (activeTab === "transport") {
-      details.mode = transportMode;
-      details.distance = transportDistance;
-    } else if (activeTab === "food") {
-      details.meal = foodMeal;
-      details.delivery = foodDelivery;
-      details.diwaliMode = diwaliMode;
-    } else if (activeTab === "energy") {
-      details.acHours = acHours;
-      details.acStarRating = acStarRating;
-      details.dgSet = dgSetToggle;
-      details.gridUnits = gridElectricityUnits;
-    } else if (activeTab === "lifestyle") {
-      details.item = selectedLifestyle;
-    }
-
     const log: DailyLog = {
       id: Math.random().toString(36).substring(2, 9),
       user_id: userId,
@@ -259,10 +230,8 @@ export default function LogActivityPage() {
     };
 
     try {
-      // Save log
       await dbService.addDailyLog(log);
 
-      // Trigger Confetti Particle Explosion if under 2 kg
       if (isConfettiActive) {
         confetti({
           particleCount: 120,
@@ -272,7 +241,6 @@ export default function LogActivityPage() {
         });
       }
 
-      // Reload stats and compute remaining envelope balance
       await loadStats(userId);
       const envelopeBudget = budget ? (budget[envelope as keyof WeeklyBudget] as number | undefined) ?? 0 : 0;
       const currentSpent = (spent[envelope] ?? 0) + co2e;
@@ -300,7 +268,6 @@ export default function LogActivityPage() {
 
   const handleResetForm = () => {
     setSuccessLog(null);
-    // Reset specific states
     setTransportDistance(10);
     setFoodDelivery(false);
     setDiwaliMode(false);
@@ -309,7 +276,6 @@ export default function LogActivityPage() {
     setDgSetToggle(false);
   };
 
-  // Envelope details helper
   const envelopeLabels: Record<ActiveTab, string> = {
     transport: "Transport",
     food: "Food & Meals",
@@ -322,7 +288,7 @@ export default function LogActivityPage() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 pt-8 md:px-6">
         
-        {/* Toast Toast */}
+        {/* Toast Notification */}
         <AnimatePresence>
           {toastMessage && (
             <motion.div 
@@ -345,7 +311,7 @@ export default function LogActivityPage() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="fixed inset-0 z-50 bg-background/95 flex items-center justify-center p-4 backdrop-blur-sm"
             >
-              <div className="w-full max-w-md bg-surface border border-primary/30 rounded-2xl p-6 md:p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
+              <div className="w-[90vw] max-w-md bg-surface border border-primary/30 rounded-2xl p-6 md:p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-emerald-400"></div>
                 <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto">
                   <CheckCircle2 className="w-8 h-8" />
@@ -353,10 +319,10 @@ export default function LogActivityPage() {
 
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-accent uppercase tracking-widest">Activity Logged</span>
-                  <h2 className="text-2xl font-extrabold text-white">{successLog.activity}</h2>
+                  <h2 className="text-2xl font-extrabold text-foreground">{successLog.activity}</h2>
                   <div className="flex items-center justify-center space-x-2 mt-1">
                     <span className="text-xl font-bold text-warm">{successLog.co2e} kg CO₂e</span>
-                    <span className="text-xs text-foreground/40">added to {successLog.envelope}</span>
+                    <span className="text-xs text-foreground/40">added to {successLog.envelope.toUpperCase()}</span>
                   </div>
                 </div>
 
@@ -364,7 +330,7 @@ export default function LogActivityPage() {
                   <span className="text-xs text-foreground/50 font-medium">Envelope Budget Impact</span>
                   <div className="flex justify-between text-sm">
                     <span className="text-foreground/60">Weekly Envelope:</span>
-                    <span className="font-bold text-white">{successLog.envelope}</span>
+                    <span className="font-bold text-foreground">{successLog.envelope.toUpperCase()}</span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-border/40 pt-2">
                     <span className="text-foreground/60">Budget Remaining:</span>
@@ -383,13 +349,13 @@ export default function LogActivityPage() {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={handleResetForm}
-                    className="flex-1 py-3 px-4 rounded-xl bg-surface hover:bg-border border border-border text-sm font-bold text-white transition-all"
+                    className="btn-secondary flex-1 py-3 px-4 text-sm font-bold text-foreground"
                   >
                     Log Another
                   </button>
                   <button
                     onClick={() => router.push("/dashboard")}
-                    className="flex-1 py-3 px-4 rounded-xl bg-primary hover:bg-primary/95 text-background font-extrabold transition-all"
+                    className="btn-primary flex-1 py-3 px-4 text-sm"
                   >
                     Go to Dashboard
                   </button>
@@ -414,8 +380,8 @@ export default function LogActivityPage() {
           {/* Form Side */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Tab Navigation */}
-            <div className="flex bg-surface border border-border rounded-xl p-1 justify-between gap-1 overflow-x-auto">
+            {/* Tab Navigation (Horizontally scrollable tab bar) */}
+            <div className="flex bg-surface border border-border rounded-xl p-1 gap-1 overflow-x-auto whitespace-nowrap scrollbar-hide w-full">
               {(["transport", "food", "energy", "lifestyle"] as ActiveTab[]).map((tab) => {
                 const Icon = tab === "transport" ? Bus 
                              : tab === "food" ? Utensils 
@@ -427,7 +393,7 @@ export default function LogActivityPage() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 min-w-[70px] py-3 rounded-lg flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 transition-all ${
+                    className={`flex-1 shrink-0 min-w-[85px] py-3 rounded-lg flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 transition-all whitespace-nowrap ${
                       active 
                         ? "bg-primary text-background font-extrabold" 
                         : "text-foreground/60 hover:text-white hover:bg-border/20"
@@ -441,7 +407,7 @@ export default function LogActivityPage() {
             </div>
 
             {/* Tab Panels */}
-            <div className="bg-surface border border-border rounded-2xl p-6 shadow-xl min-h-[350px] flex flex-col justify-between">
+            <div className="modern-card p-6 min-h-[350px] flex flex-col justify-between bg-surface">
               <div>
                 {/* 1. TRANSPORT TAB */}
                 {activeTab === "transport" && (
@@ -451,7 +417,7 @@ export default function LogActivityPage() {
                     {/* Mode Selector */}
                     <div className="space-y-2">
                       <label className="text-xs font-semibold text-foreground/50">Select Transit Mode</label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                         {(Object.keys(TRANSPORT_EMISSION_FACTORS) as TransportMode[]).map((mode) => {
                           const isSelected = transportMode === mode;
                           const labels: Record<TransportMode, string> = {
@@ -485,23 +451,25 @@ export default function LogActivityPage() {
                       </div>
                     </div>
 
-                    {/* Distance Slider */}
+                    {/* Distance Slider (Full width) */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold text-foreground/50">Distance Traveled</label>
                         <span className="text-sm font-bold text-white">{transportDistance} km</span>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-xs text-foreground/40">1 km</span>
+                      <div className="space-y-1">
                         <input
                           type="range"
                           min="1"
                           max="150"
                           value={transportDistance}
                           onChange={(e) => setTransportDistance(parseInt(e.target.value, 10))}
-                          className="flex-1 h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
+                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
                         />
-                        <span className="text-xs text-foreground/40">150 km</span>
+                        <div className="flex justify-between text-[10px] text-foreground/40 font-mono">
+                          <span>1 km</span>
+                          <span>150 km</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -548,7 +516,6 @@ export default function LogActivityPage() {
 
                     {/* Delivery & Diwali Toggles */}
                     <div className="space-y-3 pt-2">
-                      {/* Swiggy Delivery Toggle */}
                       <label className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border cursor-pointer hover:bg-border/10 transition-colors">
                         <div className="flex flex-col">
                           <span className="text-sm font-semibold text-white">Ordered via Swiggy / Zomato</span>
@@ -562,7 +529,6 @@ export default function LogActivityPage() {
                         />
                       </label>
 
-                      {/* Diwali Mode Toggle */}
                       <label className="flex items-center justify-between p-3.5 rounded-xl bg-gradient-to-r from-warm/5 to-orange-500/5 border border-warm/30 cursor-pointer hover:from-warm/10 hover:to-orange-500/10 transition-colors">
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-warm flex items-center space-x-1.5">
@@ -587,27 +553,29 @@ export default function LogActivityPage() {
                   <div className="space-y-6">
                     <h3 className="text-lg font-bold text-white">Energy & AC Details</h3>
                     
-                    {/* AC Usage Hours */}
+                    {/* AC Usage Hours (Full width) */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold text-foreground/50">Air Conditioner Run Time</label>
                         <span className="text-sm font-bold text-white">{acHours} hours</span>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-xs text-foreground/40">0h</span>
+                      <div className="space-y-1">
                         <input
                           type="range"
                           min="0"
                           max="24"
                           value={acHours}
                           onChange={(e) => setAcHours(parseInt(e.target.value, 10))}
-                          className="flex-1 h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
+                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
                         />
-                        <span className="text-xs text-foreground/40">24h</span>
+                        <div className="flex justify-between text-[10px] text-foreground/40 font-mono">
+                          <span>0h</span>
+                          <span>24h</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* AC Star Rating (Only active if AC run time > 0) */}
+                    {/* AC Star Rating */}
                     <div className={`space-y-2 transition-all ${acHours === 0 ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
                       <label className="text-xs font-semibold text-foreground/50 block">AC Efficiency Star Rating</label>
                       <div className="flex items-center space-x-2 bg-background border border-border p-2.5 rounded-xl w-fit">
@@ -635,7 +603,7 @@ export default function LogActivityPage() {
                       </p>
                     </div>
 
-                    {/* DG Set diesel backup toggle (Only if AC is running) */}
+                    {/* DG Set diesel backup */}
                     <div className={`transition-all ${acHours === 0 ? "opacity-40 pointer-events-none" : "opacity-100"}`}>
                       <label className="flex items-center justify-between p-3.5 rounded-xl bg-background border border-border cursor-pointer hover:bg-border/10 transition-colors">
                         <div className="flex flex-col">
@@ -651,26 +619,28 @@ export default function LogActivityPage() {
                       </label>
                     </div>
 
-                    {/* General electricity consumption input */}
+                    {/* General electricity consumption input (Full width) */}
                     <div className="space-y-2 pt-2 border-t border-border/40">
                       <div className="flex items-center justify-between">
                         <div className="flex flex-col">
                           <label className="text-xs font-semibold text-foreground/50">Add General Grid Electricity Units</label>
                           <span className="text-[10px] text-foreground/40">From electric meter / bill (0.71 kg per unit)</span>
                         </div>
-                        <span className="text-sm font-bold text-white">{gridElectricityUnits} kWh (Units)</span>
+                        <span className="text-sm font-bold text-white">{gridElectricityUnits} kWh</span>
                       </div>
-                      <div className="flex items-center space-x-4">
-                        <span className="text-xs text-foreground/40">0</span>
+                      <div className="space-y-1">
                         <input
                           type="range"
                           min="0"
                           max="50"
                           value={gridElectricityUnits}
                           onChange={(e) => setGridElectricityUnits(parseInt(e.target.value, 10))}
-                          className="flex-1 h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
+                          className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
                         />
-                        <span className="text-xs text-foreground/40">50</span>
+                        <div className="flex justify-between text-[10px] text-foreground/40 font-mono">
+                          <span>0</span>
+                          <span>50</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -726,7 +696,7 @@ export default function LogActivityPage() {
                   type="button"
                   onClick={handleLogActivity}
                   disabled={isSubmitting || currentFootprint === 0}
-                  className="w-full py-4 px-6 rounded-xl bg-primary hover:bg-primary/95 text-background font-extrabold shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-base active:scale-[0.98]"
+                  className="btn-primary w-full py-4 px-6 flex items-center justify-center space-x-2 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Log Activity</span>
                 </button>
@@ -738,14 +708,14 @@ export default function LogActivityPage() {
           <div className="space-y-6">
             
             {/* Realtime Carbon Gauge */}
-            <div className="bg-surface border border-border rounded-2xl p-6 text-center space-y-4 shadow-xl relative overflow-hidden">
+            <div className="modern-card p-6 text-center space-y-4 relative overflow-hidden bg-surface">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-accent"></div>
               
               <span className="text-xs font-bold text-foreground/40 uppercase tracking-widest block">
                 Calculated Footprint
               </span>
 
-              <div className="py-4">
+              <div className="py-4 font-mono">
                 <div className="text-5xl font-black text-white tracking-tight flex items-center justify-center space-x-1">
                   <span>{currentFootprint}</span>
                 </div>
@@ -779,17 +749,17 @@ export default function LogActivityPage() {
                         <span className="font-bold text-white capitalize">{envelopeLabels[activeTab]}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-foreground/50">Weekly Budget:</span>
-                        <span className="font-bold text-foreground/80">{envBudget} kg</span>
+                        <span className="text-foreground/50 font-medium">Weekly Budget:</span>
+                        <span className="font-bold text-foreground/80 font-mono">{envBudget} kg</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-foreground/50">Weekly Spent:</span>
-                        <span className="font-bold text-foreground/80">{currentSpent} kg</span>
+                        <span className="text-foreground/50 font-medium">Weekly Spent:</span>
+                        <span className="font-bold text-foreground/80 font-mono">{currentSpent} kg</span>
                       </div>
                       
                       <div className="border-t border-border/40 pt-2 flex items-center justify-between text-xs">
-                        <span className="text-foreground/50">Remaining after log:</span>
-                        <span className={`font-bold ${remaining >= 0 ? "text-primary" : "text-red-400"}`}>
+                        <span className="text-foreground/50 font-medium">Remaining after log:</span>
+                        <span className={`font-bold font-mono ${remaining >= 0 ? "text-primary" : "text-red-400"}`}>
                           {remaining.toFixed(2)} kg
                         </span>
                       </div>
@@ -800,9 +770,9 @@ export default function LogActivityPage() {
             </div>
 
             {/* Quick Context Tips */}
-            <div className="bg-surface/50 border border-border/50 rounded-2xl p-5 space-y-3 text-xs text-foreground/60">
+            <div className="modern-card bg-surface/50 p-5 space-y-3 text-xs text-foreground/60">
               <div className="flex items-center space-x-2 text-white font-bold mb-1">
-                <Info className="w-4 h-4 text-accent" />
+                <Info className="w-4 h-4 text-accent animate-pulse" />
                 <span>Prakriti Logger Guide</span>
               </div>
               <p>

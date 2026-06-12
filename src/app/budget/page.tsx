@@ -88,7 +88,6 @@ export default function BudgetPage() {
     created_at: new Date().toISOString()
   });
   
-  // Real spent values calculated from daily logs
   const [spent, setSpent] = useState<Record<EnvelopeKey, number>>({
     transport: 0,
     food: 0,
@@ -102,21 +101,17 @@ export default function BudgetPage() {
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Load user profile & weekly budget & logs
   const loadBudgetAndLogs = async (uid: string) => {
     const week = getWeekString();
     
-    // Load budget
     const userBudget = await dbService.getWeeklyBudget(uid, week);
     if (userBudget) {
       setBudget(userBudget);
     }
 
-    // Load logs to calculate actual spent
     const logs = await dbService.getDailyLogs();
     const newSpent = { transport: 0, food: 0, energy: 0, lifestyle: 0 };
     
-    // Sum logs for this week
     logs.forEach((log) => {
       const logDate = new Date(log.created_at);
       if (getWeekString(logDate) === week) {
@@ -126,7 +121,6 @@ export default function BudgetPage() {
       }
     });
 
-    // Round spent values to 2 decimal places
     Object.keys(newSpent).forEach((key) => {
       newSpent[key as EnvelopeKey] = Number(newSpent[key as EnvelopeKey].toFixed(2));
     });
@@ -141,7 +135,6 @@ export default function BudgetPage() {
         setUserId(storedUid);
         loadBudgetAndLogs(storedUid);
       } else {
-        // Fallback for demo mode
         const demoUid = "arjun_mumbai";
         setUserId(demoUid);
         loadBudgetAndLogs(demoUid);
@@ -187,7 +180,6 @@ export default function BudgetPage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Reallocate budget from lifestyle to target envelope
   const handleReallocate = async (toEnvelope: EnvelopeKey, amount: number) => {
     const lifestyleVal = budget.lifestyle ?? 0;
     if (lifestyleVal < amount) {
@@ -208,7 +200,6 @@ export default function BudgetPage() {
     showToast(`Shifted ${amount} kg CO2e from Lifestyle to ${toEnvelope.toUpperCase()}! 🔄`);
   };
 
-  // Offset using Pebbles (deduct 50 pebbles, add a negative carbon log to act as an offset)
   const handleOffset = async (envelope: EnvelopeKey) => {
     if (userPebbles < 50) {
       showToast(`Not enough Rainbow Pebbles! You need 50 pebbles to offset.`);
@@ -217,32 +208,27 @@ export default function BudgetPage() {
 
     if (!userId) return;
 
-    // Deduct pebbles
     const newPebbles = userPebbles - 50;
     setUserPebbles(newPebbles);
     localStorage.setItem("prakriti_pebbles", newPebbles.toString());
     
-    // Dispatch state change event to sync navbar
     window.dispatchEvent(new Event("prakriti_state_changed"));
 
-    // Add negative CO2 log to act as offset in that envelope
     const offsetLog: Omit<DailyLog, "id" | "created_at"> = {
       user_id: userId,
       date: new Date().toISOString().split("T")[0],
       envelope: envelope,
       activity: "Western Ghats Carbon Offset (-50 Pebbles)",
-      co2_kg: -2.0, // 2kg offset
+      co2_kg: -2.0, 
       source: "manual"
     };
 
     await dbService.addDailyLog(offsetLog);
     
-    // Refresh spent amounts
     await loadBudgetAndLogs(userId);
     showToast(`Offset active! Subtracted 2.0 kg from ${envelope} spent (Used 50 Pebbles) 🪙🌿`);
   };
 
-  // Auto-balance budget to defaults
   const handleAutoBalance = () => {
     setBudget(prev => ({
       ...prev,
@@ -258,43 +244,33 @@ export default function BudgetPage() {
     showToast("Reset budget to recommended default allocations!");
   };
 
-  // Equivalence texts matching user request guidelines
   const getEquivalenceText = (key: EnvelopeKey, val: number) => {
     switch (key) {
       case "transport":
-        // Base: 12kg -> 359km scooter, 12 Ola rides
-        // scooter: 0.0334 kg/km. Ola ride: ~1.0 kg/ride.
         const km = Math.round(val / 0.0334);
         const rides = Math.round(val / 1.0);
-        return `At your current pace, this covers ${km} km on your scooter or ${rides} Ola rides`;
+        return `Equivalent to driving ${km} km on your scooter or ${rides} Ola rides this week`;
       case "food":
-        // Base: 8kg -> 8 Swiggy orders, 16 veg thali meals
-        // Swiggy order (meal + delivery): ~1.0 kg/order. Veg thali meal: ~0.5 kg/meal.
         const swiggy = Math.round(val / 1.0);
         const thali = Math.round(val / 0.5);
-        return `This covers roughly ${swiggy} Swiggy orders or ${thali} veg thali meals`;
+        return `Equivalent to ordering ${swiggy} Swiggy orders or consuming ${thali} veg thali meals`;
       case "energy":
-        // Base: 14kg -> 13 hours AC
-        // 1.5-ton AC: ~1.077 kg/hour
         const acHours = Math.round(val / 1.077);
-        return `Running a 1.5-ton AC for ${acHours} hours this week uses your entire envelope`;
+        return `Equivalent to running a 1.5-ton AC for ${acHours} hours this week`;
       case "lifestyle":
-        // Base: 4.46kg
         const flightPercent = Math.round((val / 89.0) * 100);
         const roadTrips = (val / 15.0).toFixed(1);
-        return `This covers ${roadTrips} weekend road trips, or is just ${flightPercent}% of a single domestic flight`;
+        return `Equivalent to ${roadTrips} weekend road trips, or just ${flightPercent}% of a single domestic flight`;
       default:
         return "";
     }
   };
 
-  // Check if any envelope has overspent (spent >= budget AND budget > 0)
   const overspentEnvelopes = ENVELOPES.filter(env => {
     const bVal = budget[env.key] ?? 0;
     return spent[env.key] >= bVal && bVal > 0;
   });
 
-  // Helper to get spent percentage
   const getSpentPercent = (key: EnvelopeKey) => {
     const bVal = budget[key] ?? 0;
     if (bVal === 0) return 0;
@@ -306,7 +282,6 @@ export default function BudgetPage() {
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 pt-8 md:px-6">
         
-        {/* Toast Notification */}
         <AnimatePresence>
           {toastMessage && (
             <motion.div 
@@ -321,7 +296,6 @@ export default function BudgetPage() {
           )}
         </AnimatePresence>
 
-        {/* Header Section */}
         <div className="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary via-accent to-green-300 bg-clip-text text-transparent tracking-tight">
@@ -333,7 +307,7 @@ export default function BudgetPage() {
           </div>
           <button
             onClick={handleAutoBalance}
-            className="self-center md:self-auto px-3.5 py-2 rounded-xl bg-surface hover:bg-border border border-border text-sm flex items-center space-x-1.5 transition-all active:scale-95 text-foreground/80"
+            className="self-center md:self-auto px-4 py-2.5 rounded-2xl bg-surface hover:bg-border border border-border text-sm flex items-center space-x-1.5 transition-all active:scale-95 text-foreground/80 font-bold"
           >
             <RefreshCw className="w-4 h-4 text-accent" />
             <span>Reset to Recommended</span>
@@ -341,30 +315,30 @@ export default function BudgetPage() {
         </div>
 
         {/* YNAB Budget Pool Card */}
-        <div className="mb-6 rounded-2xl bg-surface border border-border overflow-hidden relative shadow-2xl">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-accent to-emerald-400"></div>
+        <div className="mb-8 rounded-3xl bg-surface border border-border overflow-hidden relative shadow-2xl">
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-accent to-emerald-400"></div>
           <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 text-center md:text-left">
-              <span className="text-xs font-bold text-accent uppercase tracking-widest">Weekly Limit</span>
+              <span className="text-xs font-bold text-accent uppercase tracking-widest">Total Weekly Budget Limit</span>
               <div className="flex items-baseline justify-center md:justify-start space-x-2">
-                <span className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+                <span className="text-5xl md:text-6xl font-black tracking-tight text-white font-mono">
                   {totalWeeklyLimit}
                 </span>
-                <span className="text-lg font-medium text-foreground/50">kg CO₂e</span>
+                <span className="text-lg font-bold text-primary">kg CO₂e</span>
               </div>
-              <p className="text-xs text-foreground/40">
-                Prakriti limits your budget to align with the 2-ton annual climate target.
+              <p className="text-xs text-foreground/40 max-w-sm leading-relaxed">
+                Prakriti limits your budget to align with the 2-ton annual global warming target.
               </p>
             </div>
 
-            <div className="h-px md:h-12 w-full md:w-px bg-border"></div>
+            <div className="h-px md:h-16 w-full md:w-px bg-border"></div>
 
             <div className="flex flex-col items-center md:items-end justify-center">
               <span className="text-xs font-bold text-foreground/50 uppercase tracking-widest mb-1">
                 Ready to Assign
               </span>
               <div className="flex items-center space-x-2">
-                <div className={`px-4 py-2 rounded-2xl border text-xl md:text-2xl font-bold flex items-center space-x-2 ${
+                <div className={`px-5 py-2.5 rounded-2xl border text-2xl md:text-3xl font-black font-mono flex items-center space-x-2 ${
                   readyToAssign === 0 
                     ? "bg-primary/10 border-primary/30 text-primary" 
                     : readyToAssign > 0 
@@ -374,7 +348,7 @@ export default function BudgetPage() {
                   <span>{readyToAssign > 0 ? `+${readyToAssign}` : readyToAssign} kg</span>
                 </div>
               </div>
-              <p className="text-xs text-foreground/40 mt-1.5 text-center md:text-right">
+              <p className="text-xs text-foreground/40 mt-2 text-center md:text-right font-medium">
                 {readyToAssign === 0 
                   ? "Fully budgeted! Excellent." 
                   : readyToAssign > 0 
@@ -386,7 +360,6 @@ export default function BudgetPage() {
           </div>
         </div>
 
-        {/* Compassionate Overspend Alerts Area */}
         <AnimatePresence>
           {overspentEnvelopes.map((env) => (
             <motion.div
@@ -396,14 +369,14 @@ export default function BudgetPage() {
               exit={{ opacity: 0, height: 0 }}
               className="mb-6 overflow-hidden"
             >
-              <div className="p-4 rounded-xl bg-warm/10 border border-warm/30 text-warm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="p-4 rounded-2xl bg-warm/10 border border-warm/30 text-warm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="flex items-start space-x-3">
                   <AlertCircle className="w-5 h-5 text-warm mt-0.5 shrink-0" />
                   <div>
                     <h4 className="font-bold text-white text-sm">
                       Compassionate Overspend Alert: {env.name}
                     </h4>
-                    <p className="text-xs text-foreground/80 mt-0.5">
+                    <p className="text-xs text-foreground/80 mt-0.5 leading-relaxed">
                       Your {env.key} envelope is full (Spent: {spent[env.key]} kg / Budget: {budget[env.key]} kg). Would you like to reallocate carbon or offset?
                     </p>
                   </div>
@@ -412,7 +385,7 @@ export default function BudgetPage() {
                   <button
                     onClick={() => handleReallocate(env.key, 2.0)}
                     disabled={(budget.lifestyle ?? 0) < 2}
-                    className="px-3 py-1.5 rounded-lg bg-surface border border-warm/40 text-xs font-semibold text-white hover:bg-warm/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3.5 py-2 rounded-xl bg-surface border border-warm/40 text-xs font-bold text-white hover:bg-warm/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Move 2kg budget from your Lifestyle envelope to cover this"
                   >
                     Re-allocate 2kg
@@ -420,7 +393,7 @@ export default function BudgetPage() {
                   <button
                     onClick={() => handleOffset(env.key)}
                     disabled={userPebbles < 50}
-                    className="px-3 py-1.5 rounded-lg bg-warm hover:bg-warm/80 text-background text-xs font-bold transition-all flex items-center space-x-1"
+                    className="px-3.5 py-2 rounded-xl bg-warm hover:bg-warm/80 text-background text-xs font-black transition-all flex items-center space-x-1"
                   >
                     <Coins className="w-3.5 h-3.5 fill-current" />
                     <span>Offset (-50 Pebbles)</span>
@@ -431,7 +404,7 @@ export default function BudgetPage() {
           ))}
         </AnimatePresence>
 
-        {/* Envelopes Container */}
+        {/* ENVELOPES CONTAINER ACCORDIONS */}
         <div className="space-y-4">
           {ENVELOPES.map((env) => {
             const Icon = env.icon;
@@ -443,35 +416,33 @@ export default function BudgetPage() {
             return (
               <div
                 key={env.key}
-                className="rounded-xl border border-border bg-surface transition-all overflow-hidden"
+                className="rounded-2xl border bg-surface transition-all duration-300 overflow-hidden"
                 style={{
-                  boxShadow: isExpanded ? `0 10px 30px -10px ${env.glowColor}` : "none",
+                  boxShadow: isExpanded ? `0 12px 30px -10px ${env.glowColor}` : "none",
                   borderColor: isExpanded ? "var(--primary)" : "var(--border)"
                 }}
               >
-                {/* Header (Accordion Toggle Trigger) */}
                 <div 
                   onClick={() => setExpandedCard(isExpanded ? null : env.key)}
                   className="p-5 flex items-center justify-between cursor-pointer hover:bg-border/20 transition-colors select-none"
                 >
-                  <div className="flex items-center space-x-3.5">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${env.color} flex items-center justify-center text-white`}>
-                      <Icon className="w-5 h-5" />
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${env.color} flex items-center justify-center text-white shadow-md`}>
+                      <Icon className="w-5.5 h-5.5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-white text-base leading-tight">{env.name}</h3>
-                      <p className="text-xs text-foreground/50 mt-0.5">
+                      <p className="text-xs text-foreground/50 mt-0.5 font-medium">
                         Spent: {hasSpent} kg / Budget: {value} kg
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-6">
-                    {/* Spent Progress Mini Bar */}
                     <div className="hidden md:flex flex-col items-end space-y-1">
                       <div className="flex items-center justify-between text-xs w-28">
-                        <span className="text-foreground/40">Spent bar</span>
-                        <span className={`font-semibold ${spentPercent >= 100 ? "text-warm" : "text-primary"}`}>
+                        <span className="text-foreground/40 font-semibold">Spent bar</span>
+                        <span className={`font-bold ${spentPercent >= 100 ? "text-warm" : "text-primary"}`}>
                           {spentPercent}%
                         </span>
                       </div>
@@ -489,9 +460,9 @@ export default function BudgetPage() {
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-lg font-bold text-white">{value}</span>
-                      <span className="text-xs text-foreground/40 block">kg CO₂e</span>
+                    <div className="text-right min-w-[50px]">
+                      <span className="text-lg font-black text-white font-mono">{value}</span>
+                      <span className="text-[10px] text-foreground/40 block font-bold uppercase tracking-wider">kg CO₂</span>
                     </div>
 
                     {isExpanded ? (
@@ -502,8 +473,7 @@ export default function BudgetPage() {
                   </div>
                 </div>
 
-                {/* Collapsible Panel */}
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                   {isExpanded && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
@@ -513,15 +483,14 @@ export default function BudgetPage() {
                       className="border-t border-border bg-background/30"
                     >
                       <div className="p-5 space-y-5">
-                        {/* Interactive Slider */}
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-foreground/60">Adjust Envelope Allocation</span>
-                            <span className="text-sm font-bold text-primary">{value} kg</span>
+                            <span className="text-xs font-bold text-foreground/60">Adjust Envelope Allocation</span>
+                            <span className="text-sm font-black text-primary font-mono">{value} kg</span>
                           </div>
                           
                           <div className="flex items-center space-x-4">
-                            <span className="text-xs text-foreground/40">0 kg</span>
+                            <span className="text-xs text-foreground/40 font-mono">0 kg</span>
                             <input
                               type="range"
                               min="0"
@@ -531,29 +500,28 @@ export default function BudgetPage() {
                               onChange={(e) => handleSliderChange(env.key, parseFloat(e.target.value))}
                               className="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
                             />
-                            <span className="text-xs text-foreground/40">{env.max} kg</span>
+                            <span className="text-xs text-foreground/40 font-mono">{env.max} kg</span>
                           </div>
                         </div>
 
-                        {/* Equivalence dynamic display */}
-                        <div className="p-3.5 rounded-lg bg-surface border border-border/40 text-xs text-foreground/80 flex items-start space-x-2">
-                          <TrendingUp className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+                        {/* Equivalence descriptions */}
+                        <div className="p-4 rounded-2xl bg-surface border border-border/40 text-xs text-foreground/80 flex items-start space-x-2 shadow-inner leading-relaxed font-medium">
+                          <TrendingUp className="w-4.5 h-4.5 text-accent mt-0.5 shrink-0" />
                           <span>{getEquivalenceText(env.key, value)}</span>
                         </div>
 
-                        {/* Budget breakdown stats */}
                         <div className="grid grid-cols-3 gap-3 pt-1 text-center">
-                          <div className="p-2.5 rounded-lg bg-surface/50 border border-border/20">
-                            <span className="text-[10px] uppercase font-bold text-foreground/40 tracking-wider">Allocated</span>
-                            <span className="block text-sm font-bold text-white mt-0.5">{value} kg</span>
+                          <div className="p-3 rounded-2xl bg-surface/50 border border-border/20 shadow-sm">
+                            <span className="text-[9px] uppercase font-bold text-foreground/40 tracking-wider block">Allocated</span>
+                            <span className="block text-sm font-black text-white mt-1 font-mono">{value} kg</span>
                           </div>
-                          <div className="p-2.5 rounded-lg bg-surface/50 border border-border/20">
-                            <span className="text-[10px] uppercase font-bold text-foreground/40 tracking-wider">Spent</span>
-                            <span className="block text-sm font-bold text-warm mt-0.5">{hasSpent} kg</span>
+                          <div className="p-3 rounded-2xl bg-surface/50 border border-border/20 shadow-sm">
+                            <span className="text-[9px] uppercase font-bold text-foreground/40 tracking-wider block">Spent</span>
+                            <span className="block text-sm font-black text-warm mt-1 font-mono">{hasSpent} kg</span>
                           </div>
-                          <div className="p-2.5 rounded-lg bg-surface/50 border border-border/20">
-                            <span className="text-[10px] uppercase font-bold text-foreground/40 tracking-wider">Remaining</span>
-                            <span className={`block text-sm font-bold mt-0.5 ${value - hasSpent >= 0 ? "text-primary" : "text-red-400"}`}>
+                          <div className="p-3 rounded-2xl bg-surface/50 border border-border/20 shadow-sm">
+                            <span className="text-[9px] uppercase font-bold text-foreground/40 tracking-wider block">Remaining</span>
+                            <span className={`block text-sm font-black mt-1 font-mono ${value - hasSpent >= 0 ? "text-primary" : "text-red-400"}`}>
                               {(value - hasSpent).toFixed(2)} kg
                             </span>
                           </div>
@@ -567,12 +535,11 @@ export default function BudgetPage() {
           })}
         </div>
 
-        {/* Action Button Section */}
         <div className="mt-8 flex flex-col sm:flex-row items-center gap-4">
           <button
             onClick={handleSaveBudget}
             disabled={isSaving || readyToAssign !== 0}
-            className="w-full sm:flex-1 py-4 px-6 rounded-xl bg-primary hover:bg-primary/95 text-background font-extrabold flex items-center justify-center space-x-2 shadow-lg hover:shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+            className="w-full sm:flex-1 py-4 px-6 rounded-2xl bg-primary hover:bg-primary/95 text-background font-black flex items-center justify-center space-x-2 shadow-lg hover:shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
           >
             {isSaving ? (
               <RefreshCw className="w-5 h-5 animate-spin" />
@@ -586,7 +553,7 @@ export default function BudgetPage() {
         </div>
         
         {readyToAssign !== 0 && (
-          <p className="text-xs text-warm mt-2 text-center">
+          <p className="text-xs text-warm mt-3 text-center font-semibold animate-pulse">
             ⚠️ To save your budget, the &quot;Ready to Assign&quot; carbon pool must be exactly 0 kg (Total: {totalWeeklyLimit} kg).
           </p>
         )}
