@@ -3,52 +3,32 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus_Jakarta_Sans } from "next/font/google";
-import {
-  ArrowRight,
-  Play,
-  Globe,
-  Trees,
-  Zap,
-  Leaf,
-  ChevronRight,
-  ShieldCheck,
-  Award,
-  Sparkles,
-  ExternalLink
-} from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  weight: ["700", "800"],
-  variable: "--font-plus-jakarta",
-});
-
-// Statically defined details for floating leaves animation
-const LEAVES_DATA = [
-  { left: "6%", size: "w-6 h-6", duration: "18s", delay: "0s", sway: "40px", rotate: "140deg" },
-  { left: "20%", size: "w-8 h-8", duration: "24s", delay: "3s", sway: "65px", rotate: "240deg" },
-  { left: "45%", size: "w-5 h-5", duration: "16s", delay: "1s", sway: "-50px", rotate: "320deg" },
-  { left: "65%", size: "w-7 h-7", duration: "20s", delay: "5s", sway: "55px", rotate: "190deg" },
-  { left: "80%", size: "w-6 h-6", duration: "15s", delay: "2s", sway: "-45px", rotate: "280deg" },
-  { left: "92%", size: "w-9 h-9", duration: "22s", delay: "7s", sway: "70px", rotate: "120deg" },
-];
-
-// Sub-component for scroll-triggered stats counters
+// Reusable Stats Counter component with count-up animation on scroll
 function StatsCounter({
   value,
   duration = 2000,
-  decimals = 2,
+  decimals = 0,
+  suffix = "",
 }: {
   value: number;
   duration?: number;
   decimals?: number;
+  suffix?: string;
 }) {
   const [count, setCount] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
   const elementRef = useRef<HTMLSpanElement>(null);
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
+    if (shouldReduceMotion) {
+      setCount(value);
+      setHasStarted(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -68,10 +48,10 @@ function StatsCounter({
         observer.unobserve(currentRef);
       }
     };
-  }, []);
+  }, [value, shouldReduceMotion]);
 
   useEffect(() => {
-    if (!hasStarted) return;
+    if (!hasStarted || shouldReduceMotion) return;
 
     let startTimestamp: number | null = null;
     let animationId: number;
@@ -79,8 +59,7 @@ function StatsCounter({
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      // Easing out quad
-      const easeProgress = progress * (2 - progress);
+      const easeProgress = progress * (2 - progress); // ease out quad
       setCount(easeProgress * value);
 
       if (progress < 1) {
@@ -95,18 +74,21 @@ function StatsCounter({
     return () => {
       window.cancelAnimationFrame(animationId);
     };
-  }, [hasStarted, value, duration]);
+  }, [hasStarted, value, duration, shouldReduceMotion]);
 
   return (
     <span ref={elementRef} className="font-mono tabular-nums">
-      {count.toFixed(decimals)}
+      {decimals === 0 ? Math.round(count) : count.toFixed(decimals)}
+      {suffix}
     </span>
   );
 }
 
 export default function Home() {
   const router = useRouter();
-  // Intersection observer hook for elements with the .reveal class
+  const shouldReduceMotion = useReducedMotion();
+
+  // IntersectionObserver for reveal elements
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -127,507 +109,743 @@ export default function Home() {
     };
   }, []);
 
+  const headlineVariants = {
+    initial: { opacity: 0, y: 40 },
+    animate: (delay: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: shouldReduceMotion ? 0 : delay,
+        duration: shouldReduceMotion ? 0 : 0.8,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    }),
+  };
+
+  const marqueeRow1 = [
+    "CARBON BUDGETING",
+    "INDIA FIRST",
+    "GEMINI VISION",
+    "WESTERN GHATS",
+    "CEA GRID FACTORS",
+    "YNAB MODEL",
+    "38.46 KG/WEEK",
+    "ENVELOPE SYSTEM",
+  ];
+
+  const marqueeRow2 = [
+    "0.71 KG/KWH",
+    "LION-TAILED MACAQUE",
+    "DIWALI MODE",
+    "DG SET TRACKING",
+    "SHOLA FOREST",
+    "GEMINI RECEIPT SCAN",
+    "NILGIRI TAHR",
+    "PROACTIVE NOT REACTIVE",
+  ];
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-background flex flex-col">
-      {/* Global CSS Styles Injection */}
+    <div className="homepage-theme relative min-h-screen flex flex-col">
+      {/* Editorial Page CSS Injections */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes floatLeaf {
-          0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-          10% { opacity: 0.6; }
-          90% { opacity: 0.3; }
-          100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        .homepage-theme {
+          --bg: #060a06;
+          --surface: #0d1a0d;
+          --green-bright: #39ff7a;
+          --green-muted: #1a4a1a;
+          --text-primary: #f0ffe8;
+          --text-muted: #5a7a5a;
+          --border: rgba(57,255,122,0.12);
+          --grain: rgba(255,255,255,0.03);
+          
+          background-color: var(--bg);
+          color: var(--text-primary);
+          overflow-x: hidden;
         }
-        .leaf-particle {
-          position: absolute;
-          bottom: 0;
-          color: #4ade80;
-          fill: currentColor;
-          opacity: 0;
+
+        /* Subtle global grain texture overlay */
+        .homepage-theme::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+          opacity: 0.035;
           pointer-events: none;
-          animation-name: floatLeaf;
-          animation-iteration-count: infinite;
-          animation-timing-function: linear;
+          z-index: 9999;
         }
-        
-        @keyframes monkey-peek {
-          0%, 100% {
-            transform: translateX(0) translateY(0);
+
+        /* Blob pulsing animation */
+        @keyframes blobPulse {
+          0%, 100% { 
+            transform: scale(1) translate(0, 0);
+            opacity: 0.15; 
           }
-          15%, 85% {
-            transform: translateX(-62px) translateY(-4px) rotate(-1.5deg);
-          }
-          20%, 80% {
-            transform: translateX(-64px) translateY(-2px) rotate(1deg);
+          50% { 
+            transform: scale(1.1) translate(-20px, 20px);
+            opacity: 0.25; 
           }
         }
-        .macaque-peek {
-          animation: monkey-peek 10s ease-in-out infinite;
-          transform-origin: bottom right;
+
+        /* Ticker horizontal scrolling animations */
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
-        
-        @keyframes branch-sway-1 {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(1.2deg); }
+        @keyframes marqueeReverse {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
         }
-        @keyframes branch-sway-2 {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(-1.8deg); }
+
+        .animate-marquee-row-1 {
+          animation: marquee 40s linear infinite;
         }
-        @keyframes branch-sway-3 {
-          0%, 100% { transform: rotate(0deg); }
-          50% { transform: rotate(0.8deg); }
+        .animate-marquee-row-2 {
+          animation: marqueeReverse 32s linear infinite;
         }
-        .sway-branch-1 {
-          animation: branch-sway-1 6s ease-in-out infinite;
-          transform-origin: bottom center;
-        }
-        .sway-branch-2 {
-          animation: branch-sway-2 8s ease-in-out infinite;
-          transform-origin: bottom left;
-        }
-        .sway-branch-3 {
-          animation: branch-sway-3 7s ease-in-out infinite;
-          transform-origin: bottom right;
-        }
-        
+
+        /* Scroll reveals configuration */
         .reveal {
           opacity: 0;
-          transform: translateY(30px);
-          transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          transform: translateY(40px);
+          transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), transform 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .reveal.visible {
           opacity: 1;
           transform: translateY(0);
         }
-        
-        .hover-lift {
-          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+
+        /* Down bounce indicator */
+        @keyframes bounceDown {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(6px); }
         }
-        .hover-lift:hover {
-          transform: translateY(-6px);
+        .bounce-arrow {
+          animation: bounceDown 2s infinite ease-in-out;
+        }
+
+        /* Prefers-reduced-motion overrides */
+        @media (prefers-reduced-motion: reduce) {
+          .homepage-theme::before {
+            opacity: 0;
+          }
+          .animate-marquee-row-1,
+          .animate-marquee-row-2,
+          .bounce-arrow {
+            animation: none !important;
+            transform: none !important;
+          }
+          .reveal {
+            opacity: 1 !important;
+            transform: none !important;
+            transition: none !important;
+          }
         }
       `}} />
 
-      {/* Floating Leaves Layer */}
-      <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
-        <div className="leaf-particle w-4 h-4" style={{ left: '10%', animationDelay: '0s', animationDuration: '12s' }}>
-          <svg viewBox="0 0 32 32"><path d="M16,2 C8,10 8,20 16,30 C24,20 24,10 16,2 Z M16,2 L16,30" /></svg>
-        </div>
-        <div className="leaf-particle w-5 h-5" style={{ left: '25%', animationDelay: '2s', animationDuration: '15s' }}>
-          <svg viewBox="0 0 32 32"><path d="M16,2 C8,10 8,20 16,30 C24,20 24,10 16,2 Z M16,2 L16,30" /></svg>
-        </div>
-        <div className="leaf-particle w-3 h-3" style={{ left: '40%', animationDelay: '4s', animationDuration: '10s' }}>
-          <svg viewBox="0 0 32 32"><path d="M16,2 C8,10 8,20 16,30 C24,20 24,10 16,2 Z M16,2 L16,30" /></svg>
-        </div>
-        <div className="leaf-particle w-6 h-6" style={{ left: '60%', animationDelay: '6s', animationDuration: '13s' }}>
-          <svg viewBox="0 0 32 32"><path d="M16,2 C8,10 8,20 16,30 C24,20 24,10 16,2 Z M16,2 L16,30" /></svg>
-        </div>
-        <div className="leaf-particle w-4 h-4" style={{ left: '75%', animationDelay: '8s', animationDuration: '11s' }}>
-          <svg viewBox="0 0 32 32"><path d="M16,2 C8,10 8,20 16,30 C24,20 24,10 16,2 Z M16,2 L16,30" /></svg>
-        </div>
-        <div className="leaf-particle w-5 h-5" style={{ left: '90%', animationDelay: '10s', animationDuration: '14s' }}>
-          <svg viewBox="0 0 32 32"><path d="M16,2 C8,10 8,20 16,30 C24,20 24,10 16,2 Z M16,2 L16,30" /></svg>
-        </div>
-      </div>
+      {/* Hero Pulsing Blob */}
+      <div 
+        style={{
+          position: 'absolute',
+          width: '600px',
+          height: '600px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, #39ff7a, transparent 70%)',
+          top: '-200px',
+          right: '-200px',
+          animation: shouldReduceMotion ? 'none' : 'blobPulse 8s ease-in-out infinite',
+          pointerEvents: 'none',
+          zIndex: 10,
+        }} 
+      />
 
-      {/* Hero Section */}
-      <section style={{
-        background: `
-          radial-gradient(ellipse 100% 60% at 50% -5%, 
-            rgba(34,197,94,0.15) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 40% at 80% 50%, 
-            rgba(21,128,61,0.08) 0%, transparent 50%),
-          #050d0a
-        `,
-        minHeight: '100vh'
-      }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 md:pt-20 pb-16 flex flex-col items-center justify-between min-h-[100vh] w-full">
-          {/* Top Announcement Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 border border-green-500/30 bg-green-500/10 backdrop-blur-sm text-green-400 text-sm font-medium">
-            ✦ Next-Gen India Carbon Budgeting Platform
-          </div>
-
-          {/* 72px Bold Title & Subtitle */}
-          <div className="text-center max-w-5xl space-y-6">
-            <h1 className={`${plusJakartaSans.className} text-5xl md:text-[72px] font-bold tracking-tight text-white leading-[1.08] max-w-4xl mx-auto`}>
-              Your carbon, your budget,{" "}
-              <span className="bg-gradient-to-r from-emerald-500 via-primary to-accent bg-clip-text text-transparent drop-shadow-sm">
-                your India.
-              </span>
-            </h1>
-            <p className="text-white/70 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-              Prakriti helps you allocate, track, and trade your carbon budget like currency, designed specifically for localized Indian urban living and grid parameters.
-            </p>
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 mt-8 w-full sm:w-auto">
-            <Link
-              href="/onboarding"
-              className="w-full sm:w-auto relative group overflow-hidden rounded-2xl bg-primary px-8 py-4 text-base font-bold text-white shadow-[0_4px_20px_rgba(22,163,74,0.25)] transition-all hover:bg-primary/95 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgba(22,163,74,0.4)] active:scale-[0.98] flex items-center justify-center gap-2"
+      {/* SECTION 2: HERO */}
+      <section 
+        className="w-full relative flex flex-col justify-between"
+        style={{ minHeight: '100svh', paddingBottom: '40px' }}
+      >
+        {/* Main hero center panel */}
+        <div 
+          className="max-w-5xl w-full mx-auto px-6 md:px-20 pt-[15vh] md:pt-[20vh] flex-1 flex flex-col justify-center"
+        >
+          {/* Eyebrow Label */}
+          <div>
+            <span 
+              className="inline-block uppercase tracking-[0.2em] text-[10px] md:text-[11px] font-semibold border px-3.5 py-1.5 rounded-md mb-8 select-none"
+              style={{
+                fontFamily: "'Space Mono', monospace",
+                color: "#39ff7a",
+                borderColor: "rgba(57,255,122,0.3)",
+                backgroundColor: "rgba(57,255,122,0.05)",
+              }}
             >
-              <span>Start Budgeting</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-            
+              PromptWars Ch.3 × Google Antigravity
+            </span>
+          </div>
+
+          {/* Staggered Heading */}
+          <div className="space-y-1 select-none">
+            <motion.h1 
+              custom={0.2}
+              variants={headlineVariants}
+              initial="initial"
+              animate="animate"
+              className="text-[42px] sm:text-[64px] md:text-[96px] font-black tracking-tight leading-[1.05] text-white"
+              style={{ fontFamily: "'Syne', sans-serif" }}
+            >
+              Your carbon,
+            </motion.h1>
+            <motion.h1 
+              custom={0.4}
+              variants={headlineVariants}
+              initial="initial"
+              animate="animate"
+              className="text-[42px] sm:text-[64px] md:text-[96px] font-black tracking-tight leading-[1.05] text-white"
+              style={{ fontFamily: "'Syne', sans-serif" }}
+            >
+              your budget,
+            </motion.h1>
+            <motion.h1 
+              custom={0.6}
+              variants={headlineVariants}
+              initial="initial"
+              animate="animate"
+              className="text-[42px] sm:text-[64px] md:text-[96px] font-black tracking-tight leading-[1.05]"
+              style={{ fontFamily: "'Syne', sans-serif", color: "#39ff7a" }}
+            >
+              your India.
+            </motion.h1>
+          </div>
+
+          {/* Subtext */}
+          <motion.p 
+            initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: shouldReduceMotion ? 0 : 0.8, duration: 0.6 }}
+            className="text-base sm:text-lg max-w-xl mt-6 leading-relaxed"
+            style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a5a" }}
+          >
+            The first carbon platform built for how India actually lives. Not adapted. Built.
+          </motion.p>
+
+          {/* CTA Row */}
+          <motion.div 
+            initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: shouldReduceMotion ? 0 : 1.0, duration: 0.5 }}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mt-10"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            <button
+              onClick={() => router.push("/onboarding")}
+              className="px-8 py-4 rounded-md text-[15px] font-semibold transition-all hover:brightness-110 active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-[0_4px_20px_rgba(57,255,122,0.15)]"
+              style={{
+                backgroundColor: "#39ff7a",
+                color: "#060a06",
+              }}
+            >
+              Start Budgeting →
+            </button>
             <button
               onClick={() => router.push("/dashboard")}
-              className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-white/80 border border-white/20 font-semibold hover:border-white/40 hover:text-white hover:bg-white/5 transition-all duration-200"
+              className="px-8 py-4 rounded-md text-[15px] font-semibold border transition-all hover:border-[#39ff7a] hover:text-white flex items-center justify-center"
+              style={{
+                borderColor: "rgba(57,255,122,0.3)",
+                color: "#5a7a5a",
+              }}
             >
-              View Demo ▷
+              View Demo
             </button>
-          </div>
+          </motion.div>
+        </div>
 
-          {/* Hero Visual: Animated SVG of Shola Forest and Lion-Tailed Macaque */}
-          <div className="w-full max-w-4xl mt-12 md:mt-16 relative aspect-[800/400] md:aspect-[800/450] overflow-hidden rounded-3xl border border-border bg-surface/40 backdrop-blur-xs p-1">
-            <svg
-              viewBox="0 0 800 450"
-              className="w-full h-full object-cover rounded-2xl select-none"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+        {/* Scroll hint at bottom */}
+        <div className="w-full flex flex-col items-center justify-end select-none mt-12 pointer-events-none">
+          <span 
+            className="text-[10px] tracking-[0.25em] font-bold"
+            style={{ fontFamily: "'Space Mono', monospace", color: "#5a7a5a" }}
+          >
+            SCROLL
+          </span>
+          <div className="bounce-arrow text-emerald-500 mt-2 text-base font-bold">
+            ↓
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3: MARQUEE TICKER */}
+      <section className="w-full py-8 border-y border-[rgba(57,255,122,0.12)] bg-[#040804] select-none relative z-20">
+        <div className="space-y-4">
+          {/* Row 1 (Left to Right) */}
+          <div className="w-full overflow-hidden flex">
+            <div 
+              className="flex whitespace-nowrap animate-marquee-row-1 gap-12"
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: "13px", letterSpacing: "0.15em", color: "#5a7a5a" }}
             >
-              {/* Defs for gradients */}
-              <defs>
-                <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="rgba(22,163,74,0.02)" />
-                  <stop offset="100%" stopColor="rgba(22,163,74,0.12)" />
-                </linearGradient>
-                <linearGradient id="trunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#0a2314" />
-                  <stop offset="100%" stopColor="#041209" />
-                </linearGradient>
-                <linearGradient id="trunkGradLight" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#143c22" />
-                  <stop offset="100%" stopColor="#0a2314" />
-                </linearGradient>
-              </defs>
+              {/* Duplicate contents for seamless looping */}
+              {[...marqueeRow1, ...marqueeRow1, ...marqueeRow1].map((item, idx) => (
+                <span key={`r1-${idx}`} className="hover:text-[#39ff7a] transition-colors duration-200">
+                  &ldquo;{item}&rdquo; &middot;
+                </span>
+              ))}
+            </div>
+          </div>
 
-              {/* Sky Background */}
-              <rect width="800" height="450" fill="url(#skyGrad)" />
-
-              {/* Distant Hills */}
-              <path d="M0 320 Q 200 270, 450 330 T 800 300 L 800 450 L 0 450 Z" fill="#14532d" fillOpacity="0.12" />
-              <path d="M0 350 Q 280 310, 550 360 T 800 340 L 800 450 L 0 450 Z" fill="#14532d" fillOpacity="0.22" />
-
-              {/* Swaying Tree 1 (Left) */}
-              <g className="sway-branch-1">
-                <path d="M 140 380 C 135 340, 115 310, 110 260 L 125 260 C 130 300, 145 330, 150 380 Z" fill="url(#trunkGradLight)" />
-                <path d="M 60 260 C 40 230, 60 180, 90 180 C 100 160, 130 160, 140 180 C 160 170, 180 190, 170 220 C 185 240, 165 280, 130 270 C 110 285, 80 280, 60 260 Z" fill="#166534" />
-                <path d="M 80 240 C 70 220, 85 190, 105 200 C 115 190, 135 190, 140 210 C 150 205, 160 220, 150 235 C 155 250, 140 270, 120 260 C 105 270, 90 260, 80 240 Z" fill="#15803d" fillOpacity="0.8" />
-              </g>
-
-              {/* Swaying Tree 3 (Right Small) */}
-              <g className="sway-branch-3">
-                <path d="M 680 390 C 675 350, 685 320, 690 280 L 702 280 C 698 320, 688 350, 692 390 Z" fill="url(#trunkGradLight)" />
-                <path d="M 640 280 C 620 260, 640 220, 660 220 C 670 200, 695 200, 705 220 C 720 210, 735 225, 730 245 C 740 260, 725 290, 700 285 C 685 295, 660 295, 640 280 Z" fill="#14532d" />
-              </g>
-
-              {/* Lion-Tailed Macaque (Peeks from behind the large center trunk, coordinates positioned to hide at rest) */}
-              <g className="macaque-peek">
-                {/* Tail */}
-                <path d="M 465 315 Q 475 335, 470 365 T 480 405" fill="none" stroke="#090d16" strokeWidth="4" strokeLinecap="round" />
-                <circle cx="480" cy="405" r="6" fill="#090d16" />
-                {/* Body */}
-                <path d="M 450 300 C 462 280, 482 290, 478 330 C 472 350, 460 365, 450 365 Z" fill="#090d16" />
-                {/* Mane (Grey fluff around head) */}
-                <path d="M 450 275 C 440 265, 435 245, 450 235 C 445 215, 463 205, 475 215 C 485 205, 500 215, 495 235 C 510 245, 505 265, 495 275 C 487 285, 458 285, 450 275 Z" fill="#cbd5e1" />
-                {/* Face */}
-                <ellipse cx="472" cy="248" rx="15" ry="17" fill="#090d16" />
-                <path d="M 468 254 Q 472 258, 476 254" fill="none" stroke="#334155" strokeWidth="2" strokeLinecap="round" />
-                {/* Glowing green eyes */}
-                <circle cx="465" cy="245" r="3" fill="#4ade80" />
-                <circle cx="479" cy="245" r="3" fill="#4ade80" />
-                {/* Ears */}
-                <path d="M 453 234 Q 447 232, 451 238" fill="#090d16" />
-                <path d="M 491 234 Q 497 232, 493 238" fill="#090d16" />
-              </g>
-
-              {/* Tree 2 Trunk (Large foreground trunk covering monkey when static) */}
-              <path d="M 440 180 C 430 250, 425 330, 430 450 L 495 450 C 485 330, 480 250, 475 180 Z" fill="url(#trunkGrad)" />
-
-              {/* Branches and foliage of Main Tree */}
-              <g className="sway-branch-2">
-                <path d="M 445 220 Q 380 180, 340 190 L 350 205 Q 390 195, 448 232 Z" fill="url(#trunkGrad)" />
-                <path d="M 455 210 Q 520 170, 560 175 L 555 190 Q 515 185, 452 222 Z" fill="url(#trunkGrad)" />
-                
-                <path d="M 320 200 C 290 180, 300 130, 340 130 C 350 100, 390 100, 410 120 C 430 90, 480 95, 480 130 C 500 110, 530 120, 535 150 C 555 140, 570 170, 550 190 C 560 210, 530 240, 500 230 C 480 250, 440 240, 420 220 C 400 245, 340 240, 320 200 Z" fill="#047857" />
-                <path d="M 350 180 C 330 165, 340 140, 370 140 C 380 120, 410 120, 420 135 C 435 115, 470 120, 470 140 C 485 130, 510 135, 510 160 C 525 155, 535 175, 520 190 C 530 205, 505 225, 485 215 C 470 230, 440 225, 425 210 C 410 225, 370 220, 350 180 Z" fill="#10b981" fillOpacity="0.85" />
-              </g>
-
-              {/* Understory Shrubbery / Grassland Foreground */}
-              <path d="M -20 400 Q 150 370, 320 400 T 680 380 Q 740 390, 820 375 L 820 460 L -20 460 Z" fill="#0c2515" />
-              
-              {/* Small Foreground Ferns */}
-              <g className="sway-branch-1">
-                <path d="M 50 400 Q 40 370, 20 360 Q 35 375, 52 400 Z" fill="#14532d" />
-                <path d="M 60 401 Q 60 365, 50 355 Q 65 375, 62 401 Z" fill="#166534" />
-                <path d="M 70 402 Q 80 375, 90 368 Q 80 385, 72 402 Z" fill="#047857" />
-              </g>
-              <g className="sway-branch-3">
-                <path d="M 740 395 Q 730 365, 715 355 Q 725 370, 742 395 Z" fill="#14532d" />
-                <path d="M 750 392 Q 755 360, 765 350 Q 755 370, 752 392 Z" fill="#166534" />
-              </g>
-            </svg>
+          {/* Row 2 (Right to Left) */}
+          <div className="w-full overflow-hidden flex">
+            <div 
+              className="flex whitespace-nowrap animate-marquee-row-2 gap-12"
+              style={{ fontFamily: "'Space Mono', monospace", fontSize: "13px", letterSpacing: "0.15em", color: "#5a7a5a" }}
+            >
+              {[...marqueeRow2, ...marqueeRow2, ...marqueeRow2].map((item, idx) => (
+                <span key={`r2-${idx}`} className="hover:text-[#39ff7a] transition-colors duration-200">
+                  &ldquo;{item}&rdquo; &middot;
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Feature Cards Section */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 z-20">
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-            A Clean-Tech Platform Tailored For India
-          </h2>
-          <p className="text-foreground/70 text-base max-w-xl mx-auto">
-            Manage your ecological footprints with modular budgets designed for Indian metros, cooking habits, and local power networks.
-          </p>
+      {/* SECTION 4: FEATURES — NUMBERED EDITORIAL */}
+      <section className="w-full max-w-5xl mx-auto px-6 md:px-20 py-28 relative z-20">
+        {/* Eyebrow */}
+        <div 
+          className="text-left tracking-[0.2em] text-[10px] md:text-[11px] font-semibold uppercase mb-16"
+          style={{ fontFamily: "'Space Mono', monospace", color: "#39ff7a" }}
+        >
+          [ WHAT PRAKRITI DOES ]
         </div>
 
-        {/* 3 Staggered cards in a row using .reveal and hover lift states */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* Card 1 */}
-          <div className="reveal bg-surface border border-border rounded-3xl p-8 hover-lift hover:border-primary/40 shadow-xs flex flex-col justify-between min-h-[300px]">
+        {/* Feature Rows */}
+        <div className="divide-y divide-[rgba(57,255,122,0.12)] border-y border-[rgba(57,255,122,0.12)]">
+          {/* Row 1 */}
+          <div className="reveal py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-12">
+            <div 
+              className="text-[72px] md:text-[80px] font-black leading-none select-none opacity-20"
+              style={{ fontFamily: "'Syne', sans-serif", color: "#39ff7a" }}
+            >
+              01
+            </div>
+            <div className="flex-1 max-w-xl">
+              <h3 
+                className="text-2xl md:text-3xl font-extrabold text-white mb-3"
+                style={{ fontFamily: "'Syne', sans-serif" }}
+              >
+                Scan. Don&apos;t type.
+              </h3>
+              <p 
+                className="text-[15px] md:text-[16px] leading-relaxed"
+                style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a5a" }}
+              >
+                Point your camera at any Indian bill. Gemini Vision reads electricity units, petrol liters, Swiggy orders — maps them to real carbon instantly.
+              </p>
+            </div>
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-6">
-                <Globe className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">
-                Interactive Carbon Budgeting
-              </h3>
-              <p className="text-foreground/70 text-sm leading-relaxed mb-6">
-                Treat your carbon output like a wallet. Distribute weekly allowances for transit, diet, and electricity, and trade left-over credits.
-              </p>
-            </div>
-            <Link href="/onboarding" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:gap-1.5 transition-all">
-              <span>Setup your budget</span>
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {/* Card 2 */}
-          <div className="reveal bg-surface border border-border rounded-3xl p-8 hover-lift hover:border-primary/40 shadow-xs flex flex-col justify-between min-h-[300px]" style={{ transitionDelay: "150ms" }}>
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-6">
-                <Trees className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">
-                Virtual Shola Forest Sim
-              </h3>
-              <p className="text-foreground/70 text-sm leading-relaxed mb-6">
-                Gain pebbles by cutting real-life carbon. Watch your online Shola forest expand, attracting native fauna like the Lion-Tailed Macaque.
-              </p>
-            </div>
-            <Link href="/dashboard" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:gap-1.5 transition-all">
-              <span>View demo forest</span>
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {/* Card 3 */}
-          <div className="reveal bg-surface border border-border rounded-3xl p-8 hover-lift hover:border-primary/40 shadow-xs flex flex-col justify-between min-h-[300px]" style={{ transitionDelay: "300ms" }}>
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-6">
-                <Zap className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">
-                India-Specific Analytics
-              </h3>
-              <p className="text-foreground/70 text-sm leading-relaxed mb-6">
-                Stop relying on generic Western baselines. Prakriti calculations are fully tailored to Indian city climates, LPG fuels, and vehicle standards.
-              </p>
-            </div>
-            <a href="https://cea.nic.in" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:gap-1.5 transition-all">
-              <span>Explore methodology</span>
-              <ChevronRight className="w-4 h-4" />
-            </a>
-          </div>
-
-        </div>
-      </section>
-
-      {/* India-Specific Stats Section */}
-      <section className="relative w-full bg-[#0f2d1a] text-white py-24 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              Ground Truth: Indian Carbon Realities
-            </h2>
-            <p className="text-emerald-200/70 text-base max-w-xl mx-auto">
-              Prakriti operates on real environmental baselines verified by local agricultural and electricity databases.
-            </p>
-          </div>
-
-          {/* Staggered stats counters that animate when scrolled into view */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            
-            {/* Stat 1 */}
-            <div className="space-y-4 reveal">
-              <div className="flex items-baseline justify-center">
-                <span className="text-5xl md:text-7xl font-extrabold text-white tracking-tight">
-                  <StatsCounter value={0.71} decimals={2} />
-                </span>
-                <span className="text-lg md:text-xl font-bold text-accent ml-2">
-                  kg/kWh
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-emerald-300">
-                Grid Electricity Coefficient
-              </h3>
-              <p className="text-emerald-100/60 text-sm max-w-xs mx-auto leading-relaxed">
-                Central Electricity Authority (CEA) baseline. Reflects India's highly coal-dense power production, where home energy conservation yields massive offset gains.
-              </p>
-            </div>
-
-            {/* Stat 2 */}
-            <div className="space-y-4 reveal" style={{ transitionDelay: "150ms" }}>
-              <div className="flex items-baseline justify-center">
-                <span className="text-5xl md:text-7xl font-extrabold text-white tracking-tight">
-                  <StatsCounter value={0.033} decimals={3} />
-                </span>
-                <span className="text-lg md:text-xl font-bold text-accent ml-2">
-                  kg/km
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-emerald-300">
-                Scooter/Transit Travel
-              </h3>
-              <p className="text-emerald-100/60 text-sm max-w-xs mx-auto leading-relaxed">
-                Automotive Research Association of India (ARAI) baseline. Represents two-wheeler transit, offering an affordable, lower-carbon commuter choice compared to cabs.
-              </p>
-            </div>
-
-            {/* Stat 3 */}
-            <div className="space-y-4 reveal" style={{ transitionDelay: "300ms" }}>
-              <div className="flex items-baseline justify-center">
-                <span className="text-5xl md:text-7xl font-extrabold text-white tracking-tight">
-                  <StatsCounter value={2.7} decimals={1} />
-                </span>
-                <span className="text-lg md:text-xl font-bold text-accent ml-2">
-                  kg/L
-                </span>
-              </div>
-              <h3 className="text-lg font-bold text-emerald-300">
-                LPG Cylinder Cooking Fuel
-              </h3>
-              <p className="text-emerald-100/60 text-sm max-w-xs mx-auto leading-relaxed">
-                Standard cooking baseline. Track domestic cooking gas usage and balance LPG cylinder budgets alongside delivery meals and groceries.
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Hackathon Partnership Badges */}
-      <section className="relative w-full py-16 border-t border-border bg-surface/40 backdrop-blur-xs z-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest text-foreground/40 mb-8 select-none">
-            In Partnership with Climate & Conservation Initiatives
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 hover:opacity-85 transition-opacity duration-300">
-            <div className="flex items-center gap-2 text-foreground font-semibold">
-              <Leaf className="w-5 h-5 text-primary fill-primary/10" />
-              <span className="tracking-wider text-sm">Western Ghats Coalition</span>
-            </div>
-            <div className="flex items-center gap-2 text-foreground font-semibold">
-              <Award className="w-5 h-5 text-warm" />
-              <span className="tracking-wider text-sm">National Eco Hackathon</span>
-            </div>
-            <div className="flex items-center gap-2 text-foreground font-semibold">
-              <ShieldCheck className="w-5 h-5 text-primary" />
-              <span className="tracking-wider text-sm">CEA Verified Database</span>
-            </div>
-            <div className="flex items-center gap-2 text-foreground font-semibold">
-              <Sparkles className="w-5 h-5 text-accent" />
-              <span className="tracking-wider text-sm">SankalpTaru Coalition</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Clean Minimalist Footer */}
-      <footer className="relative border-t border-border bg-surface py-16 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-12">
-          
-          {/* Logo & description */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                <Leaf className="w-4 h-4 fill-current" />
-              </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-primary via-accent to-green-300 bg-clip-text text-transparent">
-                Prakriti
+              <span 
+                className="inline-block px-3 py-1.5 border border-[rgba(57,255,122,0.2)] bg-[rgba(57,255,122,0.03)] text-[11px] font-semibold rounded-full select-none"
+                style={{ fontFamily: "'Space Mono', monospace", color: "#39ff7a" }}
+              >
+                GEMINI 1.5 FLASH
               </span>
             </div>
-            <p className="text-sm text-foreground/60 max-w-sm leading-relaxed">
-              Prakriti is a next-generation carbon budgeting application for urban India. Balance your daily emission footprints, earn rewards, and grow your virtual Western Ghats forest.
+          </div>
+
+          {/* Row 2 */}
+          <div className="reveal py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-12" style={{ transitionDelay: "150ms" }}>
+            <div 
+              className="text-[72px] md:text-[80px] font-black leading-none select-none opacity-20"
+              style={{ fontFamily: "'Syne', sans-serif", color: "#39ff7a" }}
+            >
+              02
+            </div>
+            <div className="flex-1 max-w-xl">
+              <h3 
+                className="text-2xl md:text-3xl font-extrabold text-white mb-3"
+                style={{ fontFamily: "'Syne', sans-serif" }}
+              >
+                Budget before you burn.
+              </h3>
+              <p 
+                className="text-[15px] md:text-[16px] leading-relaxed"
+                style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a5a" }}
+              >
+                Allocate your 38.46 kg weekly carbon limit across envelopes. Spend it like money. No retroactive guilt. Just decisions.
+              </p>
+            </div>
+            <div>
+              <span 
+                className="inline-block px-3 py-1.5 border border-[rgba(57,255,122,0.2)] bg-[rgba(57,255,122,0.03)] text-[11px] font-semibold rounded-full select-none"
+                style={{ fontFamily: "'Space Mono', monospace", color: "#39ff7a" }}
+              >
+                YNAB MODEL
+              </span>
+            </div>
+          </div>
+
+          {/* Row 3 */}
+          <div className="reveal py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-12" style={{ transitionDelay: "300ms" }}>
+            <div 
+              className="text-[72px] md:text-[80px] font-black leading-none select-none opacity-20"
+              style={{ fontFamily: "'Syne', sans-serif", color: "#39ff7a" }}
+            >
+              03
+            </div>
+            <div className="flex-1 max-w-xl">
+              <h3 
+                className="text-2xl md:text-3xl font-extrabold text-white mb-3"
+                style={{ fontFamily: "'Syne', sans-serif" }}
+              >
+                India&apos;s numbers. Not Europe&apos;s.
+              </h3>
+              <p 
+                className="text-[15px] md:text-[16px] leading-relaxed"
+                style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a5a" }}
+              >
+                0.71 kg/kWh grid. 0.033 kg/km scooter. DG set tracking. Diwali mode. IPL season. Wedding Guest mode. Built for how you actually live.
+              </p>
+            </div>
+            <div>
+              <span 
+                className="inline-block px-3 py-1.5 border border-[rgba(57,255,122,0.2)] bg-[rgba(57,255,122,0.03)] text-[11px] font-semibold rounded-full select-none"
+                style={{ fontFamily: "'Space Mono', monospace", color: "#39ff7a" }}
+              >
+                CEA × ARAI × CPCB
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5: DIFF COMPARISON */}
+      <section className="w-full bg-[#0d1a0d] py-28 relative z-20">
+        <div className="max-w-5xl mx-auto px-6 md:px-20">
+          {/* Section Eyebrow */}
+          <div 
+            className="text-left tracking-[0.2em] text-[10px] md:text-[11px] font-semibold uppercase mb-12"
+            style={{ fontFamily: "'Space Mono', monospace", color: "#39ff7a" }}
+          >
+            [ WHY PRAKRITI IS DIFFERENT ]
+          </div>
+
+          {/* Terminal Mockup Card */}
+          <div 
+            className="w-full rounded-xl border p-6 md:p-8"
+            style={{
+              backgroundColor: "#060a06",
+              borderColor: "rgba(57,255,122,0.2)",
+            }}
+          >
+            {/* Header bar */}
+            <div className="flex items-center justify-between pb-6 mb-8 border-b border-[rgba(57,255,122,0.12)]">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#ff5555]" />
+                <span className="w-3 h-3 rounded-full bg-[#ffb86c]" />
+                <span className="w-3 h-3 rounded-full bg-[#50fa7b]" />
+              </div>
+              <div 
+                className="text-[12px]"
+                style={{ fontFamily: "'Space Mono', monospace", color: "#5a7a5a" }}
+              >
+                india.carbon.diff
+              </div>
+              <div className="w-12" /> {/* alignment spacer */}
+            </div>
+
+            {/* Code / Diff Rows */}
+            <div className="space-y-8" style={{ fontFamily: "'Space Mono', monospace" }}>
+              {/* Row 01 */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-4 text-[11px]">
+                  <span className="opacity-40 text-slate-500">01</span>
+                  <span className="text-[#39ff7a]">{"// DATA ACCURACY"}</span>
+                </div>
+                <div 
+                  className="rounded px-4 py-2 flex items-center text-xs md:text-sm"
+                  style={{ color: "#ff5555", backgroundColor: "rgba(255,85,85,0.08)" }}
+                >
+                  <span className="mr-3 font-bold select-none">&minus;</span>
+                  Western DEFRA/EPA emission factors
+                </div>
+                <div 
+                  className="rounded px-4 py-2 flex items-center text-xs md:text-sm"
+                  style={{ color: "#39ff7a", backgroundColor: "rgba(57,255,122,0.08)" }}
+                >
+                  <span className="mr-3 font-bold select-none">+</span>
+                  CEA India grid &middot; ARAI road transport &middot; CPCB fuels
+                </div>
+              </div>
+
+              {/* Row 02 */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-4 text-[11px]">
+                  <span className="opacity-40 text-slate-500">02</span>
+                  <span className="text-[#39ff7a]">{"// TRACKING MODEL"}</span>
+                </div>
+                <div 
+                  className="rounded px-4 py-2 flex items-center text-xs md:text-sm"
+                  style={{ color: "#ff5555", backgroundColor: "rgba(255,85,85,0.08)" }}
+                >
+                  <span className="mr-3 font-bold select-none">&minus;</span>
+                  Retroactive guilt. Log it. Feel bad. Quit.
+                </div>
+                <div 
+                  className="rounded px-4 py-2 flex items-center text-xs md:text-sm"
+                  style={{ color: "#39ff7a", backgroundColor: "rgba(57,255,122,0.08)" }}
+                >
+                  <span className="mr-3 font-bold select-none">+</span>
+                  Proactive envelope budget. Allocate before you spend.
+                </div>
+              </div>
+
+              {/* Row 03 */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-4 text-[11px]">
+                  <span className="opacity-40 text-slate-500">03</span>
+                  <span className="text-[#39ff7a]">{"// DATA INGESTION"}</span>
+                </div>
+                <div 
+                  className="rounded px-4 py-2 flex items-center text-xs md:text-sm"
+                  style={{ color: "#ff5555", backgroundColor: "rgba(255,85,85,0.08)" }}
+                >
+                  <span className="mr-3 font-bold select-none">&minus;</span>
+                  Manual entry forms. High friction. Low retention.
+                </div>
+                <div 
+                  className="rounded px-4 py-2 flex items-center text-xs md:text-sm"
+                  style={{ color: "#39ff7a", backgroundColor: "rgba(57,255,122,0.08)" }}
+                >
+                  <span className="mr-3 font-bold select-none">+</span>
+                  Gemini Vision OCR. Scan any bill. Zero typing.
+                </div>
+              </div>
+
+              {/* Row 04 */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-4 text-[11px]">
+                  <span className="opacity-40 text-slate-500">04</span>
+                  <span className="text-[#39ff7a]">{"// BEHAVIORAL DESIGN"}</span>
+                </div>
+                <div 
+                  className="rounded px-4 py-2 flex items-center text-xs md:text-sm"
+                  style={{ color: "#ff5555", backgroundColor: "rgba(255,85,85,0.08)" }}
+                >
+                  <span className="mr-3 font-bold select-none">&minus;</span>
+                  Points and streaks. Moral licensing. Motivation crowd-out.
+                </div>
+                <div 
+                  className="rounded px-4 py-2 flex items-center text-xs md:text-sm"
+                  style={{ color: "#39ff7a", backgroundColor: "rgba(57,255,122,0.08)" }}
+                >
+                  <span className="mr-3 font-bold select-none">+</span>
+                  Implementation intentions. Compassionate recovery. Identity habits.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 6: STATS COUNTER ROW */}
+      <section className="w-full py-20 border-b border-[rgba(57,255,122,0.12)] relative z-20">
+        <div className="max-w-5xl mx-auto px-6 md:px-20 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[rgba(57,255,122,0.12)]">
+          {/* Stat 1 */}
+          <div className="py-8 md:py-0 md:px-8 text-center flex flex-col items-center">
+            <span 
+              className="text-6xl md:text-7xl font-extrabold tracking-tight leading-none"
+              style={{ fontFamily: "'Syne', sans-serif", color: "#39ff7a" }}
+            >
+              <StatsCounter value={48} />
+            </span>
+            <span 
+              className="text-xs md:text-sm font-semibold tracking-wider uppercase mt-4"
+              style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a5a" }}
+            >
+              unit tests
+            </span>
+          </div>
+
+          {/* Stat 2 */}
+          <div className="py-8 md:py-0 md:px-8 text-center flex flex-col items-center">
+            <span 
+              className="text-6xl md:text-7xl font-extrabold tracking-tight leading-none"
+              style={{ fontFamily: "'Syne', sans-serif", color: "#39ff7a" }}
+            >
+              <StatsCounter value={100} suffix="%" />
+            </span>
+            <span 
+              className="text-xs md:text-sm font-semibold tracking-wider uppercase mt-4"
+              style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a5a" }}
+            >
+              code coverage
+            </span>
+          </div>
+
+          {/* Stat 3 */}
+          <div className="py-8 md:py-0 md:px-8 text-center flex flex-col items-center">
+            <span 
+              className="text-6xl md:text-7xl font-extrabold tracking-tight leading-none"
+              style={{ fontFamily: "'Syne', sans-serif", color: "#39ff7a" }}
+            >
+              <StatsCounter value={7} />
+            </span>
+            <span 
+              className="text-xs md:text-sm font-semibold tracking-wider uppercase mt-4"
+              style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a5a" }}
+            >
+              parallel subagents
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 7: ECOSYSTEM PREVIEW */}
+      <section className="w-full py-28 text-center relative z-20 bg-[#040804]">
+        <div className="max-w-4xl mx-auto px-6">
+          <h2 
+            className="text-4xl md:text-[56px] font-black text-white tracking-tight mb-4"
+            style={{ fontFamily: "'Syne', sans-serif" }}
+          >
+            Your forest. Your choices.
+          </h2>
+          <p 
+            className="text-base md:text-lg max-w-xl mx-auto leading-relaxed mb-16"
+            style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#5a7a5a" }}
+          >
+            Every carbon decision shapes a living Western Ghats ecosystem. Unlock endangered Indian species as you hit milestones.
+          </p>
+
+          {/* Species Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-16">
+            {/* Species 1 */}
+            <div className="flex flex-col items-center space-y-4 select-none">
+              <div 
+                className="w-20 h-20 rounded-full flex items-center justify-center text-3xl border border-[rgba(57,255,122,0.2)] bg-[#0d1a0d]"
+              >
+                🐒
+              </div>
+              <span 
+                className="text-[13px] font-medium"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                Lion-Tailed Macaque
+              </span>
+            </div>
+
+            {/* Species 2 */}
+            <div className="flex flex-col items-center space-y-4 select-none">
+              <div 
+                className="w-20 h-20 rounded-full flex items-center justify-center text-3xl border border-[rgba(57,255,122,0.2)] bg-[#0d1a0d]"
+              >
+                🐐
+              </div>
+              <span 
+                className="text-[13px] font-medium"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                Nilgiri Tahr
+              </span>
+            </div>
+
+            {/* Species 3 - Locked */}
+            <div className="flex flex-col items-center space-y-4 grayscale select-none opacity-45 relative">
+              <div 
+                className="w-20 h-20 rounded-full flex items-center justify-center text-3xl border border-[rgba(57,255,122,0.1)] bg-[#0c120c]"
+              >
+                🐸
+              </div>
+              <span 
+                className="text-[13px] font-medium"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                Purple Frog 🔒
+              </span>
+            </div>
+
+            {/* Species 4 - Locked */}
+            <div className="flex flex-col items-center space-y-4 grayscale select-none opacity-45 relative">
+              <div 
+                className="w-20 h-20 rounded-full flex items-center justify-center text-3xl border border-[rgba(57,255,122,0.1)] bg-[#0c120c]"
+              >
+                🦡
+              </div>
+              <span 
+                className="text-[13px] font-medium"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                Malabar Civet 🔒
+              </span>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button
+            onClick={() => router.push("/onboarding")}
+            className="px-8 py-4 rounded-md text-[15px] font-semibold transition-all hover:brightness-110 active:scale-[0.98] inline-flex items-center gap-1.5 shadow-[0_4px_20px_rgba(57,255,122,0.15)]"
+            style={{
+              backgroundColor: "#39ff7a",
+              color: "#060a06",
+              fontFamily: "'Space Grotesk', sans-serif",
+            }}
+          >
+            Start Growing →
+          </button>
+        </div>
+      </section>
+
+      {/* SECTION 8: FOOTER */}
+      <footer 
+        className="w-full border-t border-[rgba(57,255,122,0.12)] bg-[#040804] py-16 relative z-20"
+        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+      >
+        <div className="max-w-5xl mx-auto px-6 md:px-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-10">
+          {/* Left Block */}
+          <div className="space-y-3">
+            <div 
+              className="text-lg font-bold tracking-[0.15em] text-white"
+              style={{ fontFamily: "'Space Mono', monospace" }}
+            >
+              PRAKRITI<span style={{ color: "#39ff7a" }}>*</span>
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: "#5a7a5a" }}>
+              Built for PromptWars Virtual Ch.3 <br />
+              Hack2Skill &times; Google Antigravity
             </p>
           </div>
 
-          {/* Quick links */}
-          <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">Platform</h3>
-            <ul className="space-y-2.5 text-sm text-foreground/60">
-              <li>
-                <Link href="/onboarding" className="hover:text-primary transition-colors flex items-center gap-1">
-                  <span>Start Onboarding</span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </Link>
-              </li>
-              <li>
-                <Link href="/dashboard" className="hover:text-primary transition-colors flex items-center gap-1">
-                  <span>View Dashboard</span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </Link>
-              </li>
-              <li>
-                <a
-                  href="https://cea.nic.in"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors flex items-center gap-1"
-                >
-                  <span>CEA Baseline Data</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </li>
-            </ul>
+          {/* Right Block */}
+          <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 text-sm">
+            <a 
+              href="https://prakriti-carbon.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors"
+              style={{ color: "#5a7a5a" }}
+            >
+              Live ↗
+            </a>
+            <a 
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-white transition-colors"
+              style={{ color: "#5a7a5a" }}
+            >
+              GitHub ↗
+            </a>
+            <Link 
+              href="/dashboard"
+              className="hover:text-white transition-colors"
+              style={{ color: "#5a7a5a" }}
+            >
+              Methodology →
+            </Link>
           </div>
-
-          {/* Resource Links */}
-          <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-foreground mb-4">Resources</h3>
-            <ul className="space-y-2.5 text-sm text-foreground/60">
-              <li>
-                <a
-                  href="https://sankalptaru.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors flex items-center gap-1"
-                >
-                  <span>Reforestation Partner</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </li>
-              <li>
-                <span className="text-xs text-foreground/40 block mt-2">
-                  Version 1.2.0 (Hackathon Release)
-                </span>
-              </li>
-            </ul>
-          </div>
-
         </div>
 
-        {/* Legal bottom row */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-foreground/45">
-          <p>© {new Date().getFullYear()} Prakriti Carbon Budgeting Initiative. All rights reserved.</p>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
-          </div>
+        {/* Bottom bar */}
+        <div className="max-w-5xl mx-auto px-6 md:px-20 mt-12 pt-8 border-t border-[rgba(57,255,122,0.06)] text-[11px] flex justify-between" style={{ color: "#5a7a5a" }}>
+          <span>&copy; {new Date().getFullYear()} Prakriti Project. All rights reserved.</span>
+          <span>Open Source</span>
         </div>
       </footer>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { MapPin, Coins, RefreshCw, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -112,7 +113,49 @@ export default function Navbar() {
     }
   };
 
+  const isHomepage = pathname === "/";
   const isOnboarding = pathname === "/onboarding";
+
+  if (isHomepage) {
+    return (
+      <header className="w-full h-[72px] bg-transparent flex items-center justify-between px-8 z-50 relative border-b border-[rgba(57,255,122,0.12)]">
+        {/* Left Section: Logo */}
+        <div 
+          onClick={() => router.push("/")}
+          className="cursor-pointer select-none text-white text-base font-bold tracking-[0.15em]"
+          style={{ fontFamily: "'Space Mono', monospace" }}
+        >
+          PRAKRITI<span style={{ color: "#39ff7a" }}>*</span>
+        </div>
+
+        {/* Right Section: Links */}
+        <div className="flex items-center space-x-6">
+          <Link
+            href="/dashboard"
+            className="hover:text-white transition-all duration-200 text-sm font-medium"
+            style={{ 
+              fontFamily: "'Space Grotesk', sans-serif",
+              color: "#5a7a5a"
+            }}
+          >
+            Dashboard →
+          </Link>
+          <a
+            href="https://github.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-all duration-200 text-sm font-medium"
+            style={{ 
+              fontFamily: "'Space Grotesk', sans-serif",
+              color: "#5a7a5a" 
+            }}
+          >
+            GitHub ↗
+          </a>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header
