@@ -27,16 +27,16 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
     return (
       <nav style={{
         position: 'absolute',
-        top: '24px',
+        top: '-22px',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 10,
+        zIndex: 20,
         display: 'inline-flex',
         alignItems: 'center',
         gap: '32px',
-        background: 'rgba(10,10,10,0.75)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
+        background: '#000000',
+        backdropFilter: 'none',
+        WebkitBackdropFilter: 'none',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: '100px',
         padding: '10px 24px',
@@ -51,16 +51,16 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: '14px',
               fontWeight: 500,
-              color: 'rgba(255,255,255,0.6)',
+              color: 'rgba(255,255,255,0.75)',
               textDecoration: 'none',
               transition: 'color 0.18s ease',
               display: 'inline-block',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.color = 'rgba(255,255,255,1)';
+              e.currentTarget.style.color = '#ffffff';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
+              e.currentTarget.style.color = 'rgba(255,255,255,0.75)';
             }}
           >
             {link.label}

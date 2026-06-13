@@ -479,10 +479,11 @@ export default function HomePage() {
         background: '#080808',
         padding: '12px',
         minHeight: '100vh',
+        borderRadius: '28px',
       }}>
         <section style={{
           position: 'relative',
-          borderRadius: '16px',
+          borderRadius: '28px',
           overflow: 'hidden',
           height: 'calc(100vh - 24px)',
           background: '#111',
