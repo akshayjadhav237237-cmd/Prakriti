@@ -572,36 +572,40 @@ export default function HomePage() {
             <Link
               href="/dashboard"
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '12px',
-                background: '#0d0d0d',
+                gap: '16px',
+                background: '#000000',
                 color: '#f5f0e8',
-                fontFamily: 'Space Grotesk',
+                fontFamily: "'Clash Display', sans-serif",
                 fontWeight: 600,
-                fontSize: '15px',
-                padding: '14px 14px 14px 24px',
+                fontSize: '17px',
+                letterSpacing: '-0.01em',
+                padding: '10px 10px 10px 28px',
                 borderRadius: '100px',
                 border: 'none',
                 cursor: 'pointer',
                 textDecoration: 'none',
                 transition: 'background 0.2s ease',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#2e2e2e')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#0d0d0d')}
+              onMouseEnter={e => (e.currentTarget.style.background = '#1a1a1a')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#000000')}
             >
               Start budgeting
               <span style={{
-                width: '32px',
-                height: '32px',
+                width: '48px',
+                height: '48px',
                 borderRadius: '50%',
-                background: '#1a1a1a',
+                background: '#111111',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#f5f0e8',
-                fontSize: '16px',
-              }}>→</span>
+                flexShrink: 0,
+              }}>
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 11H18M18 11L12 5M18 11L12 17" stroke="#f5f0e8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </span>
             </Link>
           </div>
 
