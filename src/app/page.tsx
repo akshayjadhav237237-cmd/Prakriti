@@ -216,11 +216,8 @@ const WordRevealParagraph = () => {
               <motion.span
                 key={i}
                 animate={{
-                  opacity: isRevealed ? 1 : 0.08,
-                  y: isRevealed ? 0 : 8,
-                  filter: isRevealed 
-                    ? 'blur(0px)' 
-                    : 'blur(4px)',
+                  opacity: isRevealed ? 1 : 0,
+                  y: isRevealed ? 0 : 12,
                 }}
                 transition={prefersReduced ? { duration: 0 } : {
                   duration: 0.4,
