@@ -183,7 +183,7 @@ const WordRevealParagraph = () => {
       ref={containerRef}
       style={{
         // Tall section so scroll has room to work
-        minHeight: '200vh',
+        minHeight: '120vh',
         padding: '120px 40px',
         display: 'flex',
         alignItems: 'flex-start',
@@ -549,7 +549,7 @@ export default function HomePage() {
             position: 'absolute',
             bottom: '-0.15em',
             left: '0px',
-            zIndex: 2,
+            zIndex: 15,
             maxWidth: '65%',
           }}>
             <HeroHeadline />
@@ -609,11 +609,11 @@ export default function HomePage() {
             </Link>
           </div>
 
-          {/* Scroll hint */}
+          {/* Scroll hint — right-side to avoid overlapping heading */}
           <div style={{
-            position: 'absolute', bottom: '18px',
-            left: '50%', transform: 'translateX(-50%)',
-            zIndex: 10, display: 'flex',
+            position: 'absolute', bottom: '32px',
+            right: '60px',
+            zIndex: 3, display: 'flex',
             flexDirection: 'column', alignItems: 'center', gap: '4px',
           }}>
             <span style={{
