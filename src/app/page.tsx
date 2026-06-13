@@ -228,8 +228,8 @@ const WordRevealParagraph = () => {
                   display: 'inline-block',
                   fontFamily: word.italic
                     ? 'Georgia, serif'
-                    : 'Syne, sans-serif',
-                  fontWeight: word.italic ? 400 : 800,
+                    : "'Clash Display', sans-serif",
+                  fontWeight: word.italic ? 400 : 700,
                   fontStyle: word.italic ? 'italic' : 'normal',
                   fontSize: 'clamp(36px, 6vw, 88px)',
                   color: word.green ? '#39ff7a' : '#f0ffe8',
@@ -305,7 +305,7 @@ const HeroHeadline = () => {
   });
 
   return (
-    <div ref={ref} style={{ overflow: 'hidden' }}>
+    <div ref={ref} style={{ position: 'relative' }}>
       <motion.h1
         initial={{ y: '110%' }}
         animate={isInView ? { y: '0%' } : { y: '110%' }}
@@ -315,18 +315,27 @@ const HeroHeadline = () => {
         }}
         style={{
           display: 'block',
-          fontFamily: "'Syne', sans-serif",
-          fontWeight: 400,
-          fontSize: 'clamp(52px, 11vw, 210px)',
-          lineHeight: 0.85,
+          fontFamily: "'Clash Display', sans-serif",
+          fontWeight: 700,
+          fontSize: 'clamp(120px, 22vw, 380px)',
+          lineHeight: 0.8,
           color: '#f5f0e8',
-          letterSpacing: '0.02em',
+          letterSpacing: '-0.02em',
           margin: 0,
           whiteSpace: 'nowrap',
+          position: 'relative',
         }}
       >
         PRAKRITI
-        <span style={{ color: '#f5f0e8' }}>*</span>
+        <span style={{
+          position: 'absolute',
+          top: '0.05em',
+          left: '100%',
+          marginLeft: '8px',
+          fontSize: '0.35em',
+          color: '#f5f0e8',
+          lineHeight: 1,
+        }}>*</span>
       </motion.h1>
     </div>
   );
@@ -537,8 +546,8 @@ export default function HomePage() {
           {/* LEFT — Massive brand name positioned absolutely */}
           <div style={{
             position: 'absolute',
-            bottom: '0px',
-            left: '40px',
+            bottom: '-0.25em',
+            left: '0px',
             zIndex: 2,
           }}>
             <HeroHeadline />
@@ -698,8 +707,8 @@ export default function HomePage() {
         {/* Centered heading */}
         <div className="sr" style={{ textAlign: 'center', marginBottom: '56px' }}>
           <h2 style={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 800,
+            fontFamily: "'Clash Display', sans-serif",
+            fontWeight: 600,
             fontSize: 'clamp(28px, 4vw, 48px)',
             color: '#f0ede6',
             letterSpacing: '-0.02em',
@@ -753,8 +762,8 @@ export default function HomePage() {
             }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
               <p style={{
-                fontFamily: "'Syne', sans-serif",
-                fontWeight: 700,
+                fontFamily: "'Clash Display', sans-serif",
+                fontWeight: 600,
                 fontSize: '22px',
                 color: '#f0ede6',
                 lineHeight: 1.25,
@@ -803,8 +812,8 @@ export default function HomePage() {
 
               {/* Title */}
               <h3 style={{
-                fontFamily: "'Syne', sans-serif",
-                fontWeight: 700,
+                fontFamily: "'Clash Display', sans-serif",
+                fontWeight: 600,
                 fontSize: '20px',
                 color: '#f0ede6',
                 letterSpacing: '-0.01em',
@@ -863,8 +872,8 @@ export default function HomePage() {
                 [ CARBON JOURNEY 2026 ]
               </div>
               <h2 style={{
-                fontFamily: "'Syne', sans-serif",
-                fontWeight: 800,
+                fontFamily: "'Clash Display', sans-serif",
+                fontWeight: 600,
                 fontSize: 'clamp(36px, 5vw, 64px)',
                 color: '#f0ede6',
                 letterSpacing: '-0.025em',
@@ -984,8 +993,8 @@ export default function HomePage() {
                       </span>
                     </div>
                     <h3 style={{
-                      fontFamily: "'Syne', sans-serif",
-                      fontWeight: 700,
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontWeight: 600,
                       fontSize: '18px',
                       color: '#f0ede6',
                       marginBottom: '10px',
@@ -1036,8 +1045,8 @@ export default function HomePage() {
                 [ SYSTEM COMPARATIVES ]
               </div>
               <h2 style={{
-                fontFamily: "'Syne', sans-serif",
-                fontWeight: 800,
+                fontFamily: "'Clash Display', sans-serif",
+                fontWeight: 600,
                 fontSize: 'clamp(36px, 5vw, 64px)',
                 color: '#f0ede6',
                 letterSpacing: '-0.025em',
@@ -1235,8 +1244,8 @@ export default function HomePage() {
                 borderLeft: i > 0 ? '1px solid rgba(240,237,230,0.06)' : 'none',
               }}>
                 <div style={{
-                  fontFamily: "'Syne', sans-serif",
-                  fontWeight: 800,
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontWeight: 700,
                   fontSize: 'clamp(52px, 7vw, 88px)',
                   color: '#f0ede6',
                   letterSpacing: '-0.03em',
@@ -1497,8 +1506,8 @@ function TermsAccordion() {
             [ TERMS & POLICIES ]
           </span>
           <h2 style={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 800,
+            fontFamily: "'Clash Display', sans-serif",
+            fontWeight: 600,
             fontSize: 'clamp(28px, 4vw, 48px)',
             color: '#f0ede6',
             letterSpacing: '-0.02em',
@@ -1556,8 +1565,8 @@ function TermsAccordion() {
                       {item.num}
                     </span>
                     <span style={{
-                      fontFamily: "'Syne', sans-serif",
-                      fontWeight: 700,
+                      fontFamily: "'Clash Display', sans-serif",
+                      fontWeight: 600,
                       fontSize: '18px',
                       color: '#f0ede6',
                       letterSpacing: '-0.01em'

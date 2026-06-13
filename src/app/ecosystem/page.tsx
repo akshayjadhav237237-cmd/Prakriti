@@ -501,7 +501,7 @@ export default function EcosystemSanctuary() {
           </div>
           <div>
             <span className="text-xs text-emerald-400 font-bold tracking-widest uppercase">Prakriti Sanctuary</span>
-            <h2 className="text-md md:text-lg font-bold tracking-tight leading-none text-slate-100 font-serif">Western Ghats</h2>
+            <h2 className="text-md md:text-lg font-bold tracking-tight leading-none text-slate-100 font-display">Western Ghats</h2>
           </div>
         </div>
 
@@ -719,7 +719,7 @@ export default function EcosystemSanctuary() {
 
         {/* Parallax Overlay Sanctuary Title */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 text-center pointer-events-auto z-40 select-none px-4 max-w-lg">
-          <h1 className="text-5xl md:text-7xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-emerald-100 via-emerald-300 to-teal-600 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] font-serif">
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-emerald-100 via-emerald-300 to-teal-600 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] font-display">
             Western Ghats
           </h1>
           <p className="text-emerald-100/70 mt-3 text-xs md:text-sm tracking-[0.25em] uppercase font-bold drop-shadow-md">
@@ -928,7 +928,7 @@ export default function EcosystemSanctuary() {
         <div className="mb-16">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
             <div>
-              <h3 className="text-2xl md:text-3xl font-serif font-black tracking-tight">Wildlife Catalogue</h3>
+              <h3 className="text-2xl md:text-3xl font-display font-black tracking-tight">Wildlife Catalogue</h3>
               <p className="text-sm text-slate-400 mt-1">
                 Unlocked entries appear as colorful Polaroids with glows. Tap them to view ecological details.
               </p>
@@ -970,7 +970,7 @@ export default function EcosystemSanctuary() {
                   </div>
                   
                   <div className="text-center space-y-1">
-                    <h4 className="font-serif font-bold text-slate-900 text-base tracking-tight truncate">
+                    <h4 className="font-display font-bold text-slate-900 text-base tracking-tight truncate">
                       {sp.name}
                     </h4>
                     <p className="text-[10px] text-slate-500 font-serif italic">
@@ -1053,7 +1053,7 @@ export default function EcosystemSanctuary() {
                     <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider mb-2 ${selectedSpecies.statusColor}`}>
                       {selectedSpecies.status}
                     </span>
-                    <h3 className="text-2xl font-serif font-black tracking-tight text-white leading-tight">
+                    <h3 className="text-2xl font-display font-black tracking-tight text-white leading-tight">
                       {selectedSpecies.name}
                     </h3>
                     <p className="text-sm font-mono text-slate-400 italic mt-0.5">
