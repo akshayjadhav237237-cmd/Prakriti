@@ -285,7 +285,8 @@ const HeroText = () => {
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: '18px',
               lineHeight: 1.6,
-              color: 'rgba(245,240,232,0.55)',
+              color: 'rgba(255,255,255,0.92)',
+              fontWeight: 500,
               margin: 0,
             }}
           >
@@ -574,8 +575,8 @@ export default function HomePage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                background: '#f5f0e8',
-                color: '#080808',
+                background: '#0d0d0d',
+                color: '#f5f0e8',
                 fontFamily: 'Space Grotesk',
                 fontWeight: 600,
                 fontSize: '15px',
@@ -584,14 +585,17 @@ export default function HomePage() {
                 border: 'none',
                 cursor: 'pointer',
                 textDecoration: 'none',
+                transition: 'background 0.2s ease',
               }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#2e2e2e')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#0d0d0d')}
             >
               Start budgeting
               <span style={{
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                background: '#080808',
+                background: '#1a1a1a',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
