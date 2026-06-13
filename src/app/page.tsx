@@ -99,88 +99,110 @@ const STATS = [
   { end: 7, suffix: '', label: 'parallel subagents' },
 ];
 
-const StatementReveal = () => {
+const WordRevealParagraph = () => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { 
+  const isInView = useInView(ref, {
     once: true,
-    margin: '-15% 0px'
+    margin: '-5% 0px',
   });
 
-  const segments = [
-    { 
-      text: 'We are climate thinkers,', 
-      style: 'bold'  // Syne 800, #f0ffe8
-    },
-    { 
-      text: 'building for India.', 
-      style: 'italic' // italic serif, #39ff7a or muted
-    },
-    { 
-      text: 'We empower individuals', 
-      style: 'bold'
-    },
-    { 
-      text: 'to track, budget,', 
-      style: 'bold'
-    },
-    { 
-      text: 'and reduce', 
-      style: 'bold'
-    },
-    {
-      text: 'their carbon footprint.',
-      style: 'bold'
+  const [prefersReduced, setPrefersReduced] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReduced(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches);
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
     }
+  }, []);
+
+  const content = [
+    { text: 'We', italic: false, green: false },
+    { text: 'are', italic: false, green: false },
+    { text: 'climate', italic: false, green: false },
+    { text: 'thinkers,', italic: false, green: false },
+    { text: '\n', italic: false, green: false },
+    { text: 'building', italic: true, green: true },
+    { text: 'for', italic: true, green: true },
+    { text: 'India.', italic: true, green: true },
+    { text: '\n', italic: false, green: false },
+    { text: 'We', italic: false, green: false },
+    { text: 'empower', italic: false, green: false },
+    { text: 'individuals', italic: false, green: false },
+    { text: '\n', italic: false, green: false },
+    { text: 'to', italic: false, green: false },
+    { text: 'track,', italic: false, green: false },
+    { text: 'budget,', italic: false, green: false },
+    { text: 'and', italic: false, green: false },
+    { text: 'reduce', italic: false, green: false },
+    { text: 'their', italic: false, green: false },
+    { text: 'carbon', italic: false, green: false },
+    { text: 'footprint.', italic: false, green: false },
   ];
 
   return (
-    <div 
+    <div
       ref={ref}
       style={{
+        padding: '120px 40px',
         maxWidth: '900px',
         margin: '0 auto',
-        padding: '120px 40px',
         textAlign: 'center',
       }}
     >
-      {segments.map((segment, i) => (
-        <div 
-          key={i} 
-          style={{ overflow: 'hidden', lineHeight: 1.1 }}
-        >
-          <motion.span
-            initial={{ y: '105%', opacity: 0 }}
-            animate={isInView 
-              ? { y: '0%', opacity: 1 } 
-              : { y: '105%', opacity: 0 }
-            }
-            transition={{
-              duration: 0.75,
-              delay: 0.12 * i,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            style={{
-              display: 'inline-block',
-              fontFamily: segment.style === 'italic' 
-                ? 'Georgia, serif' 
-                : 'Syne, sans-serif',
-              fontWeight: segment.style === 'italic' 
-                ? 400 
-                : 800,
-              fontStyle: segment.style === 'italic' 
-                ? 'italic' 
-                : 'normal',
-              fontSize: 'clamp(36px, 6vw, 80px)',
-              color: segment.style === 'italic'
-                ? 'rgba(57,255,122,0.7)'
-                : '#f0ffe8',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            {segment.text}
-          </motion.span>
-        </div>
-      ))}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: '0.25em 0.3em',
+        lineHeight: 1.05,
+      }}>
+        {content.map((word, i) => {
+          if (word.text === '\n') {
+            return <div key={i} style={{ width: '100%' }} />;
+          }
+
+          return (
+            <div
+              key={i}
+              style={{ overflow: 'hidden', display: 'inline-block' }}
+            >
+              <motion.span
+                initial={prefersReduced ? { y: '0%', opacity: 1 } : { y: '110%', opacity: 0 }}
+                animate={
+                  prefersReduced
+                    ? { y: '0%', opacity: 1 }
+                    : (isInView ? { y: '0%', opacity: 1 } : { y: '110%', opacity: 0 })
+                }
+                transition={
+                  prefersReduced
+                    ? { duration: 0 }
+                    : {
+                        duration: 0.55,
+                        delay: 0.045 * i,
+                        ease: [0.16, 1, 0.3, 1],
+                      }
+                }
+                style={{
+                  display: 'inline-block',
+                  fontFamily: word.italic
+                    ? 'Georgia, serif'
+                    : 'Syne, sans-serif',
+                  fontWeight: word.italic ? 400 : 800,
+                  fontStyle: word.italic ? 'italic' : 'normal',
+                  fontSize: 'clamp(42px, 7vw, 96px)',
+                  color: word.green ? '#39ff7a' : '#f0ffe8',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {word.text}
+              </motion.span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -565,7 +587,7 @@ export default function HomePage() {
           [ PRAKRITI ]
         </div>
 
-        <StatementReveal />
+        <WordRevealParagraph />
 
         {/* Sub text */}
         <div className="sr sr-d2" style={{
