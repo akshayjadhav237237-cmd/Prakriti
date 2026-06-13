@@ -247,6 +247,63 @@ const WordRevealParagraph = () => {
   );
 };
 
+// Word-by-word scroll reveal: starts dark (blends with bg), brightens to near-white on scroll
+const ScrollFadeParagraph = ({ text, fontSize = '17px', fontWeight = 300, delay = 0 }: {
+  text: string;
+  fontSize?: string;
+  fontWeight?: number;
+  delay?: number;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [revealedCount, setRevealedCount] = useState(0);
+  const words = text.split(' ');
+
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      // Start when top of element hits 90% of screen, finish when it hits 20%
+      const start = windowHeight * 0.88;
+      const end = windowHeight * 0.22;
+      const progress = Math.max(0, Math.min(1, (start - rect.top) / (start - end)));
+      timeout = setTimeout(() => {
+        setRevealedCount(Math.floor(progress * words.length));
+      }, delay);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeout);
+    };
+  }, [words.length, delay]);
+
+  return (
+    <div ref={containerRef} style={{ display: 'block' }}>
+      {words.map((word, i) => (
+        <span
+          key={i}
+          style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize,
+            fontWeight,
+            lineHeight: 1.75,
+            color: i < revealedCount
+              ? 'rgba(240,237,230,0.88)'
+              : 'rgba(240,237,230,0.13)',
+            transition: 'color 0.45s ease',
+            display: 'inline',
+          }}
+        >
+          {word}{i < words.length - 1 ? ' ' : ''}
+        </span>
+      ))}
+    </div>
+  );
+};
+
 const lines = [
   "The first carbon platform",
   "built for how India actually lives.",
@@ -656,49 +713,38 @@ export default function HomePage() {
 
         <WordRevealParagraph />
 
-        {/* Sub text */}
-        <div className="sr sr-d2" style={{
+        {/* Sub text — scroll-fade word reveal */}
+        <div style={{
           maxWidth: '640px',
           margin: '0 auto 48px',
+          textAlign: 'center',
         }}>
-          <p style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: '17px',
-            fontWeight: 300,
-            lineHeight: 1.75,
-            color: 'rgba(240,237,230,0.38)',
-          }}>
-            Over a carbon journey, you collaborate with real India data
-            to build a personal climate identity. Together, we foster a
-            generation of conscious consumers that bridge awareness with
-            action — pushing the boundaries of what individual impact
-            can achieve.
-          </p>
+          <ScrollFadeParagraph
+            text="Over a carbon journey, you collaborate with real India data to build a personal climate identity. Together, we foster a generation of conscious consumers that bridge awareness with action — pushing the boundaries of what individual impact can achieve."
+            fontSize="17px"
+            fontWeight={300}
+          />
         </div>
 
-        <div className="sr sr-d3" style={{
+        <div style={{
           maxWidth: '640px',
           margin: '0 auto',
+          textAlign: 'center',
         }}>
-          <p style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: '17px',
-            fontWeight: 300,
-            lineHeight: 1.75,
-            color: 'rgba(240,237,230,0.22)',
-          }}>
-            India-first carbon intelligence for conscious decision-makers.
-          </p>
-          <p style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: '17px',
-            fontWeight: 300,
-            lineHeight: 1.75,
-            color: 'rgba(240,237,230,0.16)',
-            marginTop: '4px',
-          }}>
-            Built on real data. Powered by Gemini.
-          </p>
+          <ScrollFadeParagraph
+            text="India-first carbon intelligence for conscious decision-makers."
+            fontSize="17px"
+            fontWeight={300}
+            delay={60}
+          />
+          <div style={{ marginTop: '4px' }}>
+            <ScrollFadeParagraph
+              text="Built on real data. Powered by Gemini."
+              fontSize="17px"
+              fontWeight={300}
+              delay={120}
+            />
+          </div>
         </div>
       </section>
 
