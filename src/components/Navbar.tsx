@@ -27,20 +27,21 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
     return (
       <nav style={{
         position: 'absolute',
-        top: '-22px',
+        top: '24px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 20,
         display: 'inline-flex',
         alignItems: 'center',
         gap: '32px',
-        background: '#000000',
-        backdropFilter: 'none',
-        WebkitBackdropFilter: 'none',
+        background: 'rgba(0, 0, 0, 0.88)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: '100px',
         padding: '10px 24px',
         whiteSpace: 'nowrap',
+        outline: 'none',
       }}>
         {HOME_LINKS.map(link => (
           <Link
