@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { motion, useInView } from 'framer-motion';
 
 /* ─── CONSTANTS ─────────────────────────────── */
 
@@ -123,6 +124,154 @@ const MISSION_WORDS = [
   { text: 'a', italic: true },
   { text: 'time.', italic: true },
 ];
+
+const lines = [
+  "The first carbon platform",
+  "built for how India actually lives.",
+  "Not adapted. Built.",
+];
+
+const HeroText = () => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { 
+    once: true, 
+    margin: '-10% 0px' 
+  });
+
+  return (
+    <div ref={ref} style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '4px',
+      marginTop: '24px',
+      marginBottom: '24px',
+    }}>
+      {lines.map((line, i) => (
+        <div key={i} style={{ overflow: 'hidden' }}>
+          <motion.p
+            initial={{ y: '110%', opacity: 0 }}
+            animate={isInView 
+              ? { y: '0%', opacity: 1 } 
+              : { y: '110%', opacity: 0 }
+            }
+            transition={{
+              duration: 0.7,
+              delay: 0.15 * i,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: '18px',
+              lineHeight: 1.6,
+              color: 'rgba(240,255,232,0.5)',
+              margin: 0,
+            }}
+          >
+            {line}
+          </motion.p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const HeroHeadline = () => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, {
+    once: true,
+    margin: '-10% 0px'
+  });
+  
+  const headline = "Your carbon, your budget, your India.";
+  const words = headline.split(" ");
+
+  return (
+    <div ref={ref} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3em' }}>
+      {words.map((word, i) => (
+        <div key={i} style={{ overflow: 'hidden' }}>
+          <motion.span
+            initial={{ y: '110%' }}
+            animate={isInView ? { y: '0%' } : { y: '110%' }}
+            transition={{
+              duration: 0.6,
+              delay: 0.06 * i,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
+            style={{
+              display: 'inline-block',
+              fontFamily: "'Syne', sans-serif",
+              fontWeight: 800,
+              fontSize: 'clamp(48px, 7vw, 96px)',
+              color: word === 'India.' 
+                ? '#39ff7a' 
+                : '#f0ffe8',
+              lineHeight: 1.05,
+            }}
+          >
+            {word}
+          </motion.span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const FeatureBullets = ({ bullets }: { bullets: string[] }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, {
+    once: true,
+    margin: '-10% 0px'
+  });
+
+  return (
+    <ul ref={ref} style={{
+      listStyle: 'none',
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '10px',
+    }}>
+      {bullets.map((b, i) => (
+        <li key={b} style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '10px',
+          fontFamily: "'Space Grotesk', sans-serif",
+          fontSize: '13px',
+          fontWeight: 300,
+          color: 'rgba(240,237,230,0.45)',
+          lineHeight: 1.5,
+        }}>
+          <span style={{ color: '#39ff7a', flexShrink: 0, marginTop: '2px' }}>✓</span>
+          <div style={{ overflow: 'hidden', flex: 1 }}>
+            <motion.p
+              initial={{ y: '110%', opacity: 0 }}
+              animate={isInView 
+                ? { y: '0%', opacity: 1 } 
+                : { y: '110%', opacity: 0 }
+              }
+              transition={{
+                duration: 0.6,
+                delay: 0.1 * i,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              }}
+              style={{
+                margin: 0,
+                color: 'rgba(240,237,230,0.45)',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontSize: '13px',
+                fontWeight: 300,
+                lineHeight: 1.5,
+              }}
+            >
+              {b}
+            </motion.p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
 /* ─── COMPONENT ─────────────────────────────── */
 
@@ -314,36 +463,12 @@ export default function HomePage() {
           
           {/* LEFT — Massive brand name */}
           <div className="col-span-1 lg:col-span-8 flex items-end overflow-hidden">
-            <h1 style={{
-              fontFamily: "'Syne', sans-serif",
-              fontWeight: 800,
-              fontSize: 'clamp(52px, 11vw, 210px)',
-              lineHeight: 0.85,
-              color: '#f0ede6',
-              letterSpacing: '-0.04em',
-              margin: 0,
-              whiteSpace: 'nowrap',
-            }}>
-              PRAKRITI
-              <span style={{ color: '#39ff7a' }}>*</span>
-            </h1>
+            <HeroHeadline />
           </div>
 
           {/* RIGHT — Description + CTA */}
           <div className="col-span-1 lg:col-span-4 flex flex-col items-start lg:pl-6 pb-2 max-w-md">
-            <p style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: '15px',
-              fontWeight: 300,
-              lineHeight: 1.7,
-              color: 'rgba(240,237,230,0.6)',
-              marginBottom: '24px',
-              maxWidth: '340px',
-            }}>
-              India's first carbon budgeting platform. Built on CEA grid
-              data, Gemini Vision scanning, and behavioural science.
-              Not adapted. Built.
-            </p>
+            <HeroText />
 
             <Link
               href="/dashboard"
@@ -651,29 +776,7 @@ export default function HomePage() {
               </h3>
 
               {/* Bullets */}
-              <ul style={{
-                listStyle: 'none',
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '10px',
-              }}>
-                {feat.bullets.map(b => (
-                  <li key={b} style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '10px',
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    fontSize: '13px',
-                    fontWeight: 300,
-                    color: 'rgba(240,237,230,0.45)',
-                    lineHeight: 1.5,
-                  }}>
-                    <span style={{ color: '#39ff7a', flexShrink: 0, marginTop: '2px' }}>✓</span>
-                    {b}
-                  </li>
-                ))}
-              </ul>
+              <FeatureBullets bullets={feat.bullets} />
 
               {/* Learn more */}
               <Link href={feat.link} style={{
