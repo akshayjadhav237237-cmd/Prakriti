@@ -100,11 +100,8 @@ const STATS = [
 ];
 
 const WordRevealParagraph = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, {
-    once: true,
-    margin: '-5% 0px',
-  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [revealedCount, setRevealedCount] = useState(0);
 
   const [prefersReduced, setPrefersReduced] = useState(false);
   useEffect(() => {
@@ -135,6 +132,7 @@ const WordRevealParagraph = () => {
     { text: 'to', italic: false, green: false },
     { text: 'track,', italic: false, green: false },
     { text: 'budget,', italic: false, green: false },
+    { text: '\n', italic: false, green: false },
     { text: 'and', italic: false, green: false },
     { text: 'reduce', italic: false, green: false },
     { text: 'their', italic: false, green: false },
@@ -142,49 +140,92 @@ const WordRevealParagraph = () => {
     { text: 'footprint.', italic: false, green: false },
   ];
 
+  // Filter out line breaks for count purposes
+  const wordCount = content.filter(w => w.text !== '\n').length;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+
+      // How far we've scrolled INTO this section
+      // 0 = section top just entered bottom of screen
+      // 1 = section bottom has reached top of screen
+      const scrollProgress = Math.max(
+        0,
+        Math.min(
+          1,
+          (windowHeight - rect.top) / (windowHeight + rect.height)
+        )
+      );
+
+      // Map scroll progress to number of revealed words
+      const revealed = Math.floor(scrollProgress * wordCount * 1.8);
+      setRevealedCount(Math.min(revealed, wordCount));
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+    handleScroll(); // run on mount
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [wordCount]);
+
+  let wordIndex = 0;
+
   return (
     <div
-      ref={ref}
+      ref={containerRef}
       style={{
+        // Tall section so scroll has room to work
+        minHeight: '200vh',
         padding: '120px 40px',
-        maxWidth: '900px',
-        margin: '0 auto',
-        textAlign: 'center',
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'center',
       }}
     >
+      {/* Sticky inner so text stays visible while scrolling */}
       <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: '0.25em 0.3em',
-        lineHeight: 1.05,
+        position: 'sticky',
+        top: '20vh',
+        maxWidth: '900px',
+        textAlign: 'center',
       }}>
-        {content.map((word, i) => {
-          if (word.text === '\n') {
-            return <div key={i} style={{ width: '100%' }} />;
-          }
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: '0.25em 0.35em',
+          lineHeight: 1.05,
+        }}>
+          {content.map((word, i) => {
+            // Line break
+            if (word.text === '\n') {
+              return <div key={i} style={{ width: '100%' }} />;
+            }
 
-          return (
-            <div
-              key={i}
-              style={{ overflow: 'hidden', display: 'inline-block' }}
-            >
+            const currentIndex = wordIndex++;
+            const isRevealed = prefersReduced ? true : (currentIndex < revealedCount);
+
+            return (
               <motion.span
-                initial={prefersReduced ? { y: '0%', opacity: 1 } : { y: '110%', opacity: 0 }}
-                animate={
-                  prefersReduced
-                    ? { y: '0%', opacity: 1 }
-                    : (isInView ? { y: '0%', opacity: 1 } : { y: '110%', opacity: 0 })
-                }
-                transition={
-                  prefersReduced
-                    ? { duration: 0 }
-                    : {
-                        duration: 0.55,
-                        delay: 0.045 * i,
-                        ease: [0.16, 1, 0.3, 1],
-                      }
-                }
+                key={i}
+                animate={{
+                  opacity: isRevealed ? 1 : 0.08,
+                  y: isRevealed ? 0 : 8,
+                  filter: isRevealed 
+                    ? 'blur(0px)' 
+                    : 'blur(4px)',
+                }}
+                transition={prefersReduced ? { duration: 0 } : {
+                  duration: 0.4,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
                 style={{
                   display: 'inline-block',
                   fontFamily: word.italic
@@ -192,16 +233,17 @@ const WordRevealParagraph = () => {
                     : 'Syne, sans-serif',
                   fontWeight: word.italic ? 400 : 800,
                   fontStyle: word.italic ? 'italic' : 'normal',
-                  fontSize: 'clamp(42px, 7vw, 96px)',
+                  fontSize: 'clamp(36px, 6vw, 88px)',
                   color: word.green ? '#39ff7a' : '#f0ffe8',
                   letterSpacing: '-0.02em',
+                  willChange: 'opacity, transform',
                 }}
               >
                 {word.text}
               </motion.span>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
