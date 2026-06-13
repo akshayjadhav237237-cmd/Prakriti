@@ -477,15 +477,15 @@ export default function HomePage() {
       {/* Bezel frame wrapper */}
       <div style={{
         background: '#080808',
-        padding: '12px',
+        padding: '24px',
         minHeight: '100vh',
-        borderRadius: '28px',
+        borderRadius: '40px',
       }}>
         <section style={{
           position: 'relative',
-          borderRadius: '28px',
+          borderRadius: '40px',
           overflow: 'hidden',
-          height: 'calc(100vh - 24px)',
+          height: 'calc(100vh - 48px)',
           background: '#111',
         }}>
 
