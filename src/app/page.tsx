@@ -316,11 +316,11 @@ const HeroHeadline = () => {
         style={{
           display: 'block',
           fontFamily: "'Syne', sans-serif",
-          fontWeight: 800,
+          fontWeight: 400,
           fontSize: 'clamp(52px, 11vw, 210px)',
           lineHeight: 0.85,
           color: '#f5f0e8',
-          letterSpacing: '-0.04em',
+          letterSpacing: '0.02em',
           margin: 0,
           whiteSpace: 'nowrap',
         }}
@@ -480,7 +480,11 @@ export default function HomePage() {
         padding: '24px',
         minHeight: '100vh',
         borderRadius: '40px',
+        position: 'relative',
       }}>
+        {/* Floating inline navbar */}
+        <Navbar inline={true} />
+
         <section style={{
           position: 'relative',
           borderRadius: '40px',
@@ -488,9 +492,6 @@ export default function HomePage() {
           height: 'calc(100vh - 48px)',
           background: '#111',
         }}>
-
-          {/* Floating inline navbar */}
-          <Navbar inline={true} />
 
           {/* VIDEO — local file and CDN fallbacks */}
           <video
