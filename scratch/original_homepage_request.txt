@@ -1,0 +1,353 @@
+<USER_REQUEST>
+Completely rebuild Prakriti's homepage (src/app/page.tsx) 
+with a cinematic, editorial design inspired by premium 
+developer/tech websites. Dark, bold, intentional.
+
+=== FONTS ===
+Primary display: "Syne" (weight 800) — for all headings
+Body/mono: "Space Grotesk" (weight 400-500)
+Mono accent: "Space Mono" — for labels, tags, numbers
+
+Add to layout.tsx:
+<link href="https://fonts.googleapis.com/css2?
+family=Syne:wght@700;800&
+family=Space+Grotesk:wght@400;500;600&
+family=Space+Mono:wght@400;700&display=swap" 
+rel="stylesheet" />
+
+=== COLOR PALETTE (homepage only) ===
+--bg: #060a06 (near black with green tint)
+--surface: #0d1a0d
+--green-bright: #39ff7a (electric lime green)
+--green-muted: #1a4a1a
+--text-primary: #f0ffe8
+--text-muted: #5a7a5a
+--border: rgba(57,255,122,0.12)
+--grain: rgba(255,255,255,0.03)
+
+=== SECTION 1: NAVBAR ===
+Minimal. Transparent bg.
+Left: "PRAKRITI*" in Space Mono 700, 
+  letter-spacing: 0.15em, text-white
+  The * is in --green-bright color
+Center: Nothing
+Right: 
+  "Dashboard →" ghost link
+  "GitHub ↗" ghost link
+  Both in Space Grotesk, text-muted, 
+  hover:text-white transition
+
+No pills. No pebble counter. No demo mode.
+Just clean minimal links.
+Height: 72px, px-8
+
+=== SECTION 2: HERO ===
+Full viewport height (100svh).
+Background: 
+  Animated gradient blob — one large green radial 
+  blob slowly pulsing in top-right corner:
+  
+  @keyframes blobPulse {
+    0%, 100% { 
+      transform: scale(1) translate(0, 0);
+      opacity: 0.15; 
+    }
+    50% { 
+      transform: scale(1.1) translate(-20px, 20px);
+      opacity: 0.25; 
+    }
+  }
+  
+  <div style={{
+    position: 'absolute',
+    width: '600px', height: '600px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, #39ff7a, transparent 70%)',
+    top: '-200px', right: '-200px',
+    animation: 'blobPulse 8s ease-in-out infinite',
+    pointerEvents: 'none'
+  }} />
+
+Layout: 
+  padding-top: 20vh
+  max-width: 900px
+  padding-left: 80px (desktop)
+
+Eye-brow label above headline:
+<span style={{
+  fontFamily: 'Space Mono',
+  fontSize: '11px',
+  letterSpacing: '0.2em',
+  color: '#39ff7a',
+  textTransform: 'uppercase',
+  border: '1px solid rgba(57,255,122,0.3)',
+  padding: '6px 14px',
+  borderRadius: '4px',
+  display: 'inline-block',
+  marginBottom: '32px'
+}}>
+  PromptWars Ch.3 × Google Antigravity
+</span>
+
+Main headline (three lines, Syne 800):
+Line 1: "Your carbon," — text-white, 96px
+Line 2: "your budget," — text-white, 96px
+Line 3: "your India." — #39ff7a color, 96px
+
+Each line animates in on load:
+initial: { opacity: 0, y: 40 }
+animate: { opacity: 1, y: 0 }
+Delays: 0.2s, 0.4s, 0.6s
+Framer Motion.
+
+Subtext below (Space Grotesk, 18px, text-muted):
+"The first carbon platform built for how India 
+actually lives. Not adapted. Built."
+Animate in: delay 0.8s
+
+CTA row (margin-top: 48px, gap: 16px):
+Button 1 — Filled:
+  background: #39ff7a
+  color: #060a06
+  font: Space Grotesk 600, 15px
+  padding: 14px 32px
+  border-radius: 6px
+  text: "Start Budgeting →"
+  hover: brightness(1.1), translateY(-1px)
+
+Button 2 — Ghost:
+  border: 1px solid rgba(57,255,122,0.3)
+  color: text-muted
+  same padding/radius
+  text: "View Demo"
+  hover: border-color #39ff7a, color white
+
+Scroll hint at bottom:
+  "SCROLL" in Space Mono 11px, 
+  letter-spacing 0.2em, text-muted
+  + animated down arrow, bouncing
+
+=== SECTION 3: MARQUEE TICKER ===
+Full width horizontal scrolling ticker.
+Two rows scrolling opposite directions.
+Speed: 40s linear infinite.
+
+Row 1 (left to right):
+"CARBON BUDGETING" · "INDIA FIRST" · 
+"GEMINI VISION" · "WESTERN GHATS" · 
+"CEA GRID FACTORS" · "YNAB MODEL" · 
+"38.46 KG/WEEK" · "ENVELOPE SYSTEM" ·
+
+Row 2 (right to left, slightly faster):
+"0.71 KG/KWH" · "LION-TAILED MACAQUE" · 
+"DIWALI MODE" · "DG SET TRACKING" · 
+"SHOLA FOREST" · "GEMINI RECEIPT SCAN" · 
+"NILGIRI TAHR" · "PROACTIVE NOT REACTIVE" ·
+
+Style: Space Mono, 13px, letter-spacing 0.15em
+Color: text-muted, hover:text-green-bright
+Border-top and border-bottom: 1px solid --border
+Padding: 16px 0
+
+Implementation:
+<div style={{ overflow: 'hidden', borderTop: '1px solid rgba(57,255,122,0.12)', borderBottom: '1px solid rgba(57,255,122,0.12)' }}>
+  <div style={{
+    display: 'flex',
+    animation: 'marquee 40s linear infinite',
+    whiteSpace: 'nowrap'
+  }}>
+    {/* repeat content twice for seamless loop */}
+  </div>
+</div>
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marqueeReverse {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+=== SECTION 4: FEATURES — NUMBERED EDITORIAL ===
+Max-width: 1000px, margin: auto
+padding: 120px 80px
+
+Section eyebrow:
+"[ WHAT PRAKRITI DOES ]" 
+Space Mono, 11px, letter-spacing 0.2em, 
+color: #39ff7a, margin-bottom: 80px
+
+3 feature rows — each takes full width:
+Border-top: 1px solid --border
+Each row: 
+  Left: oversized number "01" "02" "03"
+    Syne 800, 80px, color: rgba(57,255,122,0.2)
+    (huge, ghosted)
+  Center: Feature title + description
+    Title: Syne 700, 32px, text-white
+    Desc: Space Grotesk, 16px, text-muted, 
+          max-width 400px, line-height 1.7
+  Right: Stat/highlight pill
+    border: 1px solid --border
+    Space Mono, 12px
+
+Row 1:
+  Number: "01"
+  Title: "Scan. Don't type."
+  Desc: "Point your camera at any Indian bill. 
+  Gemini Vision reads electricity units, 
+  petrol liters, Swiggy orders — maps them 
+  to real carbon instantly."
+  Pill: "GEMINI 1.5 FLASH"
+
+Row 2:
+  Number: "02"
+  Title: "Budget before you burn."
+  Desc: "Allocate your 38.46 kg weekly carbon 
+  limit across envelopes. Spend it like money. 
+  No retroactive guilt. Just decisions."
+  Pill: "YNAB MODEL"
+
+Row 3:
+  Number: "03"
+  Title: "India's numbers. Not Europe's."
+  Desc: "0.71 kg/kWh grid. 0.033 kg/km scooter. 
+  DG set tracking. Diwali mode. IPL season. 
+  Wedding Guest mode. Built for how you 
+  actually live."
+  Pill: "CEA × ARAI × CPCB"
+
+Scroll reveal on each row:
+  .reveal class, stagger 150ms between rows
+
+=== SECTION 5: DIFF COMPARISON ===
+Full width, background: #0d1a0d
+padding: 100px 80px
+
+Section label: "[ WHY PRAKRITI IS DIFFERENT ]"
+Same eyebrow style.
+
+Code editor aesthetic card:
+  background: #060a06
+  border: 1px solid rgba(57,255,122,0.2)
+  border-radius: 12px
+  padding: 40px
+
+Header bar (like a terminal):
+  "why_prakriti.diff"  
+  Space Mono 12px, text-muted
+  Left: Three dots (red, yellow, green) 12px circles
+
+4 diff rows:
+Each with:
+  Row number: "01" "02" "03" "04" 
+    Space Mono, text-muted, opacity 0.4
+  Label: e.g. "// DATA ACCURACY"
+    Space Mono, 11px, #39ff7a
+  Minus line (red): what others do
+  Plus line (green): what Prakriti does
+
+Content:
+01 // DATA ACCURACY
+- Western DEFRA/EPA emission factors
++ CEA India grid · ARAI road transport · CPCB fuels
+
+02 // TRACKING MODEL  
+- Retroactive guilt. Log it. Feel bad. Quit.
++ Proactive envelope budget. Allocate before you spend.
+
+03 // DATA INGESTION
+- Manual entry forms. High friction. Low retention.
++ Gemini Vision OCR. Scan any bill. Zero typing.
+
+04 // BEHAVIORAL DESIGN
+- Points and streaks. Moral licensing. Motivation crowd-out.
++ Implementation intentions. Compassionate recovery. Identity habits.
+
+Diff line styles:
+  Minus: color #ff5555, background rgba(255,85,85,0.08)
+    padding: 8px 16px, "−" prefix
+  Plus: color #39ff7a, background rgba(57,255,122,0.08)
+    padding: 8px 16px, "+" prefix
+
+=== SECTION 6: STATS COUNTER ROW ===
+Full width, padding: 80px
+3 stats side by side with dividers:
+
+Stat 1: "48" — unit: "unit tests"
+Stat 2: "100%" — unit: "code coverage"  
+Stat 3: "7" — unit: "parallel subagents"
+
+Each number:
+  Syne 800, 72px, #39ff7a
+  Count-up animation on scroll into view
+  Unit text: Space Grotesk, 14px, text-muted
+
+Dividers: 1px solid --border between stats
+
+=== SECTION 7: ECOSYSTEM PREVIEW ===
+Dark section, centered
+padding: 100px 80px
+
+Large heading (Syne 800, 56px):
+"Your forest. Your choices."
+
+Subtext: "Every carbon decision shapes a living 
+Western Ghats ecosystem. Unlock endangered 
+Indian species as you hit milestones."
+
+Species row — 4 species cards:
+  Each: 80px circle, dark bg, 
+  Species emoji + name below
+  🐒 Lion-Tailed Macaque
+  🐐 Nilgiri Tahr
+  🐸 Purple Frog
+  🦡 Malabar Civet
+  Locked ones: grayscale + 🔒
+
+CTA: "Start Growing →" button (same style as hero)
+
+=== SECTION 8: FOOTER ===
+Border-top: 1px solid --border
+padding: 48px 80px
+
+Left: "PRAKRITI*" in Space Mono
+  "Built for PromptWars Virtual Ch.3"
+  "Hack2Skill × Google Antigravity"
+
+Right: 
+  "Live ↗" → vercel URL
+  "GitHub ↗" → repo URL
+  "Methodology →" → /methodology
+
+All in Space Grotesk 14px, text-muted
+
+=== GRAIN TEXTURE ===
+Add subtle grain to entire page:
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,...");
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+=== ANIMATIONS SUMMARY ===
+1. Hero headline: Framer Motion stagger reveal
+2. Marquee: CSS infinite scroll both directions
+3. Feature rows: IntersectionObserver reveal
+4. Stats: Count-up on scroll
+5. Blob: CSS keyframe pulse
+6. Page transition: Framer Motion opacity fade
+
+prefers-reduced-motion: disable all animations,
+show content statically.
+
+npm run build && vercel --prod
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-06-13T01:37:25+05:30.
+</ADDITIONAL_METADATA>

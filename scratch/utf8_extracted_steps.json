@@ -1,0 +1,134 @@
+﻿=== STEP 27 ===
+[
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Fix seasonal banner contrast and background gradient by setting custom background gradient style, text-white on container, and text-green-100 on description.\"",
+      "EndLine": "361",
+      "Instruction": "\"Set background gradient, text-white, and text-green-100 on the seasonal banner container and description.\"",
+      "ReplacementContent": "\"        <AnimatePresence mode=\\\"wait\\\">\\n          <motion.div\\n            key={currentSeason}\\n            initial={{ opacity: 0, y: 10 }}\\n            animate={{ opacity: 1, y: 0 }}\\n            exit={{ opacity: 0, y: -10 }}\\n            transition={{ duration: 0.2 }}\\n            style={{ background: \\\"linear-gradient(135deg, #14532d, #166534)\\\" }}\\n            className=\\\"border border-border/80 rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden text-white\\\"\\n          >\\n            {/* Glowing background highlights */}\\n            <div className=\\\"absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] pointer-events-none\\\" />\\n\\n            <div className=\\\"flex items-start space-x-4\\\">\\n              <div className=\\\"text-3xl shrink-0 p-3 rounded-xl bg-background/50 border border-border\\\">\\n                {seasonalBanners[currentSeason].icon}\\n              </div>\\n              <div className=\\\"space-y-1\\\">\\n                <div className=\\\"flex flex-wrap items-center gap-2\\\">\\n                  <h3 className=\\\"font-extrabold text-base sm:text-lg text-white\\\">\\n                    {seasonalBanners[currentSeason].title}\\n                  </h3>\\n                  <span className={`px-2 py-0.5 text-[9px] font-bold border rounded-md uppercase tracking-wider ${seasonalBanners[currentSeason].badgeClass}`}>\\n                    {seasonalBanners[currentSeason].badge}\\n                  </span>\\n                </div>\\n                <p className=\\\"text-xs sm:text-sm text-green-100 leading-relaxed font-medium\\\">\\n                  {seasonalBanners[currentSeason].description}\\n                </p>\\n              </div>\\n            </div>\\n          </motion.div>\\n        </AnimatePresence>\"",
+      "StartLine": "329",
+      "TargetContent": "\"        <AnimatePresence mode=\\\"wait\\\">\\n          <motion.div\\n            key={currentSeason}\\n            initial={{ opacity: 0, y: 10 }}\\n            animate={{ opacity: 1, y: 0 }}\\n            exit={{ opacity: 0, y: -10 }}\\n            transition={{ duration: 0.2 }}\\n            className={`bg-gradient-to-r ${seasonalBanners[currentSeason].themeClass} border border-border/80 rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden`}\\n          >\\n            {/* Glowing background highlights */}\\n            <div className=\\\"absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] pointer-events-none\\\" />\\n\\n            <div className=\\\"flex items-start space-x-4\\\">\\n              <div className=\\\"text-3xl shrink-0 p-3 rounded-xl bg-background/50 border border-border\\\">\\n                {seasonalBanners[currentSeason].icon}\\n              </div>\\n              <div className=\\\"space-y-1\\\">\\n                <div className=\\\"flex flex-wrap items-center gap-2\\\">\\n                  <h3 className=\\\"font-extrabold text-base sm:text-lg text-white\\\">\\n                    {seasonalBanners[currentSeason].title}\\n                  </h3>\\n                  <span className={`px-2 py-0.5 text-[9px] font-bold border rounded-md uppercase tracking-wider ${seasonalBanners[currentSeason].badgeClass}`}>\\n                    {seasonalBanners[currentSeason].badge}\\n                  </span>\\n                </div>\\n                <p className=\\\"text-xs sm:text-sm text-foreground/85 leading-relaxed font-medium\\\">\\n                  {seasonalBanners[currentSeason].description}\\n                </p>\\n              </div>\\n            </div>\\n          </motion.div>\\n        </AnimatePresence>\"",
+      "TargetFile": "\"d:\\\\Akshay final folder\\\\Antigravity\\\\Virtual Prompt wars CH3\\\\src\\\\app\\\\insights\\\\page.tsx\"",
+      "toolAction": "\"Applying Insights Seasonal Banner Fix\"",
+      "toolSummary": "\"Modifying Insights page styling\""
+    }
+  }
+]
+=======================
+
+=== STEP 30 ===
+[
+  {
+    "name": "multi_replace_file_content",
+    "args": {
+      "ArtifactMetadata": "{\"ArtifactType\":\"other\",\"Summary\":\"Updates to weekly limit calculation and display, and new envelope names.\"}",
+      "Description": "\"Update envelope names to emoji versions, compute totalWeeklyBudget dynamically, and display it in the weekly limit section.\"",
+      "Instruction": "\"Change envelope names, add totalWeeklyBudget calculation, and render totalWeeklyBudget in the weekly limit display block.\"",
+      "ReplacementChunks": "[{\"AllowMultiple\":false,\"EndLine\":71,\"ReplacementContent\":\"const ENVELOPES: EnvelopeDetails[] = [\\n  { \\n    name: \\\"≡ƒÜù Transport\\\", \\n    key: \\\"transport\\\", \\n    icon: Bus, \\n    color: \\\"from-blue-500 to-indigo-600\\\",\\n    glowColor: \\\"rgba(59, 130, 246, 0.15)\\\",\\n    defaultVal: 12.0,\\n    max: 30.0 \\n  },\\n  { \\n    name: \\\"≡ƒì▒ Food & Delivery\\\", \\n    key: \\\"food\\\", \\n    icon: Utensils, \\n    color: \\\"from-emerald-500 to-teal-600\\\",\\n    glowColor: \\\"rgba(16, 185, 129, 0.15)\\\",\\n    defaultVal: 8.0,\\n    max: 30.0 \\n  },\\n  { \\n    name: \\\"Γ¥ä∩╕Å Cooling & Energy\\\", \\n    key: \\\"energy\\\", \\n    icon: Zap, \\n    color: \\\"from-amber-500 to-orange-600\\\",\\n    glowColor: \\\"rgba(245, 158, 11, 0.15)\\\",\\n    defaultVal: 14.0,\\n    max: 30.0 \\n  },\\n  { \\n    name: \\\"≡ƒ¢ì∩╕Å Lifestyle\\\", \\n    key: \\\"lifestyle\\\", \\n    icon: Sparkles, \\n    color: \\\"from-pink-500 to-rose-600\\\",\\n    glowColor: \\\"rgba(244, 63, 94, 0.15)\\\",\\n    defaultVal: 4.46,\\n    max: 20.0 \\n  }\\n];\",\"StartLine\":33,\"TargetContent\":\"const ENVELOPES: EnvelopeDetails[] = [\\n  { \\n    name: \\\"Transport\\\", \\n    key: \\\"transport\\\", \\n    icon: Bus, \\n    color: \\\"from-blue-500 to-indigo-600\\\",\\n    glowColor: \\\"rgba(59, 130, 246, 0.15)\\\",\\n    defaultVal: 12.0,\\n    max: 30.0 \\n  },\\n  { \\n    name: \\\"Food\\\", \\n    key: \\\"food\\\", \\n    icon: Utensils, \\n    color: \\\"from-emerald-500 to-teal-600\\\",\\n    glowColor: \\\"rgba(16, 185, 129, 0.15)\\\",\\n    defaultVal: 8.0,\\n    max: 30.0 \\n  },\\n  { \\n    name: \\\"Cooling & Energy\\\", \\n    key: \\\"energy\\\", \\n    icon: Zap, \\n    color: \\\"from-amber-500 to-orange-600\\\",\\n    glowColor: \\\"rgba(245, 158, 11, 0.15)\\\",\\n    defaultVal: 14.0,\\n    max: 30.0 \\n  },\\n  { \\n    name: \\\"Lifestyle\\\", \\n    key: \\\"lifestyle\\\", \\n    icon: Sparkles, \\n    color: \\\"from-pink-500 to-rose-600\\\",\\n    glowColor: \\\"rgba(244, 63, 94, 0.15)\\\",\\n    defaultVal: 4.46,\\n    max: 20.0 \\n  }\\n];\"},{\"AllowMultiple\":false,\"EndLine\":159,\"ReplacementContent\":\"  const totalWeeklyLimit = 38.46;\\n  const totalWeeklyBudget = (budget.tran\n<truncated 1213 bytes>",
+      "TargetFile": "\"d:\\\\Akshay final folder\\\\Antigravity\\\\Virtual Prompt wars CH3\\\\src\\\\app\\\\budget\\\\page.tsx\"",
+      "toolAction": "\"Updating budget envelope names and limits\"",
+      "toolSummary": "\"Modifying budget page calculation and labels\""
+    }
+  }
+]
+=======================
+
+=== STEP 32 ===
+[
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Fix logged activity modal text color and envelope case. Show envelope in uppercase and change text-white to theme-aware text-foreground.\"",
+      "EndLine": "398",
+      "Instruction": "\"Update envelope name to uppercase and change text-white to text-foreground within the confirmation modal.\"",
+      "ReplacementContent": "\"                <div className=\\\"space-y-2\\\">\\n                  <span className=\\\"text-xs font-bold text-accent uppercase tracking-widest\\\">Activity Logged</span>\\n                  <h2 className=\\\"text-2xl font-extrabold text-foreground\\\">{successLog.activity}</h2>\\n                  <div className=\\\"flex items-center justify-center space-x-2 mt-1\\\">\\n                    <span className=\\\"text-xl font-bold text-warm\\\">{successLog.co2e} kg COΓéée</span>\\n                    <span className=\\\"text-xs text-foreground/40\\\">added to {successLog.envelope.toUpperCase()}</span>\\n                  </div>\\n                </div>\\n\\n                <div className=\\\"p-4 rounded-xl bg-background border border-border space-y-2\\\">\\n                  <span className=\\\"text-xs text-foreground/50 font-medium\\\">Envelope Budget Impact</span>\\n                  <div className=\\\"flex justify-between text-sm\\\">\\n                    <span className=\\\"text-foreground/60\\\">Weekly Envelope:</span>\\n                    <span className=\\\"font-bold text-foreground\\\">{successLog.envelope.toUpperCase()}</span>\\n                  </div>\\n                  <div className=\\\"flex justify-between text-sm border-t border-border/40 pt-2\\\">\\n                    <span className=\\\"text-foreground/60\\\">Budget Remaining:</span>\\n                    <span className={`font-bold ${successLog.remaining >= 0 ? \\\"text-primary\\\" : \\\"text-red-400\\\"}`}>\\n                      {successLog.remaining} kg COΓéée\\n                    </span>\\n                  </div>\\n                  {successLog.remaining < 0 && (\\n                    <p className=\\\"text-[10px] text-warm text-left mt-2 flex items-start space-x-1\\\">\\n                      <AlertTriangle className=\\\"w-3.5 h-3.5 shrink-0 mt-0.5\\\" />\\n                      <span>This envelope is now overspent! Use the Envelope page to shift carbon from Lifestyle.</span>\\n                    </p>\\n                  )}\\n                </div>\\n\\n                <div className=\\\"flex flex-col sm:flex-row gap-3\\\">\\n       \n<truncated 309 bytes>",
+      "StartLine": "353",
+      "TargetContent": "\"                <div className=\\\"space-y-2\\\">\\n                  <span className=\\\"text-xs font-bold text-accent uppercase tracking-widest\\\">Activity Logged</span>\\n                  <h2 className=\\\"text-2xl font-extrabold text-white\\\">{successLog.activity}</h2>\\n                  <div className=\\\"flex items-center justify-center space-x-2 mt-1\\\">\\n                    <span className=\\\"text-xl font-bold text-warm\\\">{successLog.co2e} kg COΓéée</span>\\n                    <span className=\\\"text-xs text-foreground/40\\\">added to {successLog.envelope}</span>\\n                  </div>\\n                </div>\\n\\n                <div className=\\\"p-4 rounded-xl bg-background border border-border space-y-2\\\">\\n                  <span className=\\\"text-xs text-foreground/50 font-medium\\\">Envelope Budget Impact</span>\\n                  <div className=\\\"flex justify-between text-sm\\\">\\n                    <span className=\\\"text-foreground/60\\\">Weekly Envelope:</span>\\n                    <span className=\\\"font-bold text-white\\\">{successLog.envelope}</span>\\n                  </div>\\n                  <div className=\\\"flex justify-between text-sm border-t border-border/40 pt-2\\\">\\n                    <span className=\\\"text-foreground/60\\\">Budget Remaining:</span>\\n                    <span className={`font-bold ${successLog.remaining >= 0 ? \\\"text-primary\\\" : \\\"text-red-400\\\"}`}>\\n                      {successLog.remaining} kg COΓéée\\n                    </span>\\n                  </div>\\n                  {successLog.remaining < 0 && (\\n                    <p className=\\\"text-[10px] text-warm text-left mt-2 flex items-start space-x-1\\\">\\n                      <AlertTriangle className=\\\"w-3.5 h-3.5 shrink-0 mt-0.5\\\" />\\n                      <span>This envelope is now overspent! Use the Envelope page to shift carbon from Lifestyle.</span>\\n                    </p>\\n                  )}\\n                </div>\\n\\n                <div className=\\\"flex flex-col sm:flex-row gap-3\\\">\\n                  <button\\n                  \n<truncated 266 bytes>",
+      "TargetFile": "\"d:\\\\Akshay final folder\\\\Antigravity\\\\Virtual Prompt wars CH3\\\\src\\\\app\\\\log\\\\page.tsx\"",
+      "toolAction": "\"Modifying success log modal styling\"",
+      "toolSummary": "\"Updating text colors in activity logger modal\""
+    }
+  }
+]
+=======================
+
+=== STEP 34 ===
+[
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Update the drag and drop zone container to meet dimensions and overflow requirements (min-h-[200px] and overflow-visible).\"",
+      "EndLine": "562",
+      "Instruction": "\"Add min-h-[200px] and overflow-visible to the idle state container.\"",
+      "ReplacementContent": "\"          {/* STATE 1: IDLE / PICKER */}\\n          {scanState === \\\"idle\\\" && (\\n            <div\\n              onDragOver={handleDragOver}\\n              onDrop={handleDrop}\\n              className=\\\"w-full min-h-[200px] overflow-visible text-center p-8 flex flex-col items-center justify-center space-y-6 border-2 border-dashed border-border/60 rounded-xl hover:border-primary/40 hover:bg-surface/10 transition-all cursor-pointer\\\"\\n              onClick={triggerFileSelect}\\n            >\"",
+      "StartLine": "552",
+      "TargetContent": "\"          {/* STATE 1: IDLE / PICKER */}\\n          {scanState === \\\"idle\\\" && (\\n            <div\\n              onDragOver={handleDragOver}\\n              onDrop={handleDrop}\\n              className=\\\"w-full flex flex-col items-center justify-center p-8 space-y-6 text-center border-2 border-dashed border-border/60 rounded-xl hover:border-primary/40 hover:bg-surface/10 transition-all cursor-pointer\\\"\\n              onClick={triggerFileSelect}\\n            >\"",
+      "TargetFile": "\"d:\\\\Akshay final folder\\\\Antigravity\\\\Virtual Prompt wars CH3\\\\src\\\\app\\\\scan\\\\page.tsx\"",
+      "toolAction": "\"Modifying drag & drop container styling\"",
+      "toolSummary": "\"Updating drag and drop box classes on scan page\""
+    }
+  }
+]
+=======================
+
+=== STEP 37 ===
+[
+  {
+    "name": "multi_replace_file_content",
+    "args": {
+      "ArtifactMetadata": "{\"ArtifactType\":\"other\",\"Summary\":\"Ecosystem animations and standalone Lion-Tailed Macaque SVG setup.\"}",
+      "Description": "\"Extract Macaque SVG from background branch SVG to absolute-positioned div, darken fills to realistic colors, and define interactive animations.\"",
+      "Instruction": "\"Extract Macaque SVG elements, define keyframes, apply style controls, and support reduced-motion.\"",
+      "ReplacementChunks": "[{\"AllowMultiple\":false,\"EndLine\":50,\"ReplacementContent\":\"  const [energy, setEnergy] = useState<number>(100);\\n  const [macaqueInteracted, setMacaqueInteracted] = useState<boolean>(false);\\n  const [isBouncing, setIsBouncing] = useState<boolean>(false);\",\"StartLine\":48,\"TargetContent\":\"  const [energy, setEnergy] = useState<number>(100);\\n  const [macaqueInteracted, setMacaqueInteracted] = useState<boolean>(false);\"},{\"AllowMultiple\":false,\"EndLine\":540,\"ReplacementContent\":\"      {/* Custom Styles for animations and custom layout */}\\n      <style>{`\\n        @keyframes chiku-breathe {\\n          0%, 100% { transform: scale(1) translateY(0); }\\n          50% { transform: scale(1.03) translateY(-4px); }\\n        }\\n        .chiku-breathe {\\n          animation: chiku-breathe 4s ease-in-out infinite;\\n          transform-origin: bottom center;\\n        }\\n\\n        @keyframes chiku-tail-wag {\\n          0%, 100% { transform: rotate(0deg); }\\n          50% { transform: rotate(10deg); }\\n        }\\n        .chiku-tail {\\n          animation: chiku-tail-wag 2.5s ease-in-out infinite;\\n          transform-origin: -12px 50px;\\n          transform-box: fill-box;\\n        }\\n\\n        @keyframes chiku-blink {\\n          0%, 90%, 100% { transform: scaleY(1); }\\n          95% { transform: scaleY(0.1); }\\n        }\\n        .chiku-eye {\\n          animation: chiku-blink 4s infinite;\\n          transform-origin: center;\\n          transform-box: fill-box;\\n        }\\n\\n        @keyframes chiku-head-bob {\\n          0%, 100% { transform: rotate(0deg); }\\n          50% { transform: rotate(-3deg); }\\n        }\\n        .chiku-head {\\n          animation: chiku-head-bob 6s ease-in-out infinite;\\n          transform-origin: center bottom;\\n          transform-box: fill-box;\\n        }\\n\\n        @keyframes chiku-adventure {\\n          0%, 100% { transform: translate(0, 0) rotate(0deg); }\\n          25% { transform: translate(10px, -5px) rotate(4deg); }\\n          50% { transform: translate(-5px, -10px) rotate(-3deg); }\\n       \n<truncated 18992 bytes>",
+      "TargetFile": "\"d:\\\\Akshay final folder\\\\Antigravity\\\\Virtual Prompt wars CH3\\\\src\\\\app\\\\ecosystem\\\\page.tsx\"",
+      "toolAction": "\"Extracting and animating Macaque SVG\"",
+      "toolSummary": "\"Updating ecosystem page with standalone Macaque SVG and animations\""
+    }
+  }
+]
+=======================
+
+=== STEP 93 ===
+[
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Add explicit style attribute to drag & drop zone container on the scan page to ensure min-height, overflow, text-align, padding, and width are strictly applied\"",
+      "EndLine": "560",
+      "Instruction": "\"Add the style attribute with minHeight, overflow, textAlign, padding, and width to the drag & drop container div.\"",
+      "ReplacementContent": "\"          {scanState === \\\"idle\\\" && (\\n            <div\\n              onDragOver={handleDragOver}\\n              onDrop={handleDrop}\\n              style={{ minHeight: \\\"200px\\\", overflow: \\\"visible\\\", textAlign: \\\"center\\\", padding: \\\"2rem\\\", width: \\\"100%\\\" }}\\n              className=\\\"w-full min-h-[200px] overflow-visible text-center p-8 flex flex-col items-center justify-center space-y-6 border-2 border-dashed border-border/60 rounded-xl hover:border-primary/40 hover:bg-surface/10 transition-all cursor-pointer\\\"\\n              onClick={triggerFileSelect}\\n            >\"",
+      "StartLine": "554",
+      "TargetContent": "\"          {scanState === \\\"idle\\\" && (\\n            <div\\n              onDragOver={handleDragOver}\\n              onDrop={handleDrop}\\n              className=\\\"w-full min-h-[200px] overflow-visible text-center p-8 flex flex-col items-center justify-center space-y-6 border-2 border-dashed border-border/60 rounded-xl hover:border-primary/40 hover:bg-surface/10 transition-all cursor-pointer\\\"\\n              onClick={triggerFileSelect}\\n            >\"",
+      "TargetFile": "\"d:\\\\Akshay final folder\\\\Antigravity\\\\Virtual Prompt wars CH3\\\\src\\\\app\\\\scan\\\\page.tsx\"",
+      "toolAction": "\"Update scan page drag and drop style\"",
+      "toolSummary": "\"Replace file content\""
+    }
+  }
+]
+=======================
+
+=== STEP 103 ===
+[
+  {
+    "name": "replace_file_content",
+    "args": {
+      "AllowMultiple": "false",
+      "Description": "\"Add min-w and min-h classes to ensure minimum sizes are strictly met on mobile and desktop viewports for the standalone Macaque container\"",
+      "EndLine": "756",
+      "Instruction": "\"Update the Standalone Macaque Container class list to include min-w-[150px] min-h-[150px] md:min-w-[200px] md:min-h-[200px].\"",
+      "ReplacementContent": "\"        {/* Standalone Macaque Container */}\\n        <div \\n          className=\\\"absolute z-[25] pointer-events-auto select-none w-[150px] h-[150px] min-w-[150px] min-h-[150px] md:w-[200px] md:h-[200px] md:min-w-[200px] md:min-h-[200px] cursor-pointer\\\"\\n          style={{\\n            transform: \\\"translateZ(-2px) scale(1.22) translate(-50%, -50%)\\\",\\n            left: \\\"50%\\\",\\n            top: \\\"56.25%\\\",\\n            filter: \\\"drop-shadow(0 8px 24px rgba(74,222,128,0.3))\\\"\\n          }}\"",
+      "StartLine": "743",
+      "TargetContent": "\"        {/* Standalone Macaque Container */}\\n        <div \\n          className=\\\"absolute z-[25] pointer-events-auto select-none w-[150px] h-[150px] md:w-[200px] md:h-[200px] cursor-pointer\\\"\\n          style={{\\n            transform: \\\"translateZ(-2px) scale(1.22) translate(-50%, -50%)\\\",\\n            left: \\\"50%\\\",\\n            top: \\\"56.25%\\\",\\n            filter: \\\"drop-shadow(0 8px 24px rgba(74,222,128,0.3))\\\"\\n          }}\"",
+      "TargetFile": "\"d:\\\\Akshay final folder\\\\Antigravity\\\\Virtual Prompt wars CH3\\\\src\\\\app\\\\ecosystem/page.tsx\"",
+      "toolAction": "\"Update Standalone Macaque Container classes\"",
+      "toolSummary": "\"Replace file content\""
+    }
+  }
+]
+=======================
+

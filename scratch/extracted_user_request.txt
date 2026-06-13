@@ -1,9 +1,296 @@
+<USER_REQUEST>
+PRAKRITI — EXACT CLONE OF SUMMEROFCODE.XYZ
+Implement every section exactly as described. Zero creative deviation.
+Read entirely before touching a single file.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 0 — DOWNLOAD VIDEO TO PUBLIC FOLDER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Run these commands in order:
+
+cd /path/to/your/prakriti/project
+
+# Primary: Mixkit forest mist video
+curl -L "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sun-529-large.mp4" \
+  -o public/hero.mp4
+
+# Verify download worked (should be > 1MB):
+ls -lh public/hero.mp4
+
+# If that failed, try backup:
+curl -L "https://assets.mixkit.co/videos/preview/mixkit-fog-over-the-mountains-1435-large.mp4" \
+  -o public/hero.mp4
+
+# If BOTH fail, manually download any .mp4 from 
+# https://mixkit.co/free-stock-video/nature/
+# and save it as public/hero.mp4
+
+The video reference in code will be: src="/hero.mp4"
+This is a local file — no CORS, no CDN issues, always works.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1 — FONTS (layout.tsx)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+In src/app/layout.tsx, inside <head>, add:
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+<link
+  href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Fraunces:ital,opsz,wght@1,9..144,300;1,9..144,400&family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap"
+  rel="stylesheet"
+/>
+
+Font usage rules:
+- Syne 800: massive hero brand name, ALL section H2 headings (non-italic parts)
+- Fraunces Italic 300: the italic portions of mixed headings ("igniting open source", "Different.", "Timeline.")
+- Space Grotesk 300/400: ALL body text, descriptions, paragraphs
+- Space Mono 400: ALL labels in brackets [ LIKE THIS ], path notations, diff line numbers, status bars
+
+Change html tag:
+<html lang="en" className="dark" style={{ background: '#080808' }}>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2 — globals.css — FULL REWRITE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Replace ENTIRE globals.css with:
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #080808;
+  --bg-warm: #0c0c0a;
+  --bg-surface: #111110;
+  --bg-card: #161614;
+  --text: #f0ede6;
+  --text-muted: rgba(240,237,230,0.38);
+  --text-mid: rgba(240,237,230,0.62);
+  --border: rgba(240,237,230,0.07);
+  --border-bright: rgba(240,237,230,0.14);
+  --green: #39ff7a;
+  --green-dim: rgba(57,255,122,0.08);
+  --red-dim: rgba(255,80,80,0.07);
+}
+
+html {
+  background: var(--bg);
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* Grain texture — same as ECSoC */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.038;
+  pointer-events: none;
+  z-index: 9998;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Animations */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes marqueeR {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(7px); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scroll reveal */
+.sr {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
+              transform 0.7s cubic-bezier(0.16,1,0.3,1);
+}
+.sr.visible { opacity: 1; transform: translateY(0); }
+.sr-d1 { transition-delay: 80ms; }
+.sr-d2 { transition-delay: 160ms; }
+.sr-d3 { transition-delay: 240ms; }
+
+/* Interior pages dark */
+.bg-white, [class*="bg-white"]    { background: var(--bg-surface) !important; }
+.bg-gray-50, .bg-gray-100         { background: var(--bg-warm) !important; }
+.text-gray-900, .text-gray-800    { color: var(--text) !important; }
+.text-gray-600, .text-gray-700    { color: var(--text-mid) !important; }
+.text-gray-400, .text-gray-500    { color: var(--text-muted) !important; }
+.border, [class*="border-gray"]   { border-color: var(--border) !important; }
+[class*="card"], .card            { background: var(--bg-card) !important;
+                                    border-color: var(--border) !important; }
+input, textarea, select           { background: var(--bg-surface) !important;
+                                    border-color: var(--border-bright) !important;
+                                    color: var(--text) !important; }
+input::placeholder                { color: var(--text-muted) !important; }
+
+::-webkit-scrollbar { width: 5px; background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(240,237,230,0.1); border-radius: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3 — Navbar.tsx — EXACT ECSOC CLONE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const HOME_LINKS = [
+  { label: 'Track', href: '/track' },
+  { label: 'Insights', href: '/insights' },
+  { label: 'About', href: '/about' },
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'GitHub', href: 'https://github.com/akshayjadhav237237-cmd/Prakriti' },
+];
+
+const INT_LINKS = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Track', href: '/track' },
+  { label: 'Insights', href: '/insights' },
+];
+
+export default function Navbar() {
+  const path = usePathname();
+  const isHome = path === '/';
+
+  if (isHome) {
+    return (
+      <nav style={{
+        position: 'fixed',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 500,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '2px',
+        background: 'rgba(12,12,10,0.82)',
+        backdropFilter: 'blur(28px)',
+        WebkitBackdropFilter: 'blur(28px)',
+        border: '1px solid rgba(240,237,230,0.1)',
+        borderRadius: '14px',
+        padding: '7px 10px',
+        whiteSpace: 'nowrap',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.5)',
+      }}>
+        {HOME_LINKS.map(link => (
+          <Link
+            key={link.label}
+            href={link.href}
+            target={link.href.startsWith('http') ? '_blank' : undefined}
+            style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: '14px',
+              fontWeight: 400,
+              color: 'rgba(240,237,230,0.5)',
+              textDecoration: 'none',
+              padding: '7px 16px',
+              borderRadius: '8px',
+              transition: 'color 0.18s ease, background 0.18s ease',
+              display: 'inline-block',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = '#f0ede6';
+              e.currentTarget.style.background = 'rgba(240,237,230,0.06)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = 'rgba(240,237,230,0.5)';
+              e.currentTarget.style.background = 'transparent';
+            }}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+    );
+  }
+
+  /* Interior */
+  return (
+    <nav style={{
+      position: 'fixed', top: 0, left: 0, right: 0,
+      height: '58px',
+      background: 'rgba(8,8,8,0.92)',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderBottom: '1px solid rgba(240,237,230,0.07)',
+      display: 'flex', alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 40px', zIndex: 500,
+    }}>
+      <Link href="/" style={{
+        fontFamily: "'Space Mono', monospace",
+        fontSize: '13px', fontWeight: 700,
+        letterSpacing: '0.12em', textTransform: 'uppercase',
+        color: '#f0ede6', textDecoration: 'none',
+      }}>
+        PRAKRITI<span style={{ color: '#39ff7a' }}>*</span>
+      </Link>
+      <div style={{ display: 'flex', gap: '4px' }}>
+        {INT_LINKS.map(link => (
+          <Link key={link.href} href={link.href} style={{
+            fontFamily: "'Space Grotesk', sans-serif",
+            fontSize: '14px',
+            color: path === link.href ? '#f0ede6' : 'rgba(240,237,230,0.42)',
+            textDecoration: 'none', padding: '6px 14px',
+            borderRadius: '8px', transition: 'color 0.2s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
+            onMouseLeave={e => e.currentTarget.style.color = 
+              path === link.href ? '#f0ede6' : 'rgba(240,237,230,0.42)'}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 4 — page.tsx — COMPLETE REWRITE
+Every section is exact. Do not invent anything.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { motion, useInView } from 'framer-motion';
-import Navbar from '@/components/Navbar';
 
 /* ─── CONSTANTS ─────────────────────────────── */
 
@@ -100,295 +387,6 @@ const STATS = [
   { end: 7, suffix: '', label: 'parallel subagents' },
 ];
 
-const WordRevealParagraph = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [revealedCount, setRevealedCount] = useState(0);
-
-  const [prefersReduced, setPrefersReduced] = useState(false);
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReduced(mediaQuery.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefersReduced(e.matches);
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handler);
-      return () => mediaQuery.removeEventListener('change', handler);
-    }
-  }, []);
-
-  const content = [
-    { text: 'We', italic: false, green: false },
-    { text: 'are', italic: false, green: false },
-    { text: 'climate', italic: false, green: false },
-    { text: 'thinkers,', italic: false, green: false },
-    { text: '\n', italic: false, green: false },
-    { text: 'building', italic: true, green: true },
-    { text: 'for', italic: true, green: true },
-    { text: 'India.', italic: true, green: true },
-    { text: '\n', italic: false, green: false },
-    { text: 'We', italic: false, green: false },
-    { text: 'empower', italic: false, green: false },
-    { text: 'individuals', italic: false, green: false },
-    { text: '\n', italic: false, green: false },
-    { text: 'to', italic: false, green: false },
-    { text: 'track,', italic: false, green: false },
-    { text: 'budget,', italic: false, green: false },
-    { text: '\n', italic: false, green: false },
-    { text: 'and', italic: false, green: false },
-    { text: 'reduce', italic: false, green: false },
-    { text: 'their', italic: false, green: false },
-    { text: 'carbon', italic: false, green: false },
-    { text: 'footprint.', italic: false, green: false },
-  ];
-
-  // Filter out line breaks for count purposes
-  const wordCount = content.filter(w => w.text !== '\n').length;
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current) return;
-
-      const rect = containerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-
-      // How far we've scrolled INTO this section
-      // 0 = section top just entered bottom of screen
-      // 1 = section bottom has reached top of screen
-      const scrollProgress = Math.max(
-        0,
-        Math.min(
-          1,
-          (windowHeight - rect.top) / (windowHeight + rect.height)
-        )
-      );
-
-      // Map scroll progress to number of revealed words
-      const revealed = Math.floor(scrollProgress * wordCount * 1.8);
-      setRevealedCount(Math.min(revealed, wordCount));
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
-    handleScroll(); // run on mount
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-    };
-  }, [wordCount]);
-
-  let wordIndex = 0;
-
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        // Tall section so scroll has room to work
-        minHeight: '200vh',
-        padding: '120px 40px',
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'center',
-      }}
-    >
-      {/* Sticky inner so text stays visible while scrolling */}
-      <div style={{
-        position: 'sticky',
-        top: '20vh',
-        maxWidth: '900px',
-        textAlign: 'center',
-      }}>
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: '0.25em 0.35em',
-          lineHeight: 1.05,
-        }}>
-          {content.map((word, i) => {
-            // Line break
-            if (word.text === '\n') {
-              return <div key={i} style={{ width: '100%' }} />;
-            }
-
-            const currentIndex = wordIndex++;
-            const isRevealed = prefersReduced ? true : (currentIndex < revealedCount);
-
-            return (
-              <motion.span
-                key={i}
-                animate={{
-                  opacity: isRevealed ? 1 : 0,
-                  y: isRevealed ? 0 : 12,
-                }}
-                transition={prefersReduced ? { duration: 0 } : {
-                  duration: 0.4,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                style={{
-                  display: 'inline-block',
-                  fontFamily: word.italic
-                    ? 'Georgia, serif'
-                    : 'Syne, sans-serif',
-                  fontWeight: word.italic ? 400 : 800,
-                  fontStyle: word.italic ? 'italic' : 'normal',
-                  fontSize: 'clamp(36px, 6vw, 88px)',
-                  color: word.green ? '#39ff7a' : '#f0ffe8',
-                  letterSpacing: '-0.02em',
-                  willChange: 'opacity, transform',
-                }}
-              >
-                {word.text}
-              </motion.span>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const lines = [
-  "The first carbon platform",
-  "built for how India actually lives.",
-  "Not adapted. Built.",
-];
-
-const HeroText = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { 
-    once: true, 
-    margin: '-10% 0px' 
-  });
-
-  return (
-    <div ref={ref} style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '4px',
-      marginTop: '24px',
-      marginBottom: '24px',
-    }}>
-      {lines.map((line, i) => (
-        <div key={i} style={{ overflow: 'hidden' }}>
-          <motion.p
-            initial={{ y: '110%', opacity: 0 }}
-            animate={isInView 
-              ? { y: '0%', opacity: 1 } 
-              : { y: '110%', opacity: 0 }
-            }
-            transition={{
-              duration: 0.7,
-              delay: 0.15 * i,
-              ease: [0.25, 0.46, 0.45, 0.94],
-            }}
-            style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: '18px',
-              lineHeight: 1.6,
-              color: 'rgba(245,240,232,0.55)',
-              margin: 0,
-            }}
-          >
-            {line}
-          </motion.p>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const HeroHeadline = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, {
-    once: true,
-    margin: '-10% 0px'
-  });
-
-  return (
-    <div ref={ref} style={{ overflow: 'hidden' }}>
-      <motion.h1
-        initial={{ y: '110%' }}
-        animate={isInView ? { y: '0%' } : { y: '110%' }}
-        transition={{
-          duration: 0.8,
-          ease: [0.25, 0.46, 0.45, 0.94],
-        }}
-        style={{
-          display: 'block',
-          fontFamily: "'Syne', sans-serif",
-          fontWeight: 800,
-          fontSize: 'clamp(52px, 11vw, 210px)',
-          lineHeight: 0.85,
-          color: '#f5f0e8',
-          letterSpacing: '-0.04em',
-          margin: 0,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        PRAKRITI
-        <span style={{ color: '#f5f0e8' }}>*</span>
-      </motion.h1>
-    </div>
-  );
-};
-
-const FeatureBullets = ({ bullets }: { bullets: string[] }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, {
-    once: true,
-    margin: '-10% 0px'
-  });
-
-  return (
-    <ul ref={ref} style={{
-      listStyle: 'none',
-      flex: 1,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '10px',
-    }}>
-      {bullets.map((b, i) => (
-        <li key={b} style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '10px',
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: '13px',
-          fontWeight: 300,
-          color: 'rgba(240,237,230,0.45)',
-          lineHeight: 1.5,
-        }}>
-          <span style={{ color: '#39ff7a', flexShrink: 0, marginTop: '2px' }}>✓</span>
-          <div style={{ overflow: 'hidden', flex: 1 }}>
-            <motion.p
-              initial={{ y: '110%', opacity: 0 }}
-              animate={isInView 
-                ? { y: '0%', opacity: 1 } 
-                : { y: '110%', opacity: 0 }
-              }
-              transition={{
-                duration: 0.6,
-                delay: 0.1 * i,
-                ease: [0.25, 0.46, 0.45, 0.94],
-              }}
-              style={{
-                margin: 0,
-                color: 'rgba(240,237,230,0.45)',
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '13px',
-                fontWeight: 300,
-                lineHeight: 1.5,
-              }}
-            >
-              {b}
-            </motion.p>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-};
-
 /* ─── COMPONENT ─────────────────────────────── */
 
 export default function HomePage() {
@@ -400,41 +398,20 @@ export default function HomePage() {
     /* Scroll reveal */
     const ro = new IntersectionObserver(
       entries => entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add('visible');
-          ro.unobserve(e.target);
-        }
+        if (e.isIntersecting) e.target.classList.add('visible');
       }),
-      { threshold: 0.15, rootMargin: '0px 0px -80px 0px' }
+      { threshold: 0.1 }
     );
     document.querySelectorAll('.sr').forEach(el => ro.observe(el));
 
-    return () => { ro.disconnect(); };
-  }, []);
-
-  useEffect(() => {
-    if (!statsRef.current) return;
-    
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setFired(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.3, rootMargin: '0px 0px -50px 0px' }
+    /* Stats trigger */
+    const so = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting && !fired) setFired(true); },
+      { threshold: 0.4 }
     );
-    
-    observer.observe(statsRef.current);
-    return () => observer.disconnect();
-  }, [statsRef.current]);
+    if (statsRef.current) so.observe(statsRef.current);
 
-  useEffect(() => {
-    if (!statsRef.current) return;
-    const rect = statsRef.current.getBoundingClientRect();
-    if (rect.top < window.innerHeight) {
-      setFired(true);
-    }
+    return () => { ro.disconnect(); so.disconnect(); };
   }, []);
 
   useEffect(() => {
@@ -450,8 +427,6 @@ export default function HomePage() {
     };
     requestAnimationFrame(tick);
   }, [fired]);
-
-
 
   /* ─ shared styles ─ */
   const eyebrow = {
@@ -474,149 +449,156 @@ export default function HomePage() {
           - Left: massive brand name
           - Right: description + CTA button
       ═══════════════════════════════════════ */}
-      {/* Bezel frame wrapper */}
-      <div style={{
-        background: '#080808',
-        padding: '12px',
-        minHeight: '100vh',
+      <section style={{
+        position: 'relative',
+        width: '100vw',
+        height: '100svh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-end',
       }}>
-        <section style={{
-          position: 'relative',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          height: 'calc(100vh - 24px)',
-          background: '#111',
-        }}>
 
-          {/* Floating inline navbar */}
-          <Navbar inline={true} />
-
-          {/* VIDEO — local file and CDN fallbacks */}
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center 30%',
-              filter: 'brightness(0.35) saturate(0.4) sepia(0.3)',
-              zIndex: 0,
-            }}
-          >
-            <source src="/hero.mp4" type="video/mp4" />
-            <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sun-529-large.mp4"
-              type="video/mp4"
-            />
-            <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-fog-over-the-mountains-1435-large.mp4"
-              type="video/mp4"
-            />
-            <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-river-in-the-jungle-18098-large.mp4"
-              type="video/mp4"
-            />
-          </video>
-
-          {/* Warm color overlay ON TOP of video */}
-          <div style={{
+        {/* VIDEO — local file, no CORS */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, rgba(20,12,5,0.3) 0%, rgba(5,10,5,0.7) 100%)',
-            zIndex: 1,
-            pointerEvents: 'none',
-          }} />
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center 30%',
+            filter: 'brightness(0.4) contrast(1.1) saturate(0.6)',
+            zIndex: 0,
+          }}
+        >
+          <source src="/hero.mp4" type="video/mp4" />
+        </video>
 
-          {/* LEFT — Massive brand name positioned absolutely */}
-          <div style={{
-            position: 'absolute',
-            bottom: '0px',
-            left: '40px',
-            zIndex: 2,
-          }}>
-            <HeroHeadline />
-          </div>
+        {/* GRADIENT — transparent top → dark bottom */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 1,
+          background: `
+            linear-gradient(
+              to bottom,
+              rgba(8,8,8,0.0) 0%,
+              rgba(8,8,8,0.1) 20%,
+              rgba(8,8,8,0.45) 55%,
+              rgba(8,8,8,0.90) 80%,
+              rgba(8,8,8,1.0) 100%
+            )
+          `,
+        }} />
 
-          {/* RIGHT — Description + CTA positioned absolutely */}
-          <div style={{
-            position: 'absolute',
-            bottom: '80px',
-            right: '60px',
-            maxWidth: '280px',
-            textAlign: 'left',
-            zIndex: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-start',
+        {/* BOTTOM CONTENT — ECSoC exact layout */}
+        <div style={{
+          position: 'relative',
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'space-between',
+          padding: '0 60px 56px 60px',
+          gap: '40px',
+          width: '100%',
+        }}>
+
+          {/* LEFT — Massive brand name */}
+          <h1 style={{
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: 'clamp(80px, 16vw, 230px)',
+            lineHeight: 0.87,
+            color: '#f0ede6',
+            letterSpacing: '-0.03em',
+            margin: 0,
+            flex: '1 1 auto',
+            whiteSpace: 'nowrap',
           }}>
-            <HeroText />
+            PRAKRITI
+            <span style={{ color: '#39ff7a' }}>*</span>
+          </h1>
+
+          {/* RIGHT — Description + CTA */}
+          <div style={{ flex: '0 0 300px', paddingBottom: '4px' }}>
+
+            <p style={{
+              fontFamily: "'Space Grotesk', sans-serif",
+              fontSize: '15px',
+              fontWeight: 300,
+              lineHeight: 1.7,
+              color: 'rgba(240,237,230,0.6)',
+              marginBottom: '24px',
+              maxWidth: '290px',
+            }}>
+              India's first carbon budgeting platform. Built on CEA grid
+              data, Gemini Vision scanning, and behavioural science.
+              Not adapted. Built.
+            </p>
 
             <Link
               href="/dashboard"
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '12px',
-                background: '#f5f0e8',
-                color: '#080808',
-                fontFamily: 'Space Grotesk',
-                fontWeight: 600,
+                gap: '10px',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 500,
                 fontSize: '15px',
-                padding: '14px 14px 14px 24px',
-                borderRadius: '100px',
-                border: 'none',
-                cursor: 'pointer',
+                color: '#080808',
+                background: '#f0ede6',
+                padding: '13px 26px',
+                borderRadius: '999px',
                 textDecoration: 'none',
+                transition: 'transform 0.2s ease, opacity 0.2s ease',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.opacity = '0.9';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.opacity = '1';
               }}
             >
               Start budgeting
               <span style={{
-                width: '32px',
-                height: '32px',
+                display: 'inline-flex', alignItems: 'center',
+                justifyContent: 'center',
+                width: '26px', height: '26px',
                 borderRadius: '50%',
                 background: '#080808',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#f5f0e8',
-                fontSize: '16px',
+                color: '#f0ede6',
+                fontSize: '14px',
+                flexShrink: 0,
               }}>→</span>
             </Link>
           </div>
+        </div>
 
-          {/* Scroll hint */}
-          <div style={{
-            position: 'absolute', bottom: '18px',
-            left: '50%', transform: 'translateX(-50%)',
-            zIndex: 10, display: 'flex',
-            flexDirection: 'column', alignItems: 'center', gap: '4px',
-          }}>
-            <span style={{
-              ...eyebrow,
-              fontSize: '9px',
-              letterSpacing: '0.22em',
-              color: 'rgba(245,240,232,0.35)',
-            }}>scroll</span>
-            <span style={{
-              color: 'rgba(245,240,232,0.35)',
-              fontSize: '13px',
-              animation: 'bounce 2.2s ease-in-out infinite',
-            }}>↓</span>
-          </div>
-        </section>
-      </div>
-
-      <div style={{
-        width: '100%',
-        height: '1px',
-        background: 'linear-gradient(to right, transparent, rgba(57,255,122,0.2), transparent)',
-        margin: '0 auto',
-      }} />
+        {/* Scroll hint */}
+        <div style={{
+          position: 'absolute', bottom: '18px',
+          left: '50%', transform: 'translateX(-50%)',
+          zIndex: 10, display: 'flex',
+          flexDirection: 'column', alignItems: 'center', gap: '4px',
+        }}>
+          <span style={{
+            ...eyebrow,
+            fontSize: '9px',
+            letterSpacing: '0.22em',
+            color: 'rgba(240,237,230,0.2)',
+          }}>scroll</span>
+          <span style={{
+            color: 'rgba(240,237,230,0.2)',
+            fontSize: '13px',
+            animation: 'bounce 2.2s ease-in-out infinite',
+          }}>↓</span>
+        </div>
+      </section>
 
       {/* ═══════════════════════════════════════
           SECTION 2 — MISSION / ABOUT
@@ -634,7 +616,45 @@ export default function HomePage() {
           [ PRAKRITI ]
         </div>
 
-        <WordRevealParagraph />
+        {/* Big mixed text — upright + italic alternating */}
+        <div className="sr sr-d1" style={{ maxWidth: '920px', margin: '0 auto 56px' }}>
+          {/* 
+            ECSoC uses a mix of upright bold + italic serif on same lines.
+            Implementation: span-level font switching.
+          */}
+          <p style={{
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: 'clamp(38px, 7vw, 88px)',
+            lineHeight: 1.08,
+            color: '#f0ede6',
+            letterSpacing: '-0.025em',
+          }}>
+            We are climate thinkers,{' '}
+            <em style={{
+              fontFamily: "'Fraunces', serif",
+              fontStyle: 'italic',
+              fontWeight: 300,
+              letterSpacing: '-0.01em',
+            }}>
+              building for India.
+            </em>
+            <br />
+            We empower individuals
+            <br />
+            to track, budget, and reduce
+            <br />
+            their carbon footprint—
+            <br />
+            <em style={{
+              fontFamily: "'Fraunces', serif",
+              fontStyle: 'italic',
+              fontWeight: 300,
+            }}>
+              one decision at a time.
+            </em>
+          </p>
+        </div>
 
         {/* Sub text */}
         <div className="sr sr-d2" style={{
@@ -812,7 +832,29 @@ export default function HomePage() {
               </h3>
 
               {/* Bullets */}
-              <FeatureBullets bullets={feat.bullets} />
+              <ul style={{
+                listStyle: 'none',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}>
+                {feat.bullets.map(b => (
+                  <li key={b} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontSize: '13px',
+                    fontWeight: 300,
+                    color: 'rgba(240,237,230,0.45)',
+                    lineHeight: 1.5,
+                  }}>
+                    <span style={{ color: '#39ff7a', flexShrink: 0, marginTop: '2px' }}>✓</span>
+                    {b}
+                  </li>
+                ))}
+              </ul>
 
               {/* Learn more */}
               <Link href={feat.link} style={{
@@ -1360,242 +1402,7 @@ export default function HomePage() {
             }}>
               Community
             </div>
-            {[
-              { label: 'GitHub Repository', href: 'https://github.com/akshayjadhav237237-cmd/Prakriti' },
-              { label: 'Discord Server', href: 'https://discord.gg/prakriti' },
-              { label: 'Climate Forums', href: 'https://community.prakriti.org' },
-              { label: 'Open Issues', href: 'https://github.com/akshayjadhav237237-cmd/Prakriti/issues' },
-            ].map(link => (
-              <Link key={link.label} href={link.href} target={link.href.startsWith('http') ? '_blank' : undefined} style={{
-                display: 'block',
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '14px',
-                fontWeight: 300,
-                color: 'rgba(240,237,230,0.45)',
-                textDecoration: 'none',
-                marginBottom: '12px',
-                transition: 'color 0.2s',
-              }}
-                onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,237,230,0.45)'}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
+            <div style={{ display: 'flex', 
+<truncated 7937 bytes>
 
-          {/* Col 4 — Contact Us */}
-          <div>
-            <div style={{
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: '12px',
-              fontWeight: 500,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              color: 'rgba(240,237,230,0.38)',
-              marginBottom: '20px',
-            }}>
-              Contact Us
-            </div>
-            {[
-              { label: 'Email Support', href: 'mailto:code@prakriti.org' },
-              { label: 'Student Workspace', href: '/dashboard' },
-              { label: 'Coordinator Panel', href: '/admin' },
-            ].map(link => (
-              <Link key={link.label} href={link.href} style={{
-                display: 'block',
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '14px',
-                fontWeight: 300,
-                color: 'rgba(240,237,230,0.45)',
-                textDecoration: 'none',
-                marginBottom: '12px',
-                transition: 'color 0.2s',
-              }}
-                onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,237,230,0.45)'}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom bar */}
-        <div style={{
-          maxWidth: '1200px',
-          margin: '48px auto 0',
-          padding: '24px 0 40px',
-          borderTop: '1px solid rgba(240,237,230,0.06)',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-          <span style={{
-            fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: '12px',
-            color: 'rgba(240,237,230,0.25)',
-          }}>
-            &copy; 2026 Prakriti Project. All rights reserved.
-          </span>
-          <span style={{
-            fontFamily: "'Space Mono', monospace",
-            fontSize: '12px',
-            color: 'rgba(240,237,230,0.25)',
-          }}>
-            Open Source
-          </span>
-        </div>
-      </footer>
-    </main>
-  );
-}
-
-function TermsAccordion() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const items = [
-    {
-      num: '01',
-      title: 'Carbon budgeting methodology.',
-      content: "Our allocation model uses a weekly carbon envelope of 38.46 kg CO2e, derived from India's fair-share per-capita carbon allocation aligned with the 1.5°C Paris Agreement targets."
-    },
-    {
-      num: '02',
-      title: 'India-first grid data sources.',
-      content: 'All grid emission calculations use the Central Electricity Authority (CEA) grid baseline factor of 0.71 kg CO2e/kWh. Transportation figures are calculated from ARAI road transport coefficients.'
-    },
-    {
-      num: '03',
-      title: 'Gemini Vision OCR privacy.',
-      content: 'Scanning electricity bills, Swiggy orders, and fuel receipts processes images locally or via secure API endpoints. No personal data, addresses, or payment info is ever stored.'
-    },
-    {
-      num: '04',
-      title: 'Behavioural model intentions.',
-      content: 'Prakriti is built on identity-based habit formation. Weekly envelopes encourage proactive allocation, preventing retroactive guilt and promoting long-term behavioral adaptation.'
-    }
-  ];
-
-  return (
-    <section style={{
-      background: '#080808',
-      padding: '100px 60px',
-      borderTop: '1px solid rgba(240,237,230,0.05)'
-    }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        <div className="sr" style={{ marginBottom: '56px', textAlign: 'center' }}>
-          <span style={{
-            fontFamily: "'Space Mono', monospace",
-            fontSize: '11px',
-            letterSpacing: '0.18em',
-            color: 'rgba(240,237,230,0.35)',
-            textTransform: 'uppercase'
-          }}>
-            [ TERMS & POLICIES ]
-          </span>
-          <h2 style={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 800,
-            fontSize: 'clamp(28px, 4vw, 48px)',
-            color: '#f0ede6',
-            letterSpacing: '-0.02em',
-            marginTop: '12px'
-          }}>
-            Cohort Rules &amp;{' '}
-            <em style={{
-              fontFamily: "'Fraunces', serif",
-              fontStyle: 'italic',
-              fontWeight: 300
-            }}>
-              Guidelines.
-            </em>
-          </h2>
-        </div>
-
-        <div className="sr sr-d1" style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
-          {items.map((item, idx) => {
-            const isOpen = openIndex === idx;
-            return (
-              <div
-                key={item.num}
-                style={{
-                  background: '#111110',
-                  border: '1px solid rgba(240,237,230,0.06)',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  transition: 'border-color 0.2s'
-                }}
-              >
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : idx)}
-                  style={{
-                    width: '100%',
-                    background: 'none',
-                    border: 'none',
-                    padding: '24px 28px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    textAlign: 'left'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                    <span style={{
-                      fontFamily: "'Space Mono', monospace",
-                      fontSize: '13px',
-                      color: isOpen ? '#39ff7a' : 'rgba(240,237,230,0.25)'
-                    }}>
-                      {item.num}
-                    </span>
-                    <span style={{
-                      fontFamily: "'Syne', sans-serif",
-                      fontWeight: 700,
-                      fontSize: '18px',
-                      color: '#f0ede6',
-                      letterSpacing: '-0.01em'
-                    }}>
-                      {item.title}
-                    </span>
-                  </div>
-                  <span style={{
-                    color: 'rgba(240,237,230,0.4)',
-                    fontSize: '20px',
-                    fontFamily: 'monospace',
-                    transform: isOpen ? 'rotate(45deg)' : 'none',
-                    transition: 'transform 0.2s',
-                    display: 'inline-block'
-                  }}>
-                    +
-                  </span>
-                </button>
-                <div style={{
-                  maxHeight: isOpen ? '200px' : '0',
-                  opacity: isOpen ? 1 : 0,
-                  overflow: 'hidden',
-                  transition: 'max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease',
-                  padding: isOpen ? '0 28px 28px 76px' : '0 28px 0 76px'
-                }}>
-                  <p style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    fontSize: '14px',
-                    fontWeight: 300,
-                    lineHeight: 1.7,
-                    color: 'rgba(240,237,230,0.45)'
-                  }}>
-                    {item.content}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
+NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.

@@ -17,29 +17,30 @@ const INT_LINKS = [
   { label: 'Insights', href: '/insights' },
 ];
 
-export default function Navbar() {
+export default function Navbar({ inline = false }: { inline?: boolean }) {
   const path = usePathname();
   const isHome = path === '/';
 
   if (isHome) {
+    if (!inline) return null;
+
     return (
       <nav style={{
-        position: 'fixed',
-        top: '20px',
+        position: 'absolute',
+        top: '24px',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 500,
-        display: 'flex',
+        zIndex: 10,
+        display: 'inline-flex',
         alignItems: 'center',
-        gap: '2px',
-        background: 'rgba(12,12,10,0.82)',
-        backdropFilter: 'blur(28px)',
-        WebkitBackdropFilter: 'blur(28px)',
-        border: '1px solid rgba(240,237,230,0.1)',
-        borderRadius: '14px',
-        padding: '7px 10px',
+        gap: '32px',
+        background: 'rgba(10,10,10,0.75)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '100px',
+        padding: '10px 24px',
         whiteSpace: 'nowrap',
-        boxShadow: '0 4px 32px rgba(0,0,0,0.5)',
       }}>
         {HOME_LINKS.map(link => (
           <Link
@@ -49,21 +50,17 @@ export default function Navbar() {
             style={{
               fontFamily: "'Space Grotesk', sans-serif",
               fontSize: '14px',
-              fontWeight: 400,
-              color: 'rgba(240,237,230,0.5)',
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.6)',
               textDecoration: 'none',
-              padding: '7px 16px',
-              borderRadius: '8px',
-              transition: 'color 0.18s ease, background 0.18s ease',
+              transition: 'color 0.18s ease',
               display: 'inline-block',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.color = '#f0ede6';
-              e.currentTarget.style.background = 'rgba(240,237,230,0.06)';
+              e.currentTarget.style.color = 'rgba(255,255,255,1)';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.color = 'rgba(240,237,230,0.5)';
-              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
             }}
           >
             {link.label}
