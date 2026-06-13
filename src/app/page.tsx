@@ -99,31 +99,91 @@ const STATS = [
   { end: 7, suffix: '', label: 'parallel subagents' },
 ];
 
-const MISSION_WORDS = [
-  { text: 'We', italic: false },
-  { text: 'are', italic: false },
-  { text: 'climate', italic: false },
-  { text: 'thinkers,', italic: false },
-  { text: 'building', italic: true },
-  { text: 'for', italic: true },
-  { text: 'India.', italic: true, br: true },
-  { text: 'We', italic: false },
-  { text: 'empower', italic: false },
-  { text: 'individuals', italic: false, br: true },
-  { text: 'to', italic: false },
-  { text: 'track,', italic: false },
-  { text: 'budget,', italic: false },
-  { text: 'and', italic: false },
-  { text: 'reduce', italic: false, br: true },
-  { text: 'their', italic: false },
-  { text: 'carbon', italic: false },
-  { text: 'footprint—', italic: false, br: true },
-  { text: 'one', italic: true },
-  { text: 'decision', italic: true },
-  { text: 'at', italic: true },
-  { text: 'a', italic: true },
-  { text: 'time.', italic: true },
-];
+const StatementReveal = () => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { 
+    once: true,
+    margin: '-15% 0px'
+  });
+
+  const segments = [
+    { 
+      text: 'We are climate thinkers,', 
+      style: 'bold'  // Syne 800, #f0ffe8
+    },
+    { 
+      text: 'building for India.', 
+      style: 'italic' // italic serif, #39ff7a or muted
+    },
+    { 
+      text: 'We empower individuals', 
+      style: 'bold'
+    },
+    { 
+      text: 'to track, budget,', 
+      style: 'bold'
+    },
+    { 
+      text: 'and reduce', 
+      style: 'bold'
+    },
+    {
+      text: 'their carbon footprint.',
+      style: 'bold'
+    }
+  ];
+
+  return (
+    <div 
+      ref={ref}
+      style={{
+        maxWidth: '900px',
+        margin: '0 auto',
+        padding: '120px 40px',
+        textAlign: 'center',
+      }}
+    >
+      {segments.map((segment, i) => (
+        <div 
+          key={i} 
+          style={{ overflow: 'hidden', lineHeight: 1.1 }}
+        >
+          <motion.span
+            initial={{ y: '105%', opacity: 0 }}
+            animate={isInView 
+              ? { y: '0%', opacity: 1 } 
+              : { y: '105%', opacity: 0 }
+            }
+            transition={{
+              duration: 0.75,
+              delay: 0.12 * i,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            style={{
+              display: 'inline-block',
+              fontFamily: segment.style === 'italic' 
+                ? 'Georgia, serif' 
+                : 'Syne, sans-serif',
+              fontWeight: segment.style === 'italic' 
+                ? 400 
+                : 800,
+              fontStyle: segment.style === 'italic' 
+                ? 'italic' 
+                : 'normal',
+              fontSize: 'clamp(36px, 6vw, 80px)',
+              color: segment.style === 'italic'
+                ? 'rgba(57,255,122,0.7)'
+                : '#f0ffe8',
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {segment.text}
+          </motion.span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const lines = [
   "The first carbon platform",
@@ -329,50 +389,7 @@ export default function HomePage() {
     requestAnimationFrame(tick);
   }, [fired]);
 
-  // Scroll reveal for mission section text
-  const missionTextRef = useRef<HTMLDivElement>(null);
-  const [missionIntersecting, setMissionIntersecting] = useState(false);
-  const [missionProgress, setMissionProgress] = useState(0);
 
-  useEffect(() => {
-    if (!missionTextRef.current) return;
-
-    const observer = new IntersectionObserver(([entry]) => {
-      setMissionIntersecting(entry.isIntersecting);
-    }, {
-      threshold: 0,
-      rootMargin: '200px 0px 200px 0px'
-    });
-
-    observer.observe(missionTextRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!missionIntersecting) return;
-
-    const handleScroll = () => {
-      if (!missionTextRef.current) return;
-      const rect = missionTextRef.current.getBoundingClientRect();
-      const viewHeight = window.innerHeight;
-      
-      const start = viewHeight * 0.9;
-      const end = viewHeight * 0.25;
-      
-      const progress = Math.min(1, Math.max(0, (start - rect.top) / (start - end)));
-      setMissionProgress(progress);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('resize', handleScroll, { passive: true });
-    
-    handleScroll();
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('resize', handleScroll);
-    };
-  }, [missionIntersecting]);
 
   /* ─ shared styles ─ */
   const eyebrow = {
@@ -525,6 +542,13 @@ export default function HomePage() {
         </div>
       </section>
 
+      <div style={{
+        width: '100%',
+        height: '1px',
+        background: 'linear-gradient(to right, transparent, rgba(57,255,122,0.2), transparent)',
+        margin: '0 auto',
+      }} />
+
       {/* ═══════════════════════════════════════
           SECTION 2 — MISSION / ABOUT
           Full black section. Centered huge text.
@@ -541,58 +565,7 @@ export default function HomePage() {
           [ PRAKRITI ]
         </div>
 
-        {/* Big mixed text — upright + italic alternating */}
-        <div 
-          ref={missionTextRef} 
-          style={{ maxWidth: '920px', margin: '0 auto 56px' }}
-        >
-          {/* 
-            ECSoC uses a mix of upright bold + italic serif on same lines.
-            Implementation: span-level font switching.
-          */}
-          <p style={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 800,
-            fontSize: 'clamp(38px, 7vw, 88px)',
-            lineHeight: 1.08,
-            color: '#f0ede6',
-            letterSpacing: '-0.025em',
-          }}>
-            {MISSION_WORDS.map((w, i) => {
-              const startVal = i / (MISSION_WORDS.length + 1);
-              const endVal = (i + 3.5) / (MISSION_WORDS.length + 1);
-              
-              // Calculate word progress
-              let wordProgress = 0;
-              if (missionProgress > startVal) {
-                wordProgress = Math.min(1, (missionProgress - startVal) / (endVal - startVal));
-              }
-              // Opacity goes from 0.15 (unrevealed) to 1.0 (fully revealed)
-              const opacity = 0.15 + 0.85 * wordProgress;
-
-              return (
-                <React.Fragment key={i}>
-                  <span
-                    style={{
-                      opacity,
-                      transition: 'opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                      display: 'inline-block',
-                      ...(w.italic ? {
-                        fontFamily: "'Fraunces', serif",
-                        fontStyle: 'italic',
-                        fontWeight: 300,
-                        letterSpacing: '-0.01em',
-                      } : {})
-                    }}
-                  >
-                    {w.text}
-                  </span>
-                  {w.br ? <br /> : ' '}
-                </React.Fragment>
-              );
-            })}
-          </p>
-        </div>
+        <StatementReveal />
 
         {/* Sub text */}
         <div className="sr sr-d2" style={{
