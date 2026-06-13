@@ -317,7 +317,7 @@ const HeroHeadline = () => {
           display: 'block',
           fontFamily: "'Clash Display', sans-serif",
           fontWeight: 700,
-          fontSize: 'clamp(120px, 22vw, 380px)',
+          fontSize: 'clamp(80px, 14vw, 260px)',
           lineHeight: 0.8,
           color: '#f5f0e8',
           letterSpacing: '-0.02em',
@@ -546,9 +546,10 @@ export default function HomePage() {
           {/* LEFT — Massive brand name positioned absolutely */}
           <div style={{
             position: 'absolute',
-            bottom: '-0.25em',
+            bottom: '-0.15em',
             left: '0px',
             zIndex: 2,
+            maxWidth: '65%',
           }}>
             <HeroHeadline />
           </div>
