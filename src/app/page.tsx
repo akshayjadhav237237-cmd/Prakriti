@@ -181,37 +181,31 @@ const HeroHeadline = () => {
     once: true,
     margin: '-10% 0px'
   });
-  
-  const headline = "Your carbon, your budget, your India.";
-  const words = headline.split(" ");
 
   return (
-    <div ref={ref} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3em' }}>
-      {words.map((word, i) => (
-        <div key={i} style={{ overflow: 'hidden' }}>
-          <motion.span
-            initial={{ y: '110%' }}
-            animate={isInView ? { y: '0%' } : { y: '110%' }}
-            transition={{
-              duration: 0.6,
-              delay: 0.06 * i,
-              ease: [0.25, 0.46, 0.45, 0.94],
-            }}
-            style={{
-              display: 'inline-block',
-              fontFamily: "'Syne', sans-serif",
-              fontWeight: 800,
-              fontSize: 'clamp(48px, 7vw, 96px)',
-              color: word === 'India.' 
-                ? '#39ff7a' 
-                : '#f0ffe8',
-              lineHeight: 1.05,
-            }}
-          >
-            {word}
-          </motion.span>
-        </div>
-      ))}
+    <div ref={ref} style={{ overflow: 'hidden' }}>
+      <motion.h1
+        initial={{ y: '110%' }}
+        animate={isInView ? { y: '0%' } : { y: '110%' }}
+        transition={{
+          duration: 0.8,
+          ease: [0.25, 0.46, 0.45, 0.94],
+        }}
+        style={{
+          display: 'block',
+          fontFamily: "'Syne', sans-serif",
+          fontWeight: 800,
+          fontSize: 'clamp(52px, 11vw, 210px)',
+          lineHeight: 0.85,
+          color: '#f0ede6',
+          letterSpacing: '-0.04em',
+          margin: 0,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        PRAKRITI
+        <span style={{ color: '#39ff7a' }}>*</span>
+      </motion.h1>
     </div>
   );
 };
