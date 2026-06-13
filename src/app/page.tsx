@@ -775,7 +775,7 @@ export default function HomePage() {
             fontFamily: "'Space Grotesk', sans-serif",
             fontSize: '17px',
             fontWeight: 300,
-            color: 'rgba(240,237,230,0.35)',
+            color: '#6b8cba',
           }}>
             Built on real data. Powered by Gemini.
           </p>
@@ -790,7 +790,7 @@ export default function HomePage() {
           margin: '0 auto',
         }}>
 
-          {/* LEFT large image card */}
+          {/* LEFT large card — cinematic video */}
           <div style={{
             background: '#111',
             borderRadius: '16px',
@@ -803,17 +803,33 @@ export default function HomePage() {
             justifyContent: 'flex-end',
             padding: '28px',
           }}>
-            {/* Background image — Western Ghats forest */}
+            {/* Autoplay looping nature video */}
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                filter: 'brightness(0.55) saturate(0.75)',
+              }}
+            >
+              <source src="https://videos.pexels.com/video-files/857251/857251-hd_1920_1080_25fps.mp4" type="video/mp4" />
+            </video>
+            {/* Gradient overlay — text legibility */}
             <div style={{
               position: 'absolute', inset: 0,
-              backgroundImage: `url(https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80&fit=crop)`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'brightness(0.5) saturate(0.7)',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)',
             }} />
+            {/* Warm colour grade */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(to top, rgba(8,8,8,0.95) 0%, rgba(8,8,8,0.1) 60%)',
+              background: 'rgba(20,10,5,0.25)',
+              mixBlendMode: 'multiply',
             }} />
             <div style={{ position: 'relative', zIndex: 1 }}>
               <p style={{
@@ -847,14 +863,27 @@ export default function HomePage() {
                 marginBottom: '24px',
               }}>
                 <div style={{
-                  width: '40px', height: '40px',
+                  width: '48px', height: '48px',
                   borderRadius: '10px',
-                  background: 'rgba(57,255,122,0.08)',
-                  border: '1px solid rgba(57,255,122,0.15)',
-                  display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: '18px',
+                  overflow: 'hidden',
+                  flexShrink: 0,
                 }}>
-                  {i === 0 ? '🌿' : i === 1 ? '📷' : '🇮🇳'}
+                  <img
+                    src={
+                      i === 0
+                        ? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=96&q=80'
+                        : i === 1
+                        ? 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=96&q=80'
+                        : 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=96&q=80'
+                    }
+                    alt={feat.title}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      filter: 'brightness(0.8) contrast(1.1)',
+                    }}
+                  />
                 </div>
                 <span style={{
                   fontFamily: "'Space Mono', monospace",
