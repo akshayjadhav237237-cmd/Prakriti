@@ -26,8 +26,8 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
 
     return (
       <nav style={{
-        position: 'absolute',
-        top: '24px',
+        position: 'fixed',
+        top: '-18px',
         left: '50%',
         transform: 'translateX(-50%)',
         zIndex: 20,
