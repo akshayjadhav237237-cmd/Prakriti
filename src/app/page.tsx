@@ -854,7 +854,7 @@ export default function HomePage() {
             justifyContent: 'flex-end',
             padding: '36px',
           }}>
-            {/* Bento card video — served locally, no CDN dependency */}
+            {/* Bento card — ocean waves aerial clip */}
             <video
               autoPlay
               loop
@@ -870,6 +870,7 @@ export default function HomePage() {
                 filter: 'brightness(0.55) saturate(0.75)',
               }}
             >
+              <source src="/bento-ocean.mp4" type="video/mp4" />
               <source src="/hero.mp4" type="video/mp4" />
             </video>
             {/* Gradient overlay — text legibility */}
