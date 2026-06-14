@@ -216,10 +216,8 @@ const WordRevealParagraph = () => {
             return (
               <motion.span
                 key={i}
-                animate={{
-                  opacity: isRevealed ? 1 : 0,
-                  y: isRevealed ? 0 : 12,
-                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={isRevealed ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
                 transition={prefersReduced ? { duration: 0 } : {
                   duration: 0.4,
                   ease: [0.16, 1, 0.3, 1],
@@ -627,7 +625,7 @@ export default function HomePage() {
             <HeroText />
 
             <Link
-              href="/dashboard"
+              href="/onboarding"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -703,47 +701,56 @@ export default function HomePage() {
       ═══════════════════════════════════════ */}
       <section style={{
         background: '#080808',
-        padding: '140px 80px',
-        textAlign: 'center',
+        padding: '80px 0',
       }}>
-        {/* Label */}
-        <div className="sr" style={{ ...eyebrow, marginBottom: '56px', display: 'block' }}>
-          [ PRAKRITI ]
-        </div>
-
-        <WordRevealParagraph />
-
-        {/* Sub text — scroll-fade word reveal */}
         <div style={{
-          maxWidth: '640px',
-          margin: '0 auto 48px',
-          textAlign: 'center',
-        }}>
-          <ScrollFadeParagraph
-            text="Over a carbon journey, you collaborate with real India data to build a personal climate identity. Together, we foster a generation of conscious consumers that bridge awareness with action — pushing the boundaries of what individual impact can achieve."
-            fontSize="17px"
-            fontWeight={300}
-          />
-        </div>
-
-        <div style={{
-          maxWidth: '640px',
+          background: 'radial-gradient(ellipse at center, #1e1e1e 0%, #0d0d0d 100%)',
+          borderRadius: '24px',
+          maxWidth: '900px',
           margin: '0 auto',
+          padding: '80px 60px',
+          boxShadow: '0 0 80px rgba(0,0,0,0.6)',
           textAlign: 'center',
         }}>
-          <ScrollFadeParagraph
-            text="India-first carbon intelligence for conscious decision-makers."
-            fontSize="17px"
-            fontWeight={300}
-            delay={60}
-          />
-          <div style={{ marginTop: '4px' }}>
+          {/* Label */}
+          <div className="sr" style={{ ...eyebrow, marginBottom: '56px', display: 'block' }}>
+            [ PRAKRITI ]
+          </div>
+
+          <WordRevealParagraph />
+
+          {/* Sub text — scroll-fade word reveal */}
+          <div style={{
+            maxWidth: '640px',
+            margin: '0 auto 48px',
+            textAlign: 'center',
+          }}>
             <ScrollFadeParagraph
-              text="Built on real data. Powered by Gemini."
+              text="Over a carbon journey, you collaborate with real India data to build a personal climate identity. Together, we foster a generation of conscious consumers that bridge awareness with action — pushing the boundaries of what individual impact can achieve."
               fontSize="17px"
               fontWeight={300}
-              delay={120}
             />
+          </div>
+
+          <div style={{
+            maxWidth: '640px',
+            margin: '0 auto',
+            textAlign: 'center',
+          }}>
+            <ScrollFadeParagraph
+              text="India-first carbon intelligence for conscious decision-makers."
+              fontSize="17px"
+              fontWeight={300}
+              delay={60}
+            />
+            <div style={{ marginTop: '4px' }}>
+              <ScrollFadeParagraph
+                text="Built on real data. Powered by Gemini."
+                fontSize="17px"
+                fontWeight={300}
+                delay={120}
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -794,7 +801,7 @@ export default function HomePage() {
           <div style={{
             background: '#111',
             borderRadius: '16px',
-            border: '1px solid rgba(240,237,230,0.06)',
+            border: '1px solid rgba(255,255,255,0.12)',
             overflow: 'hidden',
             position: 'relative',
             minHeight: '420px',
@@ -818,7 +825,7 @@ export default function HomePage() {
                 filter: 'brightness(0.55) saturate(0.75)',
               }}
             >
-              <source src="https://videos.pexels.com/video-files/857251/857251-hd_1920_1080_25fps.mp4" type="video/mp4" />
+              <source src="https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4" type="video/mp4" />
             </video>
             {/* Gradient overlay — text legibility */}
             <div style={{
@@ -849,7 +856,7 @@ export default function HomePage() {
             <div key={feat.num} style={{
               background: '#111110',
               borderRadius: '16px',
-              border: '1px solid rgba(240,237,230,0.06)',
+              border: '1px solid rgba(255,255,255,0.1)',
               padding: '28px',
               display: 'flex',
               flexDirection: 'column',
@@ -1421,8 +1428,7 @@ export default function HomePage() {
               { label: 'Dashboard', href: '/dashboard' },
               { label: 'Track Activity', href: '/track' },
               { label: 'Insights', href: '/insights' },
-              { label: 'Methodology', href: '/methodology' },
-              { label: 'About Prakriti', href: '/about' },
+              { label: 'About Prakriti', href: '/#about' },
             ].map(link => (
               <Link key={link.href} href={link.href} style={{
                 display: 'block',
@@ -1455,13 +1461,10 @@ export default function HomePage() {
             }}>
               Community
             </div>
-            {[
-              { label: 'GitHub Repository', href: 'https://github.com/akshayjadhav237237-cmd/Prakriti' },
-              { label: 'Discord Server', href: 'https://discord.gg/prakriti' },
-              { label: 'Climate Forums', href: 'https://community.prakriti.org' },
-              { label: 'Open Issues', href: 'https://github.com/akshayjadhav237237-cmd/Prakriti/issues' },
-            ].map(link => (
-              <Link key={link.label} href={link.href} target={link.href.startsWith('http') ? '_blank' : undefined} style={{
+            <Link
+              href="https://github.com/akshayjadhav237237-cmd/Prakriti"
+              target="_blank"
+              style={{
                 display: 'block',
                 fontFamily: "'Space Grotesk', sans-serif",
                 fontSize: '14px',
@@ -1471,12 +1474,11 @@ export default function HomePage() {
                 marginBottom: '12px',
                 transition: 'color 0.2s',
               }}
-                onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,237,230,0.45)'}
-              >
-                {link.label}
-              </Link>
-            ))}
+              onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
+              onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,237,230,0.45)'}
+            >
+              GitHub Repository
+            </Link>
           </div>
 
           {/* Col 4 — Contact Us */}
@@ -1492,12 +1494,9 @@ export default function HomePage() {
             }}>
               Contact Us
             </div>
-            {[
-              { label: 'Email Support', href: 'mailto:code@prakriti.org' },
-              { label: 'Student Workspace', href: '/dashboard' },
-              { label: 'Coordinator Panel', href: '/admin' },
-            ].map(link => (
-              <Link key={link.label} href={link.href} style={{
+            <Link
+              href="mailto:akshayjadhav237237@gmail.com"
+              style={{
                 display: 'block',
                 fontFamily: "'Space Grotesk', sans-serif",
                 fontSize: '14px',
@@ -1507,12 +1506,11 @@ export default function HomePage() {
                 marginBottom: '12px',
                 transition: 'color 0.2s',
               }}
-                onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,237,230,0.45)'}
-              >
-                {link.label}
-              </Link>
-            ))}
+              onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
+              onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,237,230,0.45)'}
+            >
+              Email Support
+            </Link>
           </div>
         </div>
 

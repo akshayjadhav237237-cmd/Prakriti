@@ -49,6 +49,7 @@ export default function Onboarding() {
   const [city, setCity] = useState("");
   const [transport, setTransport] = useState("");
   const [diet, setDiet] = useState("");
+  const [userName, setUserName] = useState("");
   const [isOpenDropdown, setIsOpenDropdown] = useState(false);
   const [isWakingUp, setIsWakingUp] = useState(false);
   const [wakingUpProgress, setWakingUpProgress] = useState(0);
@@ -110,13 +111,22 @@ export default function Onboarding() {
       }
       setDirection(1);
       setStep(3);
-    } else {
+    } else if (step === 3) {
       const res = OnboardingInputSchema.safeParse({ city, transport, diet });
       if (!res.success) {
         setValidationError(res.error.errors[0].message);
         return;
       }
-      handleSubmit();
+      setDirection(1);
+      setStep(4);
+    } else {
+      // Step 4: name
+      const trimmed = userName.trim();
+      if (!trimmed) {
+        setValidationError("Please enter your first name.");
+        return;
+      }
+      handleSubmit(trimmed);
     }
   };
 
@@ -128,8 +138,10 @@ export default function Onboarding() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (name: string) => {
     setIsWakingUp(true);
+    // Persist name for dashboard personalisation
+    localStorage.setItem('prakriti_username', name);
     
     // Save details to LocalStorage / Supabase
     await saveUserProfile({
@@ -159,7 +171,7 @@ export default function Onboarding() {
       const mappedDiet = dietMap[diet] || "vegetarian";
 
       const user = await dbService.createFreshUser(
-        "Arjun",
+        name,
         city,
         mappedTransport,
         mappedDiet
@@ -186,6 +198,7 @@ export default function Onboarding() {
     if (step === 1) return city !== "";
     if (step === 2) return transport !== "";
     if (step === 3) return diet !== "";
+    if (step === 4) return userName.trim() !== "";
     return false;
   };
 
@@ -297,10 +310,10 @@ export default function Onboarding() {
         <div className="flex items-center justify-between mb-8 px-2">
           <div className="flex items-center space-x-2">
             <span className="text-xs font-mono uppercase tracking-widest text-foreground/40">Step</span>
-            <span className="text-sm font-bold text-primary font-mono">{step} of 3</span>
+            <span className="text-sm font-bold text-primary font-mono">{step} of 4</span>
           </div>
           <div className="flex space-x-1.5">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -501,6 +514,34 @@ export default function Onboarding() {
                   </div>
                 </fieldset>
               )}
+              {/* STEP 4: Name */}
+              {step === 4 && (
+                <div className="space-y-5">
+                  <div className="space-y-2">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
+                      What should we call you?
+                    </h1>
+                    <p className="text-foreground/60 text-sm">
+                      We&apos;ll use your first name to personalise your dashboard.
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="user-name-input" className="block text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-2">
+                      First Name
+                    </label>
+                    <input
+                      id="user-name-input"
+                      type="text"
+                      value={userName}
+                      onChange={e => { setUserName(e.target.value); setValidationError(""); }}
+                      onKeyDown={e => e.key === 'Enter' && isStepValid() && handleNext()}
+                      placeholder="Your first name"
+                      autoFocus
+                      className="w-full bg-background border border-border hover:border-primary/50 focus:border-primary rounded-xl px-4 py-3.5 text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base min-h-[48px]"
+                    />
+                  </div>
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
 
@@ -544,7 +585,7 @@ export default function Onboarding() {
                   : "bg-border text-foreground/30 cursor-not-allowed"
               }`}
             >
-              <span>{step === 3 ? "Wake up Prakriti" : "Continue"}</span>
+              <span>{step === 4 ? "Wake up Prakriti" : "Continue"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

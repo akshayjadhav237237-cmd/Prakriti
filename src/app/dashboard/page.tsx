@@ -166,7 +166,11 @@ export default function Dashboard() {
   const shouldReduceMotion = useReducedMotion();
   
   const [userId, setUserId] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>("Arjun");
+  const [userName, setUserName] = useState<string>(
+    typeof window !== 'undefined'
+      ? (localStorage.getItem('prakriti_username') || 'there')
+      : 'there'
+  );
   const [city, setCity] = useState<string>("Mumbai");
   const [pebbles, setPebbles] = useState<number>(50);
   const [budget, setBudget] = useState<BudgetEnvelope>({
@@ -348,7 +352,7 @@ export default function Dashboard() {
     if (user) {
       setCity(user.city);
       setPebbles(user.pebbles_balance);
-      setUserName(user.name || "Arjun");
+      setUserName(user.name || localStorage.getItem('prakriti_username') || 'there');
       localStorage.setItem("prakriti_city", user.city);
       localStorage.setItem("prakriti_pebbles", user.pebbles_balance.toString());
     }
