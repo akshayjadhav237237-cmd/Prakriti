@@ -34,12 +34,12 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
         display: 'inline-flex',
         alignItems: 'center',
         gap: '32px',
-        background: 'rgba(15, 15, 15, 0.88)',
+        background: '#000000',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: '16px',
-        padding: '10px 24px',
+        padding: '10px 28px',
         whiteSpace: 'nowrap',
         outline: 'none',
       }}>
@@ -49,13 +49,14 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
             href={link.href}
             target={link.href.startsWith('http') ? '_blank' : undefined}
             style={{
-              fontFamily: "'Space Grotesk', sans-serif",
+              fontFamily: "'Clash Display', sans-serif",
               fontSize: '14px',
               fontWeight: 500,
               color: 'rgba(255,255,255,0.75)',
               textDecoration: 'none',
               transition: 'color 0.18s ease',
               display: 'inline-block',
+              letterSpacing: '-0.01em',
             }}
             onMouseEnter={e => {
               e.currentTarget.style.color = '#ffffff';

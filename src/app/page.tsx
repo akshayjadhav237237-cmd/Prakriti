@@ -630,8 +630,8 @@ export default function HomePage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '16px',
-                background: '#000000',
-                color: '#f5f0e8',
+                background: '#ffffff',
+                color: '#000000',
                 fontFamily: "'Clash Display', sans-serif",
                 fontWeight: 600,
                 fontSize: '17px',
@@ -643,22 +643,22 @@ export default function HomePage() {
                 textDecoration: 'none',
                 transition: 'background 0.2s ease',
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#1a1a1a')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#000000')}
+              onMouseEnter={e => (e.currentTarget.style.background = '#f0f0f0')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#ffffff')}
             >
               Start budgeting
               <span style={{
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                background: '#111111',
+                background: '#000000',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}>
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 11H18M18 11L12 5M18 11L12 17" stroke="#f5f0e8" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M4 11H18M18 11L12 5M18 11L12 17" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </span>
             </Link>
