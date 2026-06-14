@@ -854,7 +854,7 @@ export default function HomePage() {
             justifyContent: 'flex-end',
             padding: '36px',
           }}>
-            {/* Bento card video — ocean waves aerial (Pexels 3571264) */}
+            {/* Bento card video — served locally, no CDN dependency */}
             <video
               autoPlay
               loop
@@ -870,9 +870,6 @@ export default function HomePage() {
                 filter: 'brightness(0.55) saturate(0.75)',
               }}
             >
-              {/* Drop the Pexels clip here: public/bento-ocean.mp4 */}
-              <source src="/bento-ocean.mp4" type="video/mp4" />
-              {/* Fallback: hero clip already in /public */}
               <source src="/hero.mp4" type="video/mp4" />
             </video>
             {/* Gradient overlay — text legibility */}
