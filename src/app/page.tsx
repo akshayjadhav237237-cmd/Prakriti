@@ -537,15 +537,15 @@ function HeroVideoCard() {
     const loadVideo = () => {
       const video = videoRef.current;
       if (!video) return;
-      video.src = "/bento-ocean.mp4";
+      video.src = "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto/f_auto/v1781474639/hero_eogjwi.mp4";
       video.load();
       video.play().catch(() => {});
     };
 
     if (document.readyState === 'complete') {
-      setTimeout(loadVideo, 1500);
+      setTimeout(loadVideo, 500);
     } else {
-      window.addEventListener('load', () => setTimeout(loadVideo, 1500), { once: true });
+      window.addEventListener('load', () => setTimeout(loadVideo, 500), { once: true });
     }
   }, []);
 

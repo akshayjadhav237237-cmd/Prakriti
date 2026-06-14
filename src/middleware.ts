@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
     img-src 'self' blob: data: https://images.unsplash.com https://*.unsplash.com;
     connect-src ${connectSrc};
     font-src 'self' data: https://fonts.gstatic.com https://api.fontshare.com;
-    media-src 'self' https://videos.pexels.com https://mixkit.com https://assets.mixkit.co https://cdn.mixkit.co https://cdn.coverr.co https://d8j0ntlcm91z4.cloudfront.net blob: data:;
+    media-src 'self' https://res.cloudinary.com https://videos.pexels.com https://mixkit.com https://assets.mixkit.co https://cdn.mixkit.co https://cdn.coverr.co https://d8j0ntlcm91z4.cloudfront.net blob: data:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
