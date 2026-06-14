@@ -528,6 +528,47 @@ function StartBudgetingButton() {
   );
 }
 
+/* ─── HERO BENTO VIDEO CARD (DEFERRED LOAD) ───── */
+
+function HeroVideoCard() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const loadVideo = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.src = "/bento-ocean.mp4";
+      video.load();
+      video.play().catch(() => {});
+    };
+
+    if (document.readyState === 'complete') {
+      setTimeout(loadVideo, 1500);
+    } else {
+      window.addEventListener('load', () => setTimeout(loadVideo, 1500), { once: true });
+    }
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      loop
+      muted
+      playsInline
+      preload="none"
+      poster="/hero-poster.jpg"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        filter: 'brightness(0.55) saturate(0.75)',
+      }}
+    />
+  );
+}
+
 /* ─── COMPONENT ─────────────────────────────── */
 
 export default function HomePage() {
@@ -855,24 +896,7 @@ export default function HomePage() {
             padding: '36px',
           }}>
             {/* Bento card — ocean waves aerial clip */}
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                filter: 'brightness(0.55) saturate(0.75)',
-              }}
-            >
-              <source src="/bento-ocean.mp4" type="video/mp4" />
-              <source src="/hero.mp4" type="video/mp4" />
-            </video>
+            <HeroVideoCard />
             {/* Gradient overlay — text legibility */}
             <div style={{
               position: 'absolute', inset: 0,
