@@ -371,12 +371,12 @@ const HeroHeadline = () => {
         }}
         style={{
           display: 'block',
-          fontFamily: "'Clash Display', sans-serif",
+          fontFamily: "'Helvetica Now Display', 'Helvetica Neue', 'Helvetica', 'Arial Black', Arial, sans-serif",
           fontWeight: 700,
           fontSize: 'clamp(80px, 14vw, 260px)',
           lineHeight: 0.8,
           color: '#f5f0e8',
-          letterSpacing: '-0.02em',
+          letterSpacing: '-0.03em',
           margin: 0,
           whiteSpace: 'nowrap',
           position: 'relative',
