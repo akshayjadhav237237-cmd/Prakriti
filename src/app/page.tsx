@@ -246,11 +246,12 @@ const WordRevealParagraph = () => {
 };
 
 // Word-by-word scroll reveal: starts dark (blends with bg), brightens to near-white on scroll
-const ScrollFadeParagraph = ({ text, fontSize = '17px', fontWeight = 300, delay = 0 }: {
+const ScrollFadeParagraph = ({ text, fontSize = '17px', fontWeight = 300, delay = 0, simultaneous = false }: {
   text: string;
   fontSize?: string;
   fontWeight?: number;
   delay?: number;
+  simultaneous?: boolean;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [revealedCount, setRevealedCount] = useState(0);
@@ -267,7 +268,12 @@ const ScrollFadeParagraph = ({ text, fontSize = '17px', fontWeight = 300, delay 
       const end = windowHeight * 0.22;
       const progress = Math.max(0, Math.min(1, (start - rect.top) / (start - end)));
       timeout = setTimeout(() => {
-        setRevealedCount(Math.floor(progress * words.length));
+        if (simultaneous) {
+          // Reveal all words at once when progress crosses 40%
+          setRevealedCount(progress > 0.4 ? words.length : 0);
+        } else {
+          setRevealedCount(Math.floor(progress * words.length));
+        }
       }, delay);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -276,7 +282,7 @@ const ScrollFadeParagraph = ({ text, fontSize = '17px', fontWeight = 300, delay 
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(timeout);
     };
-  }, [words.length, delay]);
+  }, [words.length, delay, simultaneous]);
 
   return (
     <div ref={containerRef} style={{ display: 'block' }}>
@@ -291,7 +297,7 @@ const ScrollFadeParagraph = ({ text, fontSize = '17px', fontWeight = 300, delay 
             color: i < revealedCount
               ? 'rgba(240,237,230,0.88)'
               : 'rgba(240,237,230,0.13)',
-            transition: 'color 0.45s ease',
+            transition: simultaneous ? 'color 0.6s ease' : 'color 0.45s ease',
             display: 'inline',
           }}
         >
@@ -410,20 +416,20 @@ const FeatureBullets = ({ bullets }: { bullets: string[] }) => {
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
-      gap: '10px',
+      gap: '12px',
     }}>
       {bullets.map((b, i) => (
         <li key={b} style={{
           display: 'flex',
           alignItems: 'flex-start',
-          gap: '10px',
+          gap: '12px',
           fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: '13px',
+          fontSize: '14px',
           fontWeight: 300,
-          color: 'rgba(240,237,230,0.45)',
-          lineHeight: 1.5,
+          color: 'rgba(240,237,230,0.7)',
+          lineHeight: 1.6,
         }}>
-          <span style={{ color: '#39ff7a', flexShrink: 0, marginTop: '2px' }}>✓</span>
+          <span style={{ color: 'rgba(240,237,230,0.5)', flexShrink: 0, marginTop: '2px' }}>✓</span>
           <div style={{ overflow: 'hidden', flex: 1 }}>
             <motion.p
               initial={{ y: '110%', opacity: 0 }}
@@ -438,11 +444,11 @@ const FeatureBullets = ({ bullets }: { bullets: string[] }) => {
               }}
               style={{
                 margin: 0,
-                color: 'rgba(240,237,230,0.45)',
+                color: 'rgba(240,237,230,0.7)',
                 fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '13px',
+                fontSize: '14px',
                 fontWeight: 300,
-                lineHeight: 1.5,
+                lineHeight: 1.6,
               }}
             >
               {b}
@@ -462,6 +468,9 @@ export default function HomePage() {
   const [fired, setFired] = useState(false);
 
   useEffect(() => {
+    /* Add grain class on mount */
+    document.body.classList.add('has-grain');
+
     /* Scroll reveal */
     const ro = new IntersectionObserver(
       entries => entries.forEach(e => {
@@ -474,7 +483,10 @@ export default function HomePage() {
     );
     document.querySelectorAll('.sr').forEach(el => ro.observe(el));
 
-    return () => { ro.disconnect(); };
+    return () => {
+      ro.disconnect();
+      document.body.classList.remove('has-grain');
+    };
   }, []);
 
   useEffect(() => {
@@ -528,7 +540,7 @@ export default function HomePage() {
   };
 
   return (
-    <main style={{ background: '#080808', overflowX: 'hidden' }}>
+    <main style={{ background: '#000000', overflowX: 'hidden' }}>
 
       {/* ═══════════════════════════════════════
           SECTION 1 — HERO (video background)
@@ -541,10 +553,11 @@ export default function HomePage() {
       ═══════════════════════════════════════ */}
       {/* Bezel frame wrapper */}
       <div style={{
-        background: '#080808',
+        background: '#000000',
         padding: '24px',
         minHeight: '100vh',
         borderRadius: '40px',
+        overflow: 'hidden',
         position: 'relative',
       }}>
         {/* Floating inline navbar */}
@@ -556,6 +569,7 @@ export default function HomePage() {
           overflow: 'hidden',
           height: 'calc(100vh - 48px)',
           background: '#111',
+          zIndex: 10000,
         }}>
 
           {/* VIDEO — local file and CDN fallbacks */}
@@ -571,7 +585,7 @@ export default function HomePage() {
               height: '100%',
               objectFit: 'cover',
               objectPosition: 'center 30%',
-              filter: 'brightness(0.35) saturate(0.4) sepia(0.3)',
+              filter: 'brightness(0.48) saturate(0.5) sepia(0.2)',
               zIndex: 0,
             }}
           >
@@ -590,11 +604,11 @@ export default function HomePage() {
             />
           </video>
 
-          {/* Warm color overlay ON TOP of video */}
+          {/* Warm color overlay ON TOP of video — stronger top crush */}
           <div style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, rgba(20,12,5,0.3) 0%, rgba(5,10,5,0.7) 100%)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 30%, rgba(5,10,5,0.62) 100%)',
             zIndex: 1,
             pointerEvents: 'none',
           }} />
@@ -700,7 +714,7 @@ export default function HomePage() {
           Exact clone of ECSoC "We are Elite Coders" section.
       ═══════════════════════════════════════ */}
       <section style={{
-        background: '#080808',
+        background: '#000000',
         padding: '80px 0',
       }}>
         <div style={{
@@ -734,23 +748,28 @@ export default function HomePage() {
 
           <div style={{
             maxWidth: '640px',
-            margin: '0 auto',
+            margin: '0 auto 48px',
             textAlign: 'center',
           }}>
             <ScrollFadeParagraph
               text="India-first carbon intelligence for conscious decision-makers."
               fontSize="17px"
               fontWeight={300}
-              delay={60}
+              simultaneous
             />
-            <div style={{ marginTop: '4px' }}>
-              <ScrollFadeParagraph
-                text="Built on real data. Powered by Gemini."
-                fontSize="17px"
-                fontWeight={300}
-                delay={120}
-              />
-            </div>
+          </div>
+
+          <div style={{
+            maxWidth: '640px',
+            margin: '0 auto 48px',
+            textAlign: 'center',
+          }}>
+            <ScrollFadeParagraph
+              text="Built on real data. Powered by Gemini."
+              fontSize="17px"
+              fontWeight={300}
+              simultaneous
+            />
           </div>
         </div>
       </section>
@@ -763,7 +782,7 @@ export default function HomePage() {
           Above: centered heading
       ═══════════════════════════════════════ */}
       <section style={{
-        background: '#080808',
+        background: '#000000',
         padding: '0 60px 100px',
       }}>
         {/* Centered heading */}
@@ -789,26 +808,20 @@ export default function HomePage() {
         </div>
 
         {/* Bento grid */}
-        <div className="sr sr-d1" style={{
-          display: 'grid',
-          gridTemplateColumns: '380px 1fr 1fr 1fr',
-          gap: '12px',
-          maxWidth: '1240px',
-          margin: '0 auto',
-        }}>
+        <div className="sr sr-d1 features-grid">
 
           {/* LEFT large card — cinematic video */}
           <div style={{
-            background: '#111',
-            borderRadius: '16px',
-            border: '1px solid rgba(255,255,255,0.12)',
+            background: '#121212',
+            borderRadius: '24px',
+            border: '1px solid rgba(255,255,255,0.08)',
             overflow: 'hidden',
             position: 'relative',
             minHeight: '420px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-end',
-            padding: '28px',
+            padding: '36px',
           }}>
             {/* Autoplay looping nature video */}
             <video
@@ -830,21 +843,33 @@ export default function HomePage() {
             {/* Gradient overlay — text legibility */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)',
+              zIndex: 1,
             }} />
             {/* Warm colour grade */}
             <div style={{
               position: 'absolute', inset: 0,
               background: 'rgba(20,10,5,0.25)',
               mixBlendMode: 'multiply',
+              zIndex: 1,
             }} />
-            <div style={{ position: 'relative', zIndex: 1 }}>
+            {/* Fine grain overlay over video but under text */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+              opacity: 0.08,
+              pointerEvents: 'none',
+              zIndex: 2,
+            }} />
+            <div style={{ position: 'relative', zIndex: 3 }}>
               <p style={{
                 fontFamily: "'Clash Display', sans-serif",
                 fontWeight: 600,
-                fontSize: '22px',
-                color: '#f0ede6',
-                lineHeight: 1.25,
+                fontSize: '26px',
+                color: '#ffffff',
+                lineHeight: 1.2,
+                letterSpacing: '-0.02em',
               }}>
                 Reduce. Track. Act.
               </p>
@@ -854,85 +879,110 @@ export default function HomePage() {
           {/* RIGHT 3 cards */}
           {FEATURES.map((feat, i) => (
             <div key={feat.num} style={{
-              background: '#111110',
-              borderRadius: '16px',
-              border: '1px solid rgba(255,255,255,0.1)',
-              padding: '28px',
+              background: '#121212',
+              borderRadius: '24px',
+              border: '1px solid rgba(255,255,255,0.08)',
+              padding: '36px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0',
+              position: 'relative',
+              overflow: 'hidden',
+              height: '100%',
+              minHeight: '420px',
             }}>
-              {/* Icon + number row */}
+              {/* Fine grain overlay inside each card */}
               <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '24px',
-              }}>
+                position: 'absolute',
+                inset: 0,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                opacity: 0.08,
+                pointerEvents: 'none',
+                zIndex: 1,
+              }} />
+
+              {/* Card content wrapper (so it sits on top of grain) */}
+              <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', height: '100%', flex: 1 }}>
+                {/* Icon + number row */}
                 <div style={{
-                  width: '48px', height: '48px',
-                  borderRadius: '10px',
-                  overflow: 'hidden',
-                  flexShrink: 0,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '12px',
                 }}>
-                  <img
-                    src={
-                      i === 0
-                        ? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=96&q=80'
-                        : i === 1
-                        ? 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=96&q=80'
-                        : 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=96&q=80'
-                    }
-                    alt={feat.title}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      filter: 'brightness(0.8) contrast(1.1)',
-                    }}
-                  />
+                  <div style={{
+                    width: '42px', height: '42px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    border: '1px solid rgba(255,255,255,0.05)',
+                  }}>
+                    <img
+                      src={
+                        i === 0
+                          ? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=96&q=80'
+                          : i === 1
+                          ? 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=96&q=80'
+                          : 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=96&q=80'
+                      }
+                      alt={feat.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        filter: 'grayscale(1) brightness(0.65) contrast(1.3)',
+                      }}
+                    />
+                  </div>
+                  <span style={{
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontSize: '13px',
+                    color: 'rgba(255,255,255,0.2)',
+                  }}>
+                    {feat.num}
+                  </span>
                 </div>
-                <span style={{
-                  fontFamily: "'Space Mono', monospace",
-                  fontSize: '12px',
-                  color: 'rgba(240,237,230,0.2)',
+
+                {/* Title */}
+                <h3 style={{
+                  fontFamily: "'Clash Display', sans-serif",
+                  fontWeight: 600,
+                  fontSize: '26px',
+                  color: '#ffffff',
+                  letterSpacing: '-0.02em',
+                  marginTop: '28px',
+                  marginBottom: '20px',
+                  lineHeight: '1.2',
                 }}>
-                  {feat.num}
-                </span>
+                  {feat.title}
+                </h3>
+
+                {/* Bullets */}
+                <FeatureBullets bullets={feat.bullets} />
+
+                {/* Learn more */}
+                <Link href={feat.link} style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: '14px',
+                  color: 'rgba(255,255,255,0.45)',
+                  textDecoration: 'none',
+                  marginTop: '36px',
+                  transition: 'color 0.2s, transform 0.2s',
+                }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = '#ffffff';
+                    e.currentTarget.style.transform = 'translateX(2px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.45)';
+                    e.currentTarget.style.transform = 'none';
+                  }}
+                >
+                  Learn more ↗
+                </Link>
               </div>
-
-              {/* Title */}
-              <h3 style={{
-                fontFamily: "'Clash Display', sans-serif",
-                fontWeight: 600,
-                fontSize: '20px',
-                color: '#f0ede6',
-                letterSpacing: '-0.01em',
-                marginBottom: '20px',
-              }}>
-                {feat.title}
-              </h3>
-
-              {/* Bullets */}
-              <FeatureBullets bullets={feat.bullets} />
-
-              {/* Learn more */}
-              <Link href={feat.link} style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: '13px',
-                color: 'rgba(240,237,230,0.35)',
-                textDecoration: 'none',
-                marginTop: '28px',
-                transition: 'color 0.2s',
-              }}
-                onMouseEnter={e => e.currentTarget.style.color = '#f0ede6'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(240,237,230,0.35)'}
-              >
-                Learn more ↗
-              </Link>
             </div>
           ))}
         </div>
@@ -944,9 +994,11 @@ export default function HomePage() {
           with git branch icons and phase cards
       ═══════════════════════════════════════ */}
       <section style={{
-        background: '#080808',
+        background: '#000000',
         padding: '100px 60px',
         borderTop: '1px solid rgba(240,237,230,0.05)',
+        position: 'relative',
+        zIndex: 10000,
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
 
@@ -1117,7 +1169,7 @@ export default function HomePage() {
           Exact clone of ECSoC why_ecsoc.diff section.
       ═══════════════════════════════════════ */}
       <section style={{
-        background: '#080808',
+        background: '#000000',
         borderTop: '1px solid rgba(240,237,230,0.05)',
         padding: '100px 60px',
       }}>
@@ -1310,7 +1362,7 @@ export default function HomePage() {
       <section
         ref={statsRef}
         style={{
-          background: '#080808',
+          background: '#000000',
           borderTop: '1px solid rgba(240,237,230,0.05)',
           padding: '80px 60px',
         }}
@@ -1372,9 +1424,11 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer style={{
-        background: '#080808',
+        background: '#000000',
         borderTop: '1px solid rgba(240,237,230,0.06)',
         padding: '64px 60px 0',
+        position: 'relative',
+        zIndex: 10000,
       }}>
         <div style={{
           display: 'grid',
@@ -1574,7 +1628,9 @@ function TermsAccordion() {
     <section style={{
       background: '#080808',
       padding: '100px 60px',
-      borderTop: '1px solid rgba(240,237,230,0.05)'
+      borderTop: '1px solid rgba(240,237,230,0.05)',
+      position: 'relative',
+      zIndex: 10000,
     }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
         <div className="sr" style={{ marginBottom: '56px', textAlign: 'center' }}>

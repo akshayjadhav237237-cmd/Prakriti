@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import PageTransition from "@/components/PageTransition";
+import OnboardingGuard from "@/components/OnboardingGuard";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -50,9 +51,11 @@ export default function RootLayout({
           </a>
           <Navbar />
           <main id="main-content" className="flex-1 w-full flex flex-col" tabIndex={-1}>
-            <PageTransition>
-              {children}
-            </PageTransition>
+            <OnboardingGuard>
+              <PageTransition>
+                {children}
+              </PageTransition>
+            </OnboardingGuard>
           </main>
         </ThemeProvider>
       </body>

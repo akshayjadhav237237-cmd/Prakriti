@@ -27,17 +27,17 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
     return (
       <nav style={{
         position: 'fixed',
-        top: '-18px',
+        top: '12px',
         left: '50%',
         transform: 'translateX(-50%)',
-        zIndex: 20,
+        zIndex: 10100,
         display: 'inline-flex',
         alignItems: 'center',
         gap: '32px',
         background: '#000000',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
-        border: '1px solid rgba(255,255,255,0.08)',
+        border: 'none',
         borderRadius: '16px',
         padding: '10px 28px',
         whiteSpace: 'nowrap',
@@ -83,7 +83,7 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
       borderBottom: 'none',
       display: 'flex', alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 40px', zIndex: 500,
+      padding: '0 40px', zIndex: 10100,
     }}>
       <Link href="/" style={{
         fontFamily: "'Space Mono', monospace",
