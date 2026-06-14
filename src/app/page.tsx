@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { motion, useInView } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 
@@ -460,6 +462,72 @@ const FeatureBullets = ({ bullets }: { bullets: string[] }) => {
   );
 };
 
+/* ─── START BUDGETING BUTTON ────────────────── */
+
+function StartBudgetingButton() {
+  const router = useRouter();
+  const [hovered, setHovered] = useState(false);
+
+  const handleClick = useCallback(() => {
+    const username = localStorage.getItem('prakriti_username');
+    const userId = localStorage.getItem('prakriti_user_id');
+
+    const isNewUser =
+      !username ||
+      !userId ||
+      username === 'Arjun' ||
+      userId === 'demo-user-arjun' ||
+      userId === 'arjun-mumbai-uuid';
+
+    if (isNewUser) {
+      router.push('/onboarding');
+    } else {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+  return (
+    <button
+      onClick={handleClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '16px',
+        background: hovered ? '#f0f0f0' : '#ffffff',
+        color: '#000000',
+        fontFamily: "'Clash Display', sans-serif",
+        fontWeight: 600,
+        fontSize: '17px',
+        letterSpacing: '-0.01em',
+        padding: '10px 10px 10px 28px',
+        borderRadius: '100px',
+        border: 'none',
+        cursor: 'pointer',
+        textDecoration: 'none',
+        transition: 'background 0.2s ease',
+      }}
+    >
+      Start budgeting
+      <span style={{
+        width: '48px',
+        height: '48px',
+        borderRadius: '50%',
+        background: '#000000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+      }}>
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 11H18M18 11L12 5M18 11L12 17" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </span>
+    </button>
+  );
+}
+
 /* ─── COMPONENT ─────────────────────────────── */
 
 export default function HomePage() {
@@ -572,12 +640,14 @@ export default function HomePage() {
           zIndex: 10000,
         }}>
 
-          {/* VIDEO — local file and CDN fallbacks */}
+          {/* VIDEO — local file primary, fast CDN SD fallback */}
           <video
             autoPlay
             muted
             loop
             playsInline
+            preload="auto"
+            poster="/hero-poster.jpg"
             style={{
               position: 'absolute',
               inset: 0,
@@ -589,13 +659,11 @@ export default function HomePage() {
               zIndex: 0,
             }}
           >
+            {/* Local file loads instantly if available */}
             <source src="/hero.mp4" type="video/mp4" />
+            {/* SD fallback — tiny file size, loads fast on any connection */}
             <source
               src="https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sun-529-large.mp4"
-              type="video/mp4"
-            />
-            <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-fog-over-the-mountains-1435-large.mp4"
               type="video/mp4"
             />
             <source
@@ -638,44 +706,7 @@ export default function HomePage() {
           }}>
             <HeroText />
 
-            <Link
-              href="/onboarding"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '16px',
-                background: '#ffffff',
-                color: '#000000',
-                fontFamily: "'Clash Display', sans-serif",
-                fontWeight: 600,
-                fontSize: '17px',
-                letterSpacing: '-0.01em',
-                padding: '10px 10px 10px 28px',
-                borderRadius: '100px',
-                border: 'none',
-                cursor: 'pointer',
-                textDecoration: 'none',
-                transition: 'background 0.2s ease',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#f0f0f0')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#ffffff')}
-            >
-              Start budgeting
-              <span style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                background: '#000000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 11H18M18 11L12 5M18 11L12 17" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </span>
-            </Link>
+            <StartBudgetingButton />
           </div>
 
           {/* Scroll hint — right-side to avoid overlapping heading */}
@@ -823,12 +854,13 @@ export default function HomePage() {
             justifyContent: 'flex-end',
             padding: '36px',
           }}>
-            {/* Autoplay looping nature video */}
+            {/* Bento card video — ocean waves aerial (Pexels 3571264) */}
             <video
               autoPlay
               loop
               muted
               playsInline
+              preload="auto"
               style={{
                 position: 'absolute',
                 inset: 0,
@@ -838,7 +870,10 @@ export default function HomePage() {
                 filter: 'brightness(0.55) saturate(0.75)',
               }}
             >
-              <source src="https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4" type="video/mp4" />
+              {/* Drop the Pexels clip here: public/bento-ocean.mp4 */}
+              <source src="/bento-ocean.mp4" type="video/mp4" />
+              {/* Fallback: hero clip already in /public */}
+              <source src="/hero.mp4" type="video/mp4" />
             </video>
             {/* Gradient overlay — text legibility */}
             <div style={{
@@ -915,8 +950,9 @@ export default function HomePage() {
                     overflow: 'hidden',
                     flexShrink: 0,
                     border: '1px solid rgba(255,255,255,0.05)',
+                    position: 'relative',
                   }}>
-                    <img
+                    <Image
                       src={
                         i === 0
                           ? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=96&q=80'
@@ -925,6 +961,9 @@ export default function HomePage() {
                           : 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=96&q=80'
                       }
                       alt={feat.title}
+                      width={42}
+                      height={42}
+                      loading="lazy"
                       style={{
                         width: '100%',
                         height: '100%',

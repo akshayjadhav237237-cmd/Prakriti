@@ -3,61 +3,64 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
+// Routes that are always publicly accessible (no onboarding check)
+const PUBLIC_ROUTES = ['/', '/onboarding'];
+
+function isUnonboardedUser(): boolean {
+  if (typeof window === 'undefined') return false;
+  const username = localStorage.getItem('prakriti_username');
+  const userId = localStorage.getItem('prakriti_user_id');
+  return (
+    !username ||
+    !userId ||
+    username === 'Arjun' ||
+    userId === 'demo-user-arjun' ||
+    userId === 'arjun-mumbai-uuid'
+  );
+}
+
 export default function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const username = localStorage.getItem('prakriti_username');
-    const userId = localStorage.getItem('prakriti_user_id');
-    
-    // An un-onboarded user has no credentials, or retains the default "Arjun" seed profile
-    const isUnonboarded = 
-      !username || 
-      !userId || 
-      username === 'Arjun' || 
-      userId === 'demo-user-arjun' || 
-      userId === 'arjun-mumbai-uuid';
-
-    if (isUnonboarded) {
-      if (pathname !== '/onboarding') {
-        router.push('/onboarding');
-      } else {
-        setChecked(true);
-      }
-    } else {
-      if (pathname === '/onboarding') {
+    // Landing page and onboarding are always accessible
+    if (PUBLIC_ROUTES.includes(pathname)) {
+      // If the user is already onboarded and tries to visit /onboarding, redirect to dashboard
+      if (pathname === '/onboarding' && !isUnonboardedUser()) {
         router.push('/dashboard');
-      } else {
-        setChecked(true);
+        return;
       }
+      setChecked(true);
+      return;
+    }
+
+    // For all other protected routes, check onboarding status
+    if (isUnonboardedUser()) {
+      router.push('/onboarding');
+    } else {
+      setChecked(true);
     }
   }, [pathname, router]);
 
-  // Prevent flashing content during the redirect check
+  // Prevent flashing content during the redirect check for protected routes
   if (!checked) {
-    const username = typeof window !== 'undefined' ? localStorage.getItem('prakriti_username') : null;
-    const userId = typeof window !== 'undefined' ? localStorage.getItem('prakriti_user_id') : null;
-    
-    const isUnonboarded = 
-      !username || 
-      !userId || 
-      username === 'Arjun' || 
-      userId === 'demo-user-arjun' || 
-      userId === 'arjun-mumbai-uuid';
-
-    if (isUnonboarded && pathname !== '/onboarding') {
-      return (
-        <div style={{ 
-          minHeight: '100vh', 
-          background: '#000000', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center' 
-        }} />
-      );
+    // Public routes render immediately without a loading flash
+    if (PUBLIC_ROUTES.includes(pathname)) {
+      return <>{children}</>;
     }
+
+    // Protected routes show a black screen while checking
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: '#000000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }} />
+    );
   }
 
   return <>{children}</>;

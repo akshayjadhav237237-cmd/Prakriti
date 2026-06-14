@@ -33,6 +33,12 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://videos.pexels.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://api.fontshare.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://videos.pexels.com" />
         <link
           href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Fraunces:ital,opsz,wght@1,9..144,300;1,9..144,400&family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap"
           rel="stylesheet"
