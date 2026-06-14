@@ -543,9 +543,9 @@ function HeroVideoCard() {
     };
 
     if (document.readyState === 'complete') {
-      setTimeout(loadVideo, 500);
+      setTimeout(loadVideo, 300);
     } else {
-      window.addEventListener('load', () => setTimeout(loadVideo, 500), { once: true });
+      window.addEventListener('load', () => setTimeout(loadVideo, 300), { once: true });
     }
   }, []);
 
@@ -564,6 +564,49 @@ function HeroVideoCard() {
         height: '100%',
         objectFit: 'cover',
         filter: 'brightness(0.55) saturate(0.75)',
+      }}
+    />
+  );
+}
+
+/* ─── HERO BACKGROUND VIDEO CARD (DEFERRED LOAD) ───── */
+
+function HeroBgVideoCard() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const loadVideo = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.src = "https://videos.pexels.com/video-files/3571264/3571264-sd_640_360_25fps.mp4";
+      video.load();
+      video.play().catch(() => {});
+    };
+
+    if (document.readyState === 'complete') {
+      setTimeout(loadVideo, 300);
+    } else {
+      window.addEventListener('load', () => setTimeout(loadVideo, 300), { once: true });
+    }
+  }, []);
+
+  return (
+    <video
+      ref={videoRef}
+      loop
+      muted
+      playsInline
+      preload="none"
+      poster="/hero-poster.jpg"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        objectPosition: 'center 30%',
+        filter: 'brightness(0.48) saturate(0.5) sepia(0.2)',
+        zIndex: 0,
       }}
     />
   );
@@ -681,37 +724,8 @@ export default function HomePage() {
           zIndex: 10000,
         }}>
 
-          {/* VIDEO — local file primary, fast CDN SD fallback */}
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            poster="/hero-poster.jpg"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center 30%',
-              filter: 'brightness(0.48) saturate(0.5) sepia(0.2)',
-              zIndex: 0,
-            }}
-          >
-            {/* Local file loads instantly if available */}
-            <source src="/hero.mp4" type="video/mp4" />
-            {/* SD fallback — tiny file size, loads fast on any connection */}
-            <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sun-529-large.mp4"
-              type="video/mp4"
-            />
-            <source
-              src="https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-river-in-the-jungle-18098-large.mp4"
-              type="video/mp4"
-            />
-          </video>
+          {/* VIDEO — deferred load via CDN after page is fully interactive */}
+          <HeroBgVideoCard />
 
           {/* Warm color overlay ON TOP of video — stronger top crush */}
           <div style={{
