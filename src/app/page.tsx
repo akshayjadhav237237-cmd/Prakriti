@@ -644,11 +644,6 @@ export default function HomePage() {
   const [fired, setFired] = useState(false);
 
   useEffect(() => {
-    /* Insert grain overlay div — real DOM element so bento cards can sit above it */
-    const grain = document.createElement('div');
-    grain.className = 'grain-overlay';
-    document.body.appendChild(grain);
-
     /* Scroll reveal */
     const ro = new IntersectionObserver(
       entries => entries.forEach(e => {
@@ -663,7 +658,6 @@ export default function HomePage() {
 
     return () => {
       ro.disconnect();
-      grain.remove();
     };
   }, []);
 
