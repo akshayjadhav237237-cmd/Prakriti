@@ -49,7 +49,7 @@ const SEED = {
   companion: { name: 'Chiku', species: 'Lion-Tailed Macaque', stage: 1, energy: 45 },
   history: [42.1, 39.8, 34.8],
   lastInsight:
-    'Heavy AC cooling season. Setting AC to 26\u00b0C saves up to 20% on cooling carbon. Try a fan assist \u2014 it drops perceived temperature by 3\u00b0C.',
+    'Heavy AC cooling season. Setting AC to 26�C saves up to 20% on cooling carbon. Try a fan assist � it drops perceived temperature by 3�C.',
 };
 
 // ── FADE-IN VARIANT ──
@@ -160,10 +160,10 @@ export default function DashboardPage() {
   const isWarning = pct > 90;
 
   const envelopes = [
-    { key: 'transport', label: 'Transport', icon: '\ud83d\ude97', equiv: '\u2248 371 km on petrol scooter' },
-    { key: 'food', label: 'Food', icon: '\ud83c\udf7d\ufe0f', equiv: '\u2248 14 home-cooked meals' },
-    { key: 'energy', label: 'Energy', icon: '\u26a1', equiv: '\u2248 11 kWh grid electricity' },
-    { key: 'lifestyle', label: 'Lifestyle', icon: '\ud83c\udfaf', equiv: '\u2248 4 e-commerce deliveries' },
+    { key: 'transport', label: 'Transport', icon: '\ud83d\ude97', equiv: '� 371 km on petrol scooter' },
+    { key: 'food', label: 'Food', icon: '\ud83c\udf7d\ufe0f', equiv: '� 14 home-cooked meals' },
+    { key: 'energy', label: 'Energy', icon: '\u26a1', equiv: '� 11 kWh grid electricity' },
+    { key: 'lifestyle', label: 'Lifestyle', icon: '\ud83c\udfaf', equiv: '� 4 e-commerce deliveries' },
   ];
 
   const safeHistory = Array.isArray(data?.history) ? data.history : SEED.history;
@@ -174,7 +174,7 @@ export default function DashboardPage() {
     { name: 'Mumbai', value: 45.2, fill: '#506050' },
     { name: 'India', value: 52.1, fill: '#506050' },
     { name: 'Global', value: 65.4, fill: '#506050' },
-    { name: 'Paris 1.5\u00b0C', value: 38.5, fill: '#22c55e' },
+    { name: 'Paris 1.5�C', value: 38.5, fill: '#22c55e' },
   ];
 
   return (
@@ -286,7 +286,7 @@ export default function DashboardPage() {
                     marginBottom: 20,
                   }}
                 >
-                  CO\u2082e used of {totalBudget} kg envelope
+                  CO2e used of {totalBudget} kg envelope
                 </div>
 
                 <div
@@ -413,7 +413,7 @@ export default function DashboardPage() {
                 border: '1px solid rgba(212,175,55,0.15)',
               }}
             >
-              <span style={{ fontSize: 16 }}>\u25c6</span>
+              <span style={{ fontSize: 16 }}>?</span>
               <div>
                 <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 14, color: T.gold, fontWeight: 700 }}>
                   {data.pebbles} Pebbles
@@ -455,7 +455,7 @@ export default function DashboardPage() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(212,175,55,0.08)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >
-                Earn Pebbles \u25c6
+                Earn Pebbles ?
               </button>
               <button
                 style={{
@@ -472,7 +472,7 @@ export default function DashboardPage() {
                 onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(74,222,128,0.18)')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(74,222,128,0.1)')}
               >
-                Adventure \u2192
+                Adventure ?
               </button>
             </div>
           </motion.div>
@@ -779,7 +779,7 @@ export default function DashboardPage() {
                       key={i}
                       fill={entry.fill}
                       fillOpacity={
-                        entry.name === 'You' || entry.name === 'Paris 1.5\u00b0C' ? 1 : 0.5
+                        entry.name === 'You' || entry.name === 'Paris 1.5�C' ? 1 : 0.5
                       }
                     />
                   ))}
@@ -869,8 +869,8 @@ export default function DashboardPage() {
               margin: 0,
             }}
           >
-            Heavy AC cooling season is here. Setting AC to 26\u00b0C saves up to 20% on cooling carbon.
-            Try fan assist \u2014 drops perceived temperature by 3\u00b0C.
+            Heavy AC cooling season is here. Setting AC to 26�C saves up to 20% on cooling carbon.
+            Try fan assist � drops perceived temperature by 3�C.
           </p>
         </motion.div>
 
@@ -895,7 +895,7 @@ export default function DashboardPage() {
               value: data.phase === 2 ? 'Budget' : data.phase === 1 ? 'Baseline' : 'Reduce',
               icon: '\ud83d\udcca',
             },
-            { label: 'Pebbles', value: `\u25c6 ${data.pebbles}`, icon: '\u2728' },
+            { label: 'Pebbles', value: `? ${data.pebbles}`, icon: '\u2728' },
           ].map((stat, i) => (
             <div
               key={i}

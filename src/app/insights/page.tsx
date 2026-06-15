@@ -21,7 +21,7 @@ const fadeIn = {
 const KPI = [
   { label: 'WEEK',      value: '3 / 13',   sub: 'Phase 2: Budget',    color: '#f0ffe8' },
   { label: 'REDUCTION', value: '\u2193 18%',     sub: 'vs last month',      color: '#4ade80' },
-  { label: 'PEBBLES',   value: '\u25c6 45',      sub: 'earned total',       color: '#d4af37' },
+  { label: 'PEBBLES',   value: '? 45',      sub: 'earned total',       color: '#d4af37' },
   { label: 'STREAK',    value: '2 weeks',   sub: 'under budget',       color: '#4ade80' },
 ];
 
@@ -40,7 +40,7 @@ const BAR_DATA = [
 ];
 
 const ACTIONS = [
-  { num: '01', action: 'Switch AC to 26\u00b0C',       save: 'Save ~3.2 kg/wk' },
+  { num: '01', action: 'Switch AC to 26�C',       save: 'Save ~3.2 kg/wk' },
   { num: '02', action: 'Take bus once this week',  save: 'Save ~5.1 kg/wk' },
   { num: '03', action: 'Skip one Swiggy order',   save: 'Save ~1.2 kg/wk' },
 ];

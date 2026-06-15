@@ -176,7 +176,7 @@ export default function LogActivityPage() {
                 fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, color: '#a0b0a0',
                 lineHeight: 1.6, maxWidth: 480, margin: '0 auto 24px',
               }}>
-                Point camera at any Indian bill \u2014 electricity, petrol, Swiggy, Zomato. Gemini reads it instantly.
+                Point camera at any Indian bill � electricity, petrol, Swiggy, Zomato. Gemini reads it instantly.
               </p>
               <label style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -263,7 +263,7 @@ export default function LogActivityPage() {
               fontFamily: "'Space Mono', monospace", fontWeight: 700,
               fontSize: 28, color: '#4ade80', marginTop: 16, marginBottom: 16,
             }}>
-              TOTAL {scanResult.total.toFixed(2)} kg CO\u2082e
+              TOTAL {scanResult.total.toFixed(2)} kg CO2e
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button style={{
@@ -390,7 +390,7 @@ export default function LogActivityPage() {
                       fontFamily: "'Space Mono', monospace", fontWeight: 700,
                       fontSize: 28, color: '#4ade80',
                     }}>
-                      {liveKg.toFixed(3)} kg CO\u2082e
+                      {liveKg.toFixed(3)} kg CO2e
                     </div>
 
                     <button style={{
