@@ -50,7 +50,7 @@ export default function LogActivityPage() {
   const [showManual, setShowManual] = useState(false);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [scanLoading, setScanLoading] = useState(false);
-  const [scanResult, setScanResult] = useState<null | { items: { name: string; kg: number }[]; total: number }>(null);
+  const [scanResult, setScanResult] = useState<null | { merchant: string; items: { name: string; kg: number }[]; total: number }>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [distance, setDistance] = useState(10);
   const [transportMode, setTransportMode] = useState('Scooter');
@@ -87,22 +87,50 @@ export default function LogActivityPage() {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset the input so the same file can be re-selected after an error
+    e.target.value = '';
     setScanLoading(true);
     setScanError(null);
     setScanResult(null);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch('/api/scan', { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Scan failed');
-      const data = await res.json();
-      setScanResult(data);
-    } catch {
-      setScanError('Could not read this bill. Try a clearer photo.');
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: base64, mimeType: file.type || 'image/jpeg' }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Scan failed');
+      }
+
+      // Map API response shape → UI shape
+      const d = json.data;
+      setScanResult({
+        merchant: d.merchant || '',
+        total: d.co2eKg ?? 0,
+        items: (d.items || []).map((item: { name: string; co2eKg: number }) => ({
+          name: item.name,
+          kg: item.co2eKg ?? 0,
+        })),
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '';
+      setScanError(msg || 'Could not read this bill. Try a clearer photo.');
     } finally {
       setScanLoading(false);
     }
   };
+
 
   return (
     <InnerLayout pageName="Log Activity">
