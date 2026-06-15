@@ -130,16 +130,32 @@ export default function DashboardPage() {
       const stored = localStorage.getItem('prakriti_user');
       if (!stored) {
         localStorage.setItem('prakriti_user', JSON.stringify(SEED));
+        // Seed auth keys so OnboardingGuard doesn't redirect
+        if (!localStorage.getItem('prakriti_username')) {
+          localStorage.setItem('prakriti_username', SEED.name);
+          localStorage.setItem('prakriti_user_id', 'prakriti-demo-user');
+        }
+
       } else {
-        setData(JSON.parse(stored) as SeedType);
+        const parsed = JSON.parse(stored);
+        // Validate structure — old format may lack envelopes/history
+        const hasEnvelopes = parsed?.envelopes?.transport?.spent !== undefined;
+        const hasHistory = Array.isArray(parsed?.history);
+        if (hasEnvelopes && hasHistory) {
+          setData(parsed as SeedType);
+        } else {
+          // Old format — reset to SEED
+          localStorage.setItem('prakriti_user', JSON.stringify(SEED));
+        }
       }
     } catch {
       // ignore
     }
   }, []);
 
-  const totalSpent = Object.values(data.envelopes).reduce((a, b) => a + b.spent, 0);
-  const totalBudget = data.weeklyBudget;
+  const safeEnvelopes = data?.envelopes ?? SEED.envelopes;
+  const totalSpent = Object.values(safeEnvelopes).reduce((a, b) => a + b.spent, 0);
+  const totalBudget = data?.weeklyBudget ?? SEED.weeklyBudget;
   const pct = Math.min((totalSpent / totalBudget) * 100, 100);
   const isWarning = pct > 90;
 
@@ -150,7 +166,8 @@ export default function DashboardPage() {
     { key: 'lifestyle', label: 'Lifestyle', icon: '\ud83c\udfaf', equiv: '\u2248 4 e-commerce deliveries' },
   ];
 
-  const sparkData = data.history.map((kg, i) => ({ week: `W${i + 1}`, kg }));
+  const safeHistory = Array.isArray(data?.history) ? data.history : SEED.history;
+  const sparkData = safeHistory.map((kg, i) => ({ week: `W${i + 1}`, kg }));
 
   const benchmarkData = [
     { name: 'You', value: totalSpent, fill: '#4ade80' },

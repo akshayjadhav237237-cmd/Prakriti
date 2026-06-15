@@ -10,14 +10,10 @@ function isUnonboardedUser(): boolean {
   if (typeof window === 'undefined') return false;
   const username = localStorage.getItem('prakriti_username');
   const userId = localStorage.getItem('prakriti_user_id');
-  return (
-    !username ||
-    !userId ||
-    username === 'Arjun' ||
-    userId === 'demo-user-arjun' ||
-    userId === 'arjun-mumbai-uuid'
-  );
+  // Only redirect when there is genuinely no user profile at all
+  return !username || !userId;
 }
+
 
 export default function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
