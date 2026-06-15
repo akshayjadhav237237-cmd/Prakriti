@@ -397,7 +397,7 @@ const HeroHeadline = () => {
           left: '100%',
           marginLeft: '8px',
           fontSize: '0.35em',
-          color: '#f5f0e8',
+          color: '#00FF41',
           lineHeight: 1,
         }}>*</span>
       </motion.h1>
