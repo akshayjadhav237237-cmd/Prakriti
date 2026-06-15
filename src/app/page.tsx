@@ -602,26 +602,50 @@ function HeroBgVideoCard() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    video.src = "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4";
-    video.load();
-    video.play().catch(() => {});
+
+    // Try sources in order — first one that loads wins
+    const sources = [
+      "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto,f_auto/v1781474639/hero_eogjwi.mp4",
+      "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4",
+    ];
+
+    let idx = 0;
+
+    const tryNext = () => {
+      if (idx >= sources.length) return;
+      video.src = sources[idx++];
+      video.load();
+      video.play().catch(() => {});
+    };
+
+    video.onerror = () => tryNext();
+    tryNext();
   }, []);
 
   return (
-    <video
-      ref={videoRef}
-      loop
-      muted
-      playsInline
-      preload="none"
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-      }}
-    />
+    <div style={{
+      position: 'absolute',
+      inset: 0,
+      zIndex: 0,
+      overflow: 'hidden',
+      background: 'transparent',
+    }}>
+      <video
+        ref={videoRef}
+        loop
+        muted
+        playsInline
+        preload="none"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+        }}
+      />
+    </div>
   );
 }
 
