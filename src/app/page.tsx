@@ -528,44 +528,77 @@ function StartBudgetingButton() {
   );
 }
 
-/* ─── HERO BENTO VIDEO CARD (DEFERRED LOAD) ───── */
+/* ─── HERO BENTO VIDEO CARD ───── */
 
 function HeroVideoCard() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const loadVideo = () => {
-      const video = videoRef.current;
-      if (!video) return;
-      video.src = "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto/f_auto/v1781474639/hero_eogjwi.mp4";
-      video.load();
-      video.play().catch(() => {});
-    };
-
-    if (document.readyState === 'complete') {
-      setTimeout(loadVideo, 300);
-    } else {
-      window.addEventListener('load', () => setTimeout(loadVideo, 300), { once: true });
-    }
+    const video = videoRef.current;
+    if (!video) return;
+    video.src = "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto/f_auto/v1781474639/hero_eogjwi.mp4";
+    video.load();
+    video.play().catch(() => {});
   }, []);
 
   return (
-    <video
-      ref={videoRef}
-      loop
-      muted
-      playsInline
-      preload="none"
-      poster="/hero-poster.jpg"
-      style={{
+    <div style={{ position: 'relative', width: '100%', height: '100%', background: '#0a0f0a', borderRadius: 'inherit', overflow: 'hidden' }}>
+      <video
+        ref={videoRef}
+        loop
+        muted
+        playsInline
+        preload="none"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          filter: 'brightness(0.55) saturate(0.75)',
+        }}
+      />
+      {/* Gradient overlay — text legibility */}
+      <div style={{
         position: 'absolute',
         inset: 0,
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-        filter: 'brightness(0.55) saturate(0.75)',
-      }}
-    />
+        background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.1) 60%)',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }} />
+      {/* Warm colour grade */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'rgba(20,10,5,0.25)',
+        mixBlendMode: 'multiply',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }} />
+      {/* Fine grain overlay */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        opacity: 0.08,
+        pointerEvents: 'none',
+        zIndex: 2,
+      }} />
+      {/* Text */}
+      <div style={{ position: 'absolute', bottom: 36, left: 36, zIndex: 3 }}>
+        <p style={{
+          fontFamily: "'Clash Display', sans-serif",
+          fontWeight: 600,
+          fontSize: '26px',
+          color: '#ffffff',
+          lineHeight: 1.2,
+          letterSpacing: '-0.02em',
+          margin: 0,
+        }}>
+          Reduce. Track. Act.
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -597,7 +630,6 @@ function HeroBgVideoCard() {
       muted
       playsInline
       preload="none"
-      poster="/hero-poster.jpg"
       style={{
         position: 'absolute',
         inset: 0,
@@ -898,53 +930,15 @@ export default function HomePage() {
 
           {/* LEFT large card — cinematic video */}
           <div style={{
-            background: '#121212',
+            background: '#0a0f0a',
             borderRadius: '24px',
             border: '1px solid rgba(255,255,255,0.08)',
             overflow: 'hidden',
             position: 'relative',
             minHeight: '420px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'flex-end',
-            padding: '36px',
           }}>
-            {/* Bento card — ocean waves aerial clip */}
+            {/* HeroVideoCard owns its own background, overlays, and text */}
             <HeroVideoCard />
-            {/* Gradient overlay — text legibility */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%)',
-              zIndex: 1,
-            }} />
-            {/* Warm colour grade */}
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'rgba(20,10,5,0.25)',
-              mixBlendMode: 'multiply',
-              zIndex: 1,
-            }} />
-            {/* Fine grain overlay over video but under text */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-              opacity: 0.08,
-              pointerEvents: 'none',
-              zIndex: 2,
-            }} />
-            <div style={{ position: 'relative', zIndex: 3 }}>
-              <p style={{
-                fontFamily: "'Clash Display', sans-serif",
-                fontWeight: 600,
-                fontSize: '26px',
-                color: '#ffffff',
-                lineHeight: 1.2,
-                letterSpacing: '-0.02em',
-              }}>
-                Reduce. Track. Act.
-              </p>
-            </div>
           </div>
 
           {/* RIGHT 3 cards */}
