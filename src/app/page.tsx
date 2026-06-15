@@ -536,7 +536,7 @@ function HeroVideoCard() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    video.src = "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto/f_auto/v1781474639/hero_eogjwi.mp4";
+    video.src = "/hero-bg.mp4";
     video.load();
     video.play().catch(() => {});
   }, []);
