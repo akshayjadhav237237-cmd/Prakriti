@@ -46,7 +46,7 @@ export default function RootLayout({
         <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap" rel="stylesheet" />
       </head>
       <body
-        className={`${inter.variable} ${plusJakarta.variable} antialiased bg-background text-foreground min-h-screen flex flex-col grain`}
+        className={`${inter.variable} ${plusJakarta.variable} antialiased bg-background text-foreground min-h-screen flex flex-col`}
       >
         <ThemeProvider defaultTheme="dark">
           <a
