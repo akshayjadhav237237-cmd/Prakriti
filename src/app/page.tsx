@@ -580,7 +580,7 @@ function HeroVideoCard() {
       <div style={{ position: 'absolute', bottom: 36, left: 36, zIndex: 3 }}>
         <p style={{
           fontFamily: "'Cormorant Garamond', serif",
-          fontWeight: 500,
+          fontWeight: 700,
           fontSize: '28px',
           color: '#ffffff',
           lineHeight: 1.2,
@@ -887,7 +887,7 @@ export default function HomePage() {
         <div className="sr" style={{ textAlign: 'center', marginBottom: '56px' }}>
           <h2 style={{
             fontFamily: "'Cormorant Garamond', serif",
-            fontWeight: 500,
+            fontWeight: 700,
             fontSize: 'clamp(30px, 4vw, 52px)',
             color: '#f0ede6',
             letterSpacing: '0.01em',
@@ -987,7 +987,7 @@ export default function HomePage() {
                 {/* Title */}
                 <h3 style={{
                   fontFamily: "'Cormorant Garamond', serif",
-                  fontWeight: 500,
+                  fontWeight: 700,
                   fontSize: '28px',
                   color: '#ffffff',
                   letterSpacing: '0.01em',
