@@ -388,6 +388,7 @@ const HeroHeadline = () => {
           margin: 0,
           whiteSpace: 'nowrap',
           position: 'relative',
+          textShadow: '0 4px 24px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.9), 0 0 60px rgba(0,0,0,0.5)',
         }}
       >
         PRAKRITI
@@ -399,6 +400,7 @@ const HeroHeadline = () => {
           fontSize: '0.35em',
           color: '#f5f0e8',
           lineHeight: 1,
+          textShadow: '0 4px 24px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.9)',
         }}>*</span>
       </motion.h1>
     </div>
@@ -603,11 +605,10 @@ function HeroBgVideoCard() {
     const video = videoRef.current;
     if (!video) return;
 
-    // Mixkit forest stream first (green/nature — right for carbon platform)
-    // Cloudinary sky clip as fallback
+    // Try sources in order — first one that loads wins
     const sources = [
-      "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4",
       "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto,f_auto/v1781474639/hero_eogjwi.mp4",
+      "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4",
     ];
 
     let idx = 0;
@@ -773,7 +774,7 @@ export default function HomePage() {
           {/* LEFT — Massive brand name positioned absolutely */}
           <div style={{
             position: 'absolute',
-            bottom: '-8px',
+            bottom: '-0.15em',
             left: '0px',
             zIndex: 15,
             maxWidth: '65%',
