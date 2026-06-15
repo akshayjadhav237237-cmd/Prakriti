@@ -594,25 +594,17 @@ function HeroVideoCard() {
   );
 }
 
-/* ─── HERO BACKGROUND VIDEO CARD (DEFERRED LOAD) ───── */
+/* ─── HERO BACKGROUND VIDEO CARD ───── */
 
 function HeroBgVideoCard() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const loadVideo = () => {
-      const video = videoRef.current;
-      if (!video) return;
-      video.src = "https://videos.pexels.com/video-files/3571264/3571264-sd_640_360_25fps.mp4";
-      video.load();
-      video.play().catch(() => {});
-    };
-
-    if (document.readyState === 'complete') {
-      setTimeout(loadVideo, 300);
-    } else {
-      window.addEventListener('load', () => setTimeout(loadVideo, 300), { once: true });
-    }
+    const video = videoRef.current;
+    if (!video) return;
+    video.src = "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto/f_auto/v1781474639/hero_eogjwi.mp4";
+    video.load();
+    video.play().catch(() => {});
   }, []);
 
   return (
