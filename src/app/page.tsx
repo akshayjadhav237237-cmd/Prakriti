@@ -644,8 +644,10 @@ export default function HomePage() {
   const [fired, setFired] = useState(false);
 
   useEffect(() => {
-    /* Add grain class on mount */
-    document.body.classList.add('has-grain');
+    /* Insert grain overlay div — real DOM element so bento cards can sit above it */
+    const grain = document.createElement('div');
+    grain.className = 'grain-overlay';
+    document.body.appendChild(grain);
 
     /* Scroll reveal */
     const ro = new IntersectionObserver(
@@ -661,7 +663,7 @@ export default function HomePage() {
 
     return () => {
       ro.disconnect();
-      document.body.classList.remove('has-grain');
+      grain.remove();
     };
   }, []);
 
@@ -921,28 +923,29 @@ export default function HomePage() {
         <div className="sr sr-d1 features-grid">
 
           {/* LEFT large card — cinematic video */}
-          <div style={{
-            background: '#0a0f0a',
-            borderRadius: '24px',
-            border: '1px solid rgba(255,255,255,0.08)',
-            overflow: 'hidden',
-            position: 'relative',
-            minHeight: '420px',
-          }}>
+          <div
+            className="bento-card"
+            style={{
+              background: '#0a0f0a',
+              borderRadius: '24px',
+              border: '1px solid rgba(255,255,255,0.08)',
+              overflow: 'hidden',
+              minHeight: '420px',
+            }}
+          >
             {/* HeroVideoCard owns its own background, overlays, and text */}
             <HeroVideoCard />
           </div>
 
           {/* RIGHT 3 cards */}
           {FEATURES.map((feat, i) => (
-            <div key={feat.num} style={{
+            <div key={feat.num} className="bento-card" style={{
               background: '#121212',
               borderRadius: '24px',
               border: '1px solid rgba(255,255,255,0.08)',
               padding: '36px',
               display: 'flex',
               flexDirection: 'column',
-              position: 'relative',
               overflow: 'hidden',
               height: '100%',
               minHeight: '420px',
