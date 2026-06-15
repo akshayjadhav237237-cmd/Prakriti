@@ -600,18 +600,11 @@ function HeroBgVideoCard() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const loadVideo = () => {
-      const video = videoRef.current;
-      if (!video) return;
-      video.src = "https://videos.pexels.com/video-files/3571264/3571264-hd_1280_720_25fps.mp4";
-      video.load();
-      video.play().catch(() => {});
-    };
-    if (document.readyState === 'complete') {
-      loadVideo();
-    } else {
-      window.addEventListener('load', loadVideo, { once: true });
-    }
+    const video = videoRef.current;
+    if (!video) return;
+    video.src = "https://videos.pexels.com/video-files/3571264/3571264-hd_1280_720_25fps.mp4";
+    video.load();
+    video.play().catch(() => {});
   }, []);
 
   return (
