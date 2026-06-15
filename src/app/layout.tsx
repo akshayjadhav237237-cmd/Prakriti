@@ -40,7 +40,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://videos.pexels.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Fraunces:ital,opsz,wght@1,9..144,300;1,9..144,400&family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=Fraunces:ital,opsz,wght@1,9..144,300;1,9..144,400&family=Space+Grotesk:wght@300;400;500&family=Space+Mono:wght@400;700&family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600,700&display=swap" rel="stylesheet" />

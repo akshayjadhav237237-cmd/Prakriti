@@ -579,12 +579,12 @@ function HeroVideoCard() {
       {/* Text */}
       <div style={{ position: 'absolute', bottom: 36, left: 36, zIndex: 3 }}>
         <p style={{
-          fontFamily: "'Clash Display', sans-serif",
-          fontWeight: 600,
-          fontSize: '26px',
+          fontFamily: "'Cormorant Garamond', serif",
+          fontWeight: 500,
+          fontSize: '28px',
           color: '#ffffff',
           lineHeight: 1.2,
-          letterSpacing: '-0.02em',
+          letterSpacing: '0.01em',
           margin: 0,
         }}>
           Reduce. Track. Act.
@@ -886,11 +886,11 @@ export default function HomePage() {
         {/* Centered heading */}
         <div className="sr" style={{ textAlign: 'center', marginBottom: '56px' }}>
           <h2 style={{
-            fontFamily: "'Clash Display', sans-serif",
-            fontWeight: 600,
-            fontSize: 'clamp(28px, 4vw, 48px)',
+            fontFamily: "'Cormorant Garamond', serif",
+            fontWeight: 500,
+            fontSize: 'clamp(30px, 4vw, 52px)',
             color: '#f0ede6',
-            letterSpacing: '-0.02em',
+            letterSpacing: '0.01em',
             marginBottom: '10px',
           }}>
             Carbon intelligence for conscious India.
@@ -986,11 +986,11 @@ export default function HomePage() {
 
                 {/* Title */}
                 <h3 style={{
-                  fontFamily: "'Clash Display', sans-serif",
-                  fontWeight: 600,
-                  fontSize: '26px',
+                  fontFamily: "'Cormorant Garamond', serif",
+                  fontWeight: 500,
+                  fontSize: '28px',
                   color: '#ffffff',
-                  letterSpacing: '-0.02em',
+                  letterSpacing: '0.01em',
                   marginTop: '28px',
                   marginBottom: '20px',
                   lineHeight: '1.2',
