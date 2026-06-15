@@ -1745,7 +1745,7 @@ function TermsAccordion() {
                       {item.num}
                     </span>
                     <span style={{
-                      fontFamily: "'Clash Display', sans-serif",
+                      fontFamily: "'Space Grotesk', sans-serif",
                       fontWeight: 600,
                       fontSize: '18px',
                       color: '#f0ede6',
