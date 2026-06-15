@@ -9,7 +9,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     <NextThemesProvider
       attribute="class"
       defaultTheme="dark"
-      storageKey="prakriti-theme"
+      storageKey="prakriti_theme"
       enableSystem={true}
       disableTransitionOnChange={false}
       {...props}

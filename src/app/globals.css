@@ -19,8 +19,8 @@ h2, h3 {
   padding: 0;
 }
 
-:root {
-  --bg: #000000;
+:root, .dark {
+  --bg: #080808;
   --bg-warm: #0c0c0a;
   --bg-surface: #111110;
   --bg-card: #161614;
@@ -32,15 +32,32 @@ h2, h3 {
   --green: #39ff7a;
   --green-dim: rgba(57,255,122,0.08);
   --red-dim: rgba(255,80,80,0.07);
+  --nav-bg: rgba(8, 8, 8, 0.92);
+}
+
+.light {
+  --bg: #f5f0e8;
+  --bg-warm: #eae5db;
+  --bg-surface: #ffffff;
+  --bg-card: #fcfbfa;
+  --text: #080808;
+  --text-muted: rgba(8,8,8,0.38);
+  --text-mid: rgba(8,8,8,0.62);
+  --border: rgba(8,8,8,0.07);
+  --border-bright: rgba(8,8,8,0.14);
+  --green: #2eb858;
+  --green-dim: rgba(46,184,88,0.08);
+  --red-dim: rgba(255,80,80,0.07);
+  --nav-bg: rgba(245, 240, 232, 0.92);
 }
 
 html {
-  background: #000000;
+  background: var(--bg);
   scroll-behavior: smooth;
 }
 
 body {
-  background: #000000;
+  background: var(--bg);
   color: var(--text);
   font-family: 'Space Grotesk', sans-serif;
   font-weight: 300;

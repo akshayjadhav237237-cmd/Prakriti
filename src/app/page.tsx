@@ -30,7 +30,7 @@ const FEATURES = [
       'Petrol pump slip recognition',
       'Zero manual data entry',
     ],
-    link: '/track',
+    link: '/log',
   },
   {
     num: '03',
@@ -600,11 +600,18 @@ function HeroBgVideoCard() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.src = "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto/f_auto/v1781474639/hero_eogjwi.mp4";
-    video.load();
-    video.play().catch(() => {});
+    const loadVideo = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.src = "https://videos.pexels.com/video-files/3571264/3571264-hd_1280_720_25fps.mp4";
+      video.load();
+      video.play().catch(() => {});
+    };
+    if (document.readyState === 'complete') {
+      loadVideo();
+    } else {
+      window.addEventListener('load', loadVideo, { once: true });
+    }
   }, []);
 
   return (
@@ -621,7 +628,6 @@ function HeroBgVideoCard() {
         height: '100%',
         objectFit: 'cover',
         objectPosition: 'center 30%',
-        filter: 'brightness(0.48) saturate(0.5) sepia(0.2)',
         zIndex: 0,
       }}
     />
@@ -732,7 +738,7 @@ export default function HomePage() {
           borderRadius: '40px',
           overflow: 'hidden',
           height: 'calc(100vh - 48px)',
-          background: '#111',
+          background: '#0a0a0a',
           zIndex: 10000,
         }}>
 
@@ -743,7 +749,7 @@ export default function HomePage() {
           <div style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 30%, rgba(5,10,5,0.62) 100%)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.15) 100%)',
             zIndex: 1,
             pointerEvents: 'none',
           }} />
@@ -1522,7 +1528,7 @@ export default function HomePage() {
             </div>
             {[
               { label: 'Dashboard', href: '/dashboard' },
-              { label: 'Track Activity', href: '/track' },
+              { label: 'Track Activity', href: '/log' },
               { label: 'Insights', href: '/insights' },
               { label: 'About Prakriti', href: '/#about' },
             ].map(link => (
