@@ -620,8 +620,6 @@ function HeroBgVideoCard() {
         width: '100%',
         height: '100%',
         objectFit: 'cover',
-        objectPosition: 'center 30%',
-        zIndex: 0,
       }}
     />
   );
