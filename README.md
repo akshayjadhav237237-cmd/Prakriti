@@ -133,7 +133,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — the app is live.
+Open https://prakriti-carbon.vercel.app/  — the app is live.
 
 ### Other Commands
 
