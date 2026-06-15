@@ -388,7 +388,6 @@ const HeroHeadline = () => {
           margin: 0,
           whiteSpace: 'nowrap',
           position: 'relative',
-          textShadow: '0 4px 24px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.9), 0 0 60px rgba(0,0,0,0.5)',
         }}
       >
         PRAKRITI
@@ -400,7 +399,6 @@ const HeroHeadline = () => {
           fontSize: '0.35em',
           color: '#f5f0e8',
           lineHeight: 1,
-          textShadow: '0 4px 24px rgba(0,0,0,0.85), 0 2px 8px rgba(0,0,0,0.9)',
         }}>*</span>
       </motion.h1>
     </div>
@@ -607,6 +605,7 @@ function HeroBgVideoCard() {
 
     // Try sources in order — first one that loads wins
     const sources = [
+      "/hero-bg.mp4",
       "https://res.cloudinary.com/dbqsqrctz/video/upload/q_auto,f_auto/v1781474639/hero_eogjwi.mp4",
       "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4",
     ];
