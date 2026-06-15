@@ -1,563 +1,267 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  TrendingUp, 
-  ArrowLeft, 
-  Sparkles, 
-  CheckCircle2, 
-  Zap, 
-  Flame, 
-  Utensils, 
-  Compass, 
-  ArrowRight,
-  RefreshCw,
-  Info
-} from "lucide-react";
-import { dbService } from "@/core/supabase";
-import confetti from "canvas-confetti";
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import {
+  ResponsiveContainer, PieChart, Pie, Cell, Tooltip,
+  BarChart, Bar, XAxis, YAxis, ReferenceLine
+} from 'recharts';
+import { dbService } from '@/core/supabase';
+import confetti from 'canvas-confetti';
+import InnerLayout from '@/components/InnerLayout';
 
-interface InsightItem {
-  title: string;
-  body: string;
-  co2SavingsKg: number;
-  difficulty: "Easy" | "Medium" | "Hard";
-  implementationIntention: {
-    trigger: string;
-    action: string;
-  };
-  envelope: "transport" | "food" | "energy" | "lifestyle";
-}
-
-type SeasonKey = "summer" | "ipl" | "diwali" | "wedding";
-
-interface SeasonalBanner {
-  id: SeasonKey;
-  title: string;
-  icon: string;
-  badge: string;
-  description: string;
-  themeClass: string;
-  badgeClass: string;
-}
-
-const seasonalBanners: Record<SeasonKey, SeasonalBanner> = {
-  summer: {
-    id: "summer",
-    title: "Summer Cooling Mode",
-    icon: "☀️",
-    badge: "April - June",
-    description: "Regional summer peaks are here! Heavy AC cooling draw is straining power grids in India. Setting your AC temperature to 26°C and pairing with a fan saves up to 20% on cooling carbon footprint.",
-    themeClass: "",
-    badgeClass: "bg-emerald-900/40 border-emerald-700/50 text-emerald-200",
-  },
-  ipl: {
-    id: "ipl",
-    title: "IPL AC Sharing Mode",
-    icon: "🏏",
-    badge: "March - May",
-    description: "It's IPL match night! Instead of cooling three separate bedrooms, gather friends and family in a single living room. Group-sharing cooling cuts your energy footprint by over 60% tonight.",
-    themeClass: "",
-    badgeClass: "bg-emerald-900/40 border-emerald-700/50 text-emerald-200",
-  },
-  diwali: {
-    id: "diwali",
-    title: "Diwali Festive Mode",
-    icon: "🪔",
-    badge: "October - November",
-    description: "Happy Festivities! Diwali celebrations bring special treats, ghee preparation, and decorative lights. Watch out for the +15% carbon festive cooking surcharge, and try using LED diya strands.",
-    themeClass: "",
-    badgeClass: "bg-emerald-900/40 border-emerald-700/50 text-emerald-200",
-  },
-  wedding: {
-    id: "wedding",
-    title: "Wedding Season Offset Mode",
-    icon: "💍",
-    badge: "November - February",
-    description: "Wedding season is in full swing! Travel and celebrations increase footprints. Offset the events by renting rather than buying heavy wedding attire, and carpool with friends to the venues.",
-    themeClass: "",
-    badgeClass: "bg-emerald-900/40 border-emerald-700/50 text-emerald-200",
-  }
+const fadeIn = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.08, duration: 0.4, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] },
+  }),
 };
 
+const KPI = [
+  { label: 'WEEK',      value: '3 / 13',   sub: 'Phase 2: Budget',    color: '#f0ffe8' },
+  { label: 'REDUCTION', value: '\u2193 18%',     sub: 'vs last month',      color: '#4ade80' },
+  { label: 'PEBBLES',   value: '\u25c6 45',      sub: 'earned total',       color: '#d4af37' },
+  { label: 'STREAK',    value: '2 weeks',   sub: 'under budget',       color: '#4ade80' },
+];
+
+const DONUT_DATA = [
+  { name: 'Transport', value: 12.4, color: '#4ade80' },
+  { name: 'Food',      value: 11.2, color: '#f59e0b' },
+  { name: 'Energy',    value: 7.8,  color: '#60a5fa' },
+  { name: 'Lifestyle', value: 3.4,  color: '#a78bfa' },
+];
+const TOTAL_DONUT = DONUT_DATA.reduce((a, b) => a + b.value, 0);
+
+const BAR_DATA = [
+  { week: 'Week 1', kg: 42.1 },
+  { week: 'Week 2', kg: 39.8 },
+  { week: 'Week 3', kg: 34.8 },
+];
+
+const ACTIONS = [
+  { num: '01', action: 'Switch AC to 26\u00b0C',       save: 'Save ~3.2 kg/wk' },
+  { num: '02', action: 'Take bus once this week',  save: 'Save ~5.1 kg/wk' },
+  { num: '03', action: 'Skip one Swiggy order',   save: 'Save ~1.2 kg/wk' },
+];
+
+
 export default function InsightsPage() {
-  const router = useRouter();
-  
-  // Loading & State
-  const [loading, setLoading] = useState<boolean>(true);
-  const [insights, setInsights] = useState<InsightItem[]>([]);
-  const [activeIntentions, setActiveIntentions] = useState<{ trigger: string; action: string }[]>([]);
-  const [logsCount, setLogsCount] = useState<number>(0);
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [savingIntentionIndex, setSavingIntentionIndex] = useState<number | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [doneActions, setDoneActions] = useState<number[]>([]);
 
-  // Active Season State
-  const [currentSeason, setCurrentSeason] = useState<SeasonKey>("summer");
+  const customTooltipStyle = {
+    background: '#161616',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 8,
+    fontFamily: "'Space Mono', monospace",
+    fontSize: 12,
+    color: '#f0ffe8',
+  };
 
-  // Determine active season based on current date
-  useEffect(() => {
-    const now = new Date();
-    const month = now.getMonth(); // 0 = Jan, 11 = Dec
-    
-    // Check ranges
-    if (month >= 3 && month <= 5) {
-      setCurrentSeason("summer"); // Apr - Jun
-    } else if (month >= 9 && month <= 10) {
-      setCurrentSeason("diwali"); // Oct - Nov
-    } else if (month >= 2 && month <= 4) {
-      setCurrentSeason("ipl"); // Mar - May
-    } else if (month >= 10 || month <= 1) {
-      setCurrentSeason("wedding"); // Nov - Feb
-    } else {
-      setCurrentSeason("summer"); // default
-    }
-  }, []);
-
-  // Fetch data & generate recommendations
-  const generateAIRecommendations = async (forceRefresh = false) => {
-    try {
-      if (forceRefresh) {
-        setIsRefreshing(true);
-      } else {
-        setLoading(true);
+  const handleActionToggle = (i: number) => {
+    setDoneActions(prev => {
+      const isNowDone = !prev.includes(i);
+      const next = isNowDone ? [...prev, i] : prev.filter(x => x !== i);
+      if (isNowDone) {
+        confetti({
+          particleCount: 60,
+          spread: 55,
+          origin: { y: 0.7 },
+          colors: ['#4ade80', '#d4af37', '#f0ffe8'],
+        });
       }
-
-      // 1. Fetch user & logs
-      await dbService.getCurrentUser();
-      const allLogs = await dbService.getDailyLogs();
-      const userIntentions = await dbService.getIntentions();
-
-      // 2. Filter logs for the last 7 days
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const last7DaysLogs = allLogs.filter(log => {
-        const logDate = new Date(log.date);
-        return logDate >= sevenDaysAgo;
-      });
-
-      setLogsCount(last7DaysLogs.length);
-      setActiveIntentions(
-        userIntentions.map(i => ({
-          trigger: i.trigger,
-          action: i.action
-        }))
-      );
-
-      // 3. Post logs to our API route
-      const response = await fetch("/api/insights", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logs: last7DaysLogs })
-      });
-
-      const resJson = await response.json();
-      
-      if (resJson.success && resJson.data?.insights) {
-        setInsights(resJson.data.insights);
-      } else {
-        throw new Error(resJson.error || "Failed to fetch insights array");
-      }
-
-    } catch (err) {
-      console.error("Failed to generate insights:", err);
-      setToast("Failed to load insights. Using offline advice.");
-      setTimeout(() => setToast(null), 3500);
-    } finally {
-      setLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    generateAIRecommendations();
-  }, []);
-
-  // Commit Intention
-  const handleSetIntention = async (insight: InsightItem, index: number) => {
-    if (savingIntentionIndex !== null) return;
-    setSavingIntentionIndex(index);
-    
-    try {
-      const user = await dbService.getCurrentUser();
-      const userId = user?.id || "arjun-mumbai-uuid";
-
-      await dbService.createIntention({
-        user_id: userId,
-        trigger: insight.implementationIntention.trigger,
-        action: insight.implementationIntention.action,
-        envelope: insight.envelope,
-        active: true
-      });
-
-      // Award sparkles and confetti
-      confetti({
-        particleCount: 120,
-        spread: 60,
-        origin: { y: 0.8 },
-        colors: ["#4ade80", "#86efac", "#fbbf24", "#60a5fa", "#f472b6"]
-      });
-
-      // Update local state
-      setActiveIntentions(prev => [
-        ...prev,
-        {
-          trigger: insight.implementationIntention.trigger,
-          action: insight.implementationIntention.action
-        }
-      ]);
-
-      setToast("Commitment saved! Your implementation intention is now active 🌿");
-      setTimeout(() => setToast(null), 3000);
-
-    } catch (err) {
-      console.error("Error setting intention:", err);
-      setToast("Failed to save commitment. Please try again.");
-      setTimeout(() => setToast(null), 3000);
-    } finally {
-      setSavingIntentionIndex(null);
-    }
-  };
-
-  const isAlreadySaved = (insight: InsightItem) => {
-    return activeIntentions.some(
-      item => 
-        item.trigger.toLowerCase().trim() === insight.implementationIntention.trigger.toLowerCase().trim() &&
-        item.action.toLowerCase().trim() === insight.implementationIntention.action.toLowerCase().trim()
-    );
-  };
-
-  // Envelope details mapping helper
-  const getEnvelopeDetails = (envelope: string) => {
-    switch (envelope) {
-      case "transport":
-        return { 
-          label: "Transport", 
-          icon: Flame, 
-          color: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-          borderAccent: "border-l-4 border-l-blue-500",
-          hoverGlow: "hover:shadow-[0_0_25px_rgba(59,130,246,0.15)]"
-        };
-      case "food":
-        return { 
-          label: "Food", 
-          icon: Utensils, 
-          color: "text-orange-400 bg-orange-500/10 border-orange-500/20",
-          borderAccent: "border-l-4 border-l-orange-500",
-          hoverGlow: "hover:shadow-[0_0_25px_rgba(249,115,22,0.15)]"
-        };
-      case "energy":
-        return { 
-          label: "Energy & AC", 
-          icon: Zap, 
-          color: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
-          borderAccent: "border-l-4 border-l-yellow-500",
-          hoverGlow: "hover:shadow-[0_0_25px_rgba(234,179,8,0.15)]"
-        };
-      default:
-        return { 
-          label: "Lifestyle", 
-          icon: Sparkles, 
-          color: "text-purple-400 bg-purple-500/10 border-purple-500/20",
-          borderAccent: "border-l-4 border-l-purple-500",
-          hoverGlow: "hover:shadow-[0_0_25px_rgba(168,85,247,0.15)]"
-        };
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return "text-green-400 bg-green-500/10 border-green-500/20";
-      case "Medium":
-        return "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
-      case "Hard":
-        return "text-red-400 bg-red-500/10 border-red-500/20";
-      default:
-        return "text-foreground/60 bg-border/40 border-border";
-    }
+      return next;
+    });
   };
 
   return (
-    <div className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 min-h-screen">
-      
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div 
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-surface border border-primary/30 text-primary px-4 py-2.5 rounded-xl shadow-lg flex items-center space-x-2 text-sm max-w-sm text-center"
-          >
-            <span>{toast}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <InnerLayout pageName="Insights">
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
 
-      {/* HEADER SECTION WITH PREMIUM GRADIENT BACKGROUND STRIP */}
-      <div 
-        style={{ background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)" }}
-        className="rounded-3xl p-6 md:p-8 shadow-xl border border-emerald-200/50 flex flex-col md:flex-row md:items-center justify-between gap-6"
-      >
-        <div className="space-y-1 text-slate-800">
-          <button 
-            onClick={() => router.push("/dashboard")}
-            className="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-800 hover:text-emerald-950 transition-colors mb-2 group"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Back to Dashboard</span>
-          </button>
-          <h1 className="text-3xl md:text-4xl font-black text-emerald-950 tracking-tight flex items-center gap-2">
-            <Sparkles className="w-8 h-8 text-emerald-700 animate-pulse" />
-            <span>AI Coach Insights</span>
+        {/* ── HEADER ── */}
+        <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0} style={{ marginBottom: 32 }}>
+          <h1 style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 28, color: '#f0ffe8', margin: 0 }}>
+            Insights
           </h1>
-          <p className="text-sm font-medium text-emerald-800/80 max-w-xl">
-            Hyper-personalized, data-driven savings advice calculated based on your last 7 days of activity logs.
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, color: '#a0b0a0', marginTop: 6 }}>
+            Your climate story, told through data.
           </p>
+        </motion.div>
+
+        {/* ── KPI ROW ── */}
+        <motion.div
+          variants={fadeIn} initial="hidden" animate="visible" custom={1}
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 24 }}
+          className="kpi-grid"
+        >
+          {KPI.map((k, i) => (
+            <div key={i} style={{
+              background: '#0f0f0f',
+              border: '1px solid rgba(255,255,255,0.06)',
+              borderRadius: 12, padding: '20px 24px',
+            }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
+                {k.label}
+              </div>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 28, color: k.color, marginBottom: 4 }}>
+                {k.value}
+              </div>
+              <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: '#a0b0a0' }}>
+                {k.sub}
+              </div>
+            </div>
+          ))}
+        </motion.div>
+
+        {/* ── ROW 2: Donut + Bar Chart ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }} className="chart-grid">
+
+          {/* Donut */}
+          <motion.div
+            variants={fadeIn} initial="hidden" animate="visible" custom={2}
+            style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px' }}
+          >
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
+              Category Breakdown
+            </div>
+            <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
+              <ResponsiveContainer width={200} height={200}>
+                <PieChart>
+                  <Pie data={DONUT_DATA} innerRadius={70} outerRadius={95} paddingAngle={3} dataKey="value" stroke="none">
+                    {DONUT_DATA.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip contentStyle={customTooltipStyle} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minWidth: 140 }}>
+                {DONUT_DATA.map((d, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
+                    <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: '#f0ffe8', flex: 1 }}>{d.name}</span>
+                    <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#a0b0a0' }}>
+                      {d.value.toFixed(1)} · {((d.value / TOTAL_DONUT) * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Bar chart */}
+          <motion.div
+            variants={fadeIn} initial="hidden" animate="visible" custom={3}
+            style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px' }}
+          >
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
+              Weekly History
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={BAR_DATA} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                <XAxis dataKey="week" tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#506050' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#506050' }} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={customTooltipStyle} />
+                <ReferenceLine y={38.46} stroke="rgba(74,222,128,0.4)" strokeDasharray="4 4"
+                  label={{ value: 'Budget', position: 'insideTopRight', fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#4ade80' }} />
+                <Bar dataKey="kg" radius={[4, 4, 0, 0]} barSize={32}>
+                  {BAR_DATA.map((entry, i) => (
+                    <Cell key={i} fill={entry.kg > 38.46 ? '#ef4444' : '#4ade80'} fillOpacity={0.8} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </motion.div>
         </div>
 
-        <button
-          onClick={() => generateAIRecommendations(true)}
-          disabled={loading || isRefreshing}
-          className="w-fit self-start md:self-center py-3 px-5 rounded-2xl border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-900 text-xs font-extrabold flex items-center space-x-2 shadow-sm transition-all active:scale-95 disabled:opacity-50"
+        {/* ── PHASE TRACKER ── */}
+        <motion.div
+          variants={fadeIn} initial="hidden" animate="visible" custom={4}
+          style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '28px 32px', marginBottom: 24 }}
         >
-          <RefreshCw className={`w-3.5 h-3.5 text-emerald-700 ${isRefreshing ? "animate-spin" : ""}`} />
-          <span>{isRefreshing ? "Calculating..." : "Refresh Insights"}</span>
-        </button>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 24 }}>
+            Journey Progress
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 28 }}>
+            {/* Phase 1 */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: 80 }}>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#080808', fontWeight: 700 }}>✓</div>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Baseline</div>
+            </div>
+            <div style={{ flex: 1, height: 2, background: '#4ade80', opacity: 0.6 }} />
+
+            {/* Phase 2 current */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: 80 }}>
+              <div className="pulse-ring" style={{
+                width: 16, height: 16, borderRadius: '50%',
+                border: '2px solid #f0ffe8', background: 'transparent',
+              }} />
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#f0ffe8', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Budget</div>
+            </div>
+            <div style={{ flex: 1, height: 2, background: 'rgba(255,255,255,0.08)' }} />
+
+            {/* Phase 3 */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: 80 }}>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#506050' }} />
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Reduce</div>
+            </div>
+          </div>
+
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: '#f0ffe8', marginBottom: 4 }}>
+            Next milestone: Stay under budget for 1 more week
+          </p>
+          <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: '#a0b0a0', margin: 0 }}>
+            Unlock: Shola Forest region for Chiku
+          </p>
+        </motion.div>
+
+        {/* ── ACTION ROWS ── */}
+        <motion.div
+          variants={fadeIn} initial="hidden" animate="visible" custom={5}
+          style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px', marginBottom: 24 }}
+        >
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
+            Reduce Your Footprint
+          </div>
+          {ACTIONS.map((a, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 0', borderBottom: i < ACTIONS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#506050', minWidth: 24, flexShrink: 0 }}>{a.num}</span>
+              <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: '#f0ffe8', flex: 1 }}>{a.action}</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: '#4ade80', marginRight: 12, whiteSpace: 'nowrap' }}>{a.save}</span>
+              <button
+                onClick={() => handleActionToggle(i)}
+                style={{
+                  padding: '4px 14px', borderRadius: 9999,
+                  border: doneActions.includes(i) ? '1px solid rgba(74,222,128,0.4)' : '1px solid rgba(74,222,128,0.2)',
+                  background: doneActions.includes(i) ? 'rgba(74,222,128,0.15)' : 'transparent',
+                  color: '#4ade80',
+                  fontFamily: "'Space Grotesk', sans-serif", fontSize: 12,
+                  cursor: 'pointer', transition: 'all 0.2s', whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => { if (!doneActions.includes(i)) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(74,222,128,0.08)'; }}
+                onMouseLeave={e => { if (!doneActions.includes(i)) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+              >
+                {doneActions.includes(i) ? '\u2713 Done' : 'Do'}
+              </button>
+            </div>
+          ))}
+        </motion.div>
+
       </div>
 
-      {/* SEASONAL CONTEXT BANNER - SOLID DARK GREEN GRADIENT */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-foreground/50 uppercase tracking-widest block">
-            Seasonal Carbon Modifier
-          </span>
-          
-          <div className="flex space-x-1 bg-surface border border-border p-0.5 rounded-lg text-[10px] font-bold">
-            {(Object.keys(seasonalBanners) as SeasonKey[]).map(key => (
-              <button
-                key={key}
-                onClick={() => setCurrentSeason(key)}
-                className={`px-2.5 py-1 rounded-md transition-all ${
-                  currentSeason === key 
-                    ? "bg-primary text-background font-extrabold" 
-                    : "text-foreground/60 hover:text-white"
-                }`}
-              >
-                {seasonalBanners[key].icon} {seasonalBanners[key].id.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSeason}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            style={{ background: "linear-gradient(135deg, #14532d, #166534)" }}
-            className="border border-emerald-800 rounded-3xl p-6 shadow-xl relative overflow-hidden text-white"
-          >
-            {/* Glowing background highlights */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-[40px] pointer-events-none" />
-
-            <div className="flex items-start space-x-4">
-              <div className="text-3xl shrink-0 p-3.5 rounded-2xl bg-emerald-900/50 border border-emerald-700/40 shadow-inner">
-                {seasonalBanners[currentSeason].icon}
-              </div>
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-extrabold text-lg sm:text-xl text-white tracking-tight">
-                    {seasonalBanners[currentSeason].title}
-                  </h3>
-                  <span className={`px-2.5 py-0.5 text-[9px] font-bold border rounded-full uppercase tracking-wider ${seasonalBanners[currentSeason].badgeClass}`}>
-                    {seasonalBanners[currentSeason].badge}
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-medium">
-                  {seasonalBanners[currentSeason].description}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </section>
-
-      {/* RECOMMENDATIONS SECTION */}
-      <section className="space-y-6">
-        <div className="flex items-center justify-between border-b border-border/40 pb-3">
-          <h3 className="text-xl font-bold text-white flex items-center space-x-2">
-            <TrendingUp className="w-5.5 h-5.5 text-primary" />
-            <span>Weekly Recommendations</span>
-          </h3>
-          <span className="text-xs text-foreground/40 font-semibold font-mono">
-            Analyzed {logsCount} logs
-          </span>
-        </div>
-
-        {loading ? (
-          /* SKELETON LOADER STATE */
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => (
-              <div 
-                key={i} 
-                className="bg-surface border border-border/60 rounded-3xl p-6 space-y-6 animate-pulse"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="h-6 w-20 bg-border/80 rounded-md"></div>
-                  <div className="h-5 w-16 bg-border/80 rounded-md"></div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="h-5 w-3/4 bg-border/80 rounded-md"></div>
-                  <div className="h-4 w-full bg-border/60 rounded-md"></div>
-                  <div className="h-4 w-5/6 bg-border/60 rounded-md"></div>
-                </div>
-
-                <div className="h-14 w-full bg-background/50 border border-border/40 rounded-xl p-3 space-y-1.5">
-                  <div className="h-3.5 w-12 bg-border/80 rounded-md"></div>
-                  <div className="h-3 w-4/5 bg-border/60 rounded-md"></div>
-                </div>
-
-                <div className="h-10 w-full bg-border/80 rounded-xl"></div>
-              </div>
-            ))}
-          </div>
-        ) : insights.length === 0 ? (
-          /* NO LOGS FALLBACK STATE */
-          <div className="bg-surface border border-border rounded-3xl p-8 text-center space-y-6 max-w-md mx-auto shadow-xl">
-            <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto animate-bounce">
-              <Compass className="w-8 h-8" />
-            </div>
-            <div className="space-y-2">
-              <h4 className="text-lg font-extrabold text-white">No Footprint Logs Found</h4>
-              <p className="text-xs text-foreground/60 leading-relaxed">
-                You haven&apos;t logged any carbon footprints in the last 7 days! Log an activity or scan a receipt first to get tailored advice.
-              </p>
-            </div>
-            <button
-              onClick={() => router.push("/log")}
-              className="py-3 px-6 bg-primary text-background font-extrabold text-xs rounded-xl hover:brightness-110 active:scale-95 transition-all flex items-center justify-center space-x-2 mx-auto shadow-md shadow-primary/15"
-            >
-              <span>Go to Activity Logger</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        ) : (
-          /* STAGGERED INSIGHT CARDS LIST */
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            {insights.slice(0, 3).map((insight, idx) => {
-              const env = getEnvelopeDetails(insight.envelope);
-              const EnvIcon = env.icon;
-              const saved = isAlreadySaved(insight);
-              
-              // Dynamic vertical offsets to create staggered visual rhythm
-              const staggeredClass = idx === 0 
-                ? "md:translate-y-0" 
-                : idx === 1 
-                  ? "md:translate-y-4" 
-                  : "md:translate-y-8";
-              
-              return (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: idx * 0.1 }}
-                  className={`reveal bg-surface border border-border hover:border-emerald-500/30 rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-xl transition-all duration-300 relative overflow-hidden group ${env.borderAccent} ${env.hoverGlow} ${staggeredClass}`}
-                >
-                  <div className="space-y-5">
-                    {/* Badge and Difficulty */}
-                    <div className="flex items-center justify-between">
-                      <div className={`flex items-center space-x-1.5 px-2.5 py-1 border rounded-full text-[9px] uppercase font-bold tracking-wider ${env.color}`}>
-                        <EnvIcon className="w-3.5 h-3.5 shrink-0" />
-                        <span>{env.label}</span>
-                      </div>
-
-                      <div className={`px-2.5 py-1 border rounded-full text-[9px] uppercase font-bold tracking-wider ${getDifficultyColor(insight.difficulty)}`}>
-                        {insight.difficulty}
-                      </div>
-                    </div>
-
-                    {/* Title & Body */}
-                    <div className="space-y-2">
-                      <h4 className="font-extrabold text-white text-base sm:text-lg group-hover:text-primary transition-colors leading-tight">
-                        {insight.title}
-                      </h4>
-                      <p className="text-xs text-foreground/70 leading-relaxed font-medium">
-                        {insight.body}
-                      </p>
-                    </div>
-
-                    {/* Green Carbon Badge */}
-                    <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25">
-                      <span>🌿 Saves ~{insight.co2SavingsKg} kg CO₂e</span>
-                    </div>
-
-                    {/* Implementation Intention Card */}
-                    <div className="bg-background/80 border border-border/80 p-4 rounded-2xl space-y-2">
-                      <div className="flex items-center space-x-1.5 text-[9px] font-bold text-foreground/45 uppercase tracking-widest font-mono">
-                        <Info className="w-3 h-3 text-primary shrink-0" />
-                        <span>Behavior Commitment</span>
-                      </div>
-                      <p className="text-xs text-foreground/80 italic font-medium leading-relaxed">
-                        &quot;When <strong className="text-orange-400 font-semibold">{insight.implementationIntention.trigger}</strong>, I will <strong className="text-primary font-semibold">{insight.implementationIntention.action}</strong>.&quot;
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Set Intention Button */}
-                  <button
-                    onClick={() => handleSetIntention(insight, idx)}
-                    disabled={saved || savingIntentionIndex !== null}
-                    className={`w-full py-3 rounded-2xl text-xs font-extrabold flex items-center justify-center space-x-1.5 transition-all active:scale-[0.98] ${
-                      saved 
-                        ? "bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 cursor-default"
-                        : "bg-primary text-background hover:brightness-115 shadow-md shadow-primary/10"
-                    }`}
-                  >
-                    {saved ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5 fill-current text-primary" />
-                        <span>Commitment Saved ✓</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 fill-current" />
-                        <span>{savingIntentionIndex === idx ? "Saving commitment..." : "Set as Intention"}</span>
-                      </>
-                    )}
-                  </button>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* FOOTER SECTION: Info & Path Link */}
-      <section className="bg-surface/40 border border-border/50 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-foreground/60 shadow-inner md:translate-y-8">
-        <div className="flex items-start space-x-3 max-w-xl text-center sm:text-left">
-          <Info className="w-5 h-5 text-primary shrink-0 mt-0.5 mx-auto" />
-          <p className="leading-relaxed font-medium">
-            By setting implementation intentions, you pre-program your brain to select the low-carbon choice automatically in the moment. Saved commitments appear in your dashboard companion check-ins.
-          </p>
-        </div>
-        <button
-          onClick={() => router.push("/budget")}
-          className="shrink-0 text-primary font-bold hover:underline flex items-center space-x-1.5 bg-primary/5 hover:bg-primary/10 border border-primary/20 py-2.5 px-4 rounded-xl transition-all"
-        >
-          <span>Modify Carbon Budgets</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-      </section>
-
-    </div>
+      <style>{`
+        @keyframes pulse-ring {
+          0%   { box-shadow: 0 0 0 0 rgba(240,255,232,0.4); }
+          70%  { box-shadow: 0 0 0 6px rgba(240,255,232,0); }
+          100% { box-shadow: 0 0 0 0 rgba(240,255,232,0); }
+        }
+        .pulse-ring {
+          animation: pulse-ring 2s ease-out infinite;
+        }
+        @media (max-width: 767px) {
+          .kpi-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .chart-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </InnerLayout>
   );
 }

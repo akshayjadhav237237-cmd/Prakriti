@@ -145,3 +145,48 @@ input::placeholder                { color: var(--text-muted) !important; }
   }
 }
 
+
+/* ==========================================
+   INNER PAGE GLOBAL FIXES
+   ========================================== */
+
+.inner-page {
+  background: #080808;
+  min-height: 100vh;
+}
+
+.inner-page h1, .inner-page h2, .inner-page h3,
+.inner-page h4, .inner-page h5, .inner-page h6 {
+  color: #f0ffe8;
+  font-family: 'Syne', sans-serif;
+}
+
+.mono { font-family: 'Space Mono', monospace; }
+
+.insight-banner {
+  background: rgba(74,222,128,0.06);
+  border: 1px solid rgba(74,222,128,0.15);
+  color: #f0ffe8 !important;
+}
+
+.seasonal-banner {
+  background: rgba(245,158,11,0.06);
+  border: 1px solid rgba(245,158,11,0.2);
+  color: #f0ffe8 !important;
+}
+
+.ai-coach-card { color: #f0ffe8 !important; }
+
+/* Inner page scrollbar */
+.inner-main::-webkit-scrollbar { width: 4px; }
+.inner-main::-webkit-scrollbar-track { background: #080808; }
+.inner-main::-webkit-scrollbar-thumb { background: rgba(74,222,128,0.2); border-radius: 9999px; }
+.inner-main::-webkit-scrollbar-thumb:hover { background: rgba(74,222,128,0.4); }
+
+/* Pulse ring animation for phase tracker */
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(74,222,128,0.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(74,222,128,0); }
+  100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+}
+.pulse-ring { animation: pulse-ring 2s ease-out infinite; }
