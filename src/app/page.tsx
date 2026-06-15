@@ -602,7 +602,7 @@ function HeroBgVideoCard() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    video.src = "https://videos.pexels.com/video-files/3571264/3571264-hd_1280_720_25fps.mp4";
+    video.src = "https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4";
     video.load();
     video.play().catch(() => {});
   }, []);
