@@ -49,7 +49,7 @@ const SEED = {
   companion: { name: 'Chiku', species: 'Lion-Tailed Macaque', stage: 1, energy: 45 },
   history: [42.1, 39.8, 34.8],
   lastInsight:
-    'Heavy AC cooling season. Setting AC to 26�C saves up to 20% on cooling carbon. Try a fan assist � it drops perceived temperature by 3�C.',
+    'Heavy AC cooling season. Setting AC to 26°C saves up to 20% on cooling carbon. Try a fan assist → it drops perceived temperature by 3°C.',
 };
 
 // ── FADE-IN VARIANT ──
@@ -925,8 +925,8 @@ export default function DashboardPage() {
               margin: 0,
             }}
           >
-            Heavy AC cooling season is here. Setting AC to 26�C saves up to 20% on cooling carbon.
-            Try fan assist � drops perceived temperature by 3�C.
+            Heavy AC cooling season is here. Setting AC to 26°C saves up to 20% on cooling carbon.
+          Try fan assist → drops perceived temperature by 3°C.
           </p>
         </motion.div>
 
