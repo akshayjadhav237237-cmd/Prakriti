@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
+  const ua = request.headers.get("user-agent") || "";
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const { pathname } = request.nextUrl;
+  const desktopRoutes = ["/", "/dashboard", "/log", "/calculate", "/scan", "/onboarding"];
+
+  if (isMobile && desktopRoutes.includes(pathname) && !pathname.startsWith("/mobile")) {
+    const target = pathname === "/" ? "/mobile" : `/mobile${pathname}`;
+    return NextResponse.redirect(new URL(target, request.url));
+  }
+
   // Generate a random UUID and convert to base64 for CSP nonce
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const isDev = process.env.NODE_ENV === "development";
