@@ -22,6 +22,19 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
         paddingBottom: '80px', /* padding to clear bottom tab nav */
       }}
     >
+      <style dangerouslySetInnerHTML={{ __html: `
+        /* Overrides for top desktop navbar inside mobile viewports */
+        nav:not([style*="bottom"]) {
+          width: 100% !important;
+          max-width: 100vw !important;
+          left: 0 !important;
+          right: 0 !important;
+          margin: 0 !important;
+          padding: 0 16px !important;
+          box-sizing: border-box !important;
+          overflow-x: hidden !important;
+        }
+      `}} />
       <div style={{ flex: 1, width: '100%' }}>{children}</div>
       <MobileNav />
     </div>
