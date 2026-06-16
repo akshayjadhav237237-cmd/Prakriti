@@ -130,6 +130,7 @@ type SeedType = typeof SEED;
 export default function DashboardPage() {
   const [data, setData] = useState<SeedType>(SEED);
   const [mounted, setMounted] = useState(false);
+  const [showPebblesModal, setShowPebblesModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -474,6 +475,7 @@ export default function DashboardPage() {
 
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <button
+                onClick={() => setShowPebblesModal(true)}
                 style={{
                   padding: '8px 14px',
                   borderRadius: 9999,
@@ -491,6 +493,7 @@ export default function DashboardPage() {
                 Earn Pebbles ?
               </button>
               <button
+                onClick={() => window.location.href = '/ecosystem'}
                 style={{
                   padding: '8px 14px',
                   borderRadius: 9999,
@@ -990,6 +993,70 @@ export default function DashboardPage() {
             </div>
           ))}
         </motion.div>
+
+        {showPebblesModal && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(8,8,8,0.85)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 9999,
+              padding: 20,
+            }}
+            onClick={() => setShowPebblesModal(false)}
+          >
+            <div 
+              style={{
+                background: '#0f0f0f',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 16,
+                padding: 28,
+                maxWidth: 480,
+                width: '100%',
+                position: 'relative',
+                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.5)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ fontFamily: "'Syne', sans-serif", fontSize: 22, color: '#f0ffe8', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                How to Earn Pebbles <span style={{ color: '#d4af37' }}>◆</span>
+              </h3>
+              <ul style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: '#a0b0a0', paddingLeft: 20, margin: '0 0 24px 0', display: 'flex', flexDirection: 'column', gap: 12, lineHeight: 1.5 }}>
+                <li><strong>Stay Under Budget:</strong> Keep your weekly carbon footprint below your allocated limit to automatically earn 50 Pebbles.</li>
+                <li><strong>Scan Receipts:</strong> Log emissions via utility bill or restaurant receipt scan in "Log Activity" to earn 15 Pebbles.</li>
+                <li><strong>Log Activities:</strong> Perform manual logging of commute or other activities to earn 5 Pebbles per log.</li>
+                <li><strong>Wilderness Adventures:</strong> Send your companion Chiku on wilderness exploring to discover hidden Pebbles.</li>
+              </ul>
+              <button 
+                onClick={() => setShowPebblesModal(false)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: 9999,
+                  background: '#4ade80',
+                  color: '#080808',
+                  border: 'none',
+                  fontFamily: "'Space Grotesk', sans-serif",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+              >
+                Got it, thanks!
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       <style>{`
