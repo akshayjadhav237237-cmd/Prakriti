@@ -499,6 +499,11 @@ export default function BudgetPage() {
                               value={value}
                               onChange={(e) => handleSliderChange(env.key, parseFloat(e.target.value))}
                               className="flex-1 h-2 bg-border rounded-lg appearance-none cursor-pointer accent-primary focus:outline-none"
+                              aria-label={`Adjust ${env.name} envelope allocation`}
+                              aria-valuemin={0}
+                              aria-valuemax={env.max}
+                              aria-valuenow={value}
+                              aria-valuetext={`${value} kg CO₂e`}
                             />
                             <span className="text-xs text-foreground/40 font-mono">{env.max} kg</span>
                           </div>

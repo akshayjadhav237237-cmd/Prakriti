@@ -330,6 +330,28 @@ export default function ScanPage() {
             }
             localStorage.setItem("prakriti_budget", JSON.stringify(budgetObj));
             
+            // Also update prakriti_user envelopes spent
+            const storedUser = localStorage.getItem("prakriti_user");
+            if (storedUser) {
+              try {
+                const userObj = JSON.parse(storedUser);
+                if (!userObj.envelopes) {
+                  userObj.envelopes = {
+                    transport: { allocated: 15.0, spent: 0 },
+                    food: { allocated: 10.0, spent: 0 },
+                    energy: { allocated: 8.0, spent: 0 },
+                    lifestyle: { allocated: 5.46, spent: 0 },
+                  };
+                }
+                if (userObj.envelopes[category]) {
+                  userObj.envelopes[category].spent = Number((userObj.envelopes[category].spent + co2e).toFixed(2));
+                }
+                localStorage.setItem("prakriti_user", JSON.stringify(userObj));
+              } catch (err) {
+                console.error("Local user envelope sync error in scan/page.tsx:", err);
+              }
+            }
+
             const currentPebbles = parseInt(localStorage.getItem("prakriti_pebbles") || "150", 10);
             const awardPebbles = 15; 
             const newPebbles = currentPebbles + awardPebbles;

@@ -23,7 +23,7 @@ export default function Navbar({ inline = false }: { inline?: boolean }) {
   const isHome = path === '/';
 
   // Inner app pages have their own InnerLayout sidebar/topbar — don't render root Navbar
-  const INNER_ROUTES = ['/dashboard', '/log', '/insights', '/budget', '/scan', '/ecosystem', '/track', '/onboarding'];
+  const INNER_ROUTES = ['/dashboard', '/log', '/insights', '/budget', '/scan', '/ecosystem', '/track', '/onboarding', '/calculate'];
   if (INNER_ROUTES.some(r => path === r || path?.startsWith(r + '/'))) return null;
 
   if (isHome) {

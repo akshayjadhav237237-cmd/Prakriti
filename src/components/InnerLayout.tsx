@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Calculator } from 'lucide-react';
 
 interface InnerLayoutProps {
   children: React.ReactNode;
@@ -42,6 +43,13 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    label: 'Calculate',
+    href: '/calculate',
+    icon: (active: boolean) => (
+      <Calculator size={18} stroke={active ? '#4ade80' : '#a0b0a0'} strokeWidth="2" />
+    ),
+  },
 ];
 
 const DEMO = {
@@ -72,6 +80,9 @@ export default function InnerLayout({ children, pageName }: InnerLayoutProps) {
     if (typeof window === 'undefined') return;
     try {
       const stored = localStorage.getItem('prakriti_user');
+      const storedUsername = localStorage.getItem('prakriti_username');
+      const storedCity = localStorage.getItem('prakriti_city');
+
       if (stored) {
         const parsed = JSON.parse(stored);
         const hasEnvelopes = parsed?.envelopes?.transport !== undefined;
@@ -83,14 +94,20 @@ export default function InnerLayout({ children, pageName }: InnerLayoutProps) {
           } catch { /* keep DEMO.spent */ }
         }
         setUserData({
-          name: parsed?.name ?? DEMO.name,
-          city: parsed?.city ?? DEMO.city,
+          name: storedUsername || parsed?.name || DEMO.name,
+          city: storedCity || parsed?.city || DEMO.city,
           pebbles: parsed?.pebbles ?? DEMO.pebbles,
           week: parsed?.week ?? DEMO.week,
           totalWeeks: DEMO.totalWeeks,
           phase: parsed?.phase === 2 ? 'Budget' : parsed?.phase === 1 ? 'Baseline' : 'Reduce',
           spent,
           budget: parsed?.weeklyBudget ?? DEMO.budget,
+        });
+      } else {
+        setUserData({
+          ...DEMO,
+          name: storedUsername || DEMO.name,
+          city: storedCity || DEMO.city,
         });
       }
     } catch { /* keep DEMO */ }
@@ -100,6 +117,9 @@ export default function InnerLayout({ children, pageName }: InnerLayoutProps) {
 
   return (
     <div style={{ background: '#080808', minHeight: '100vh', display: 'flex', position: 'relative' }}>
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
 
       {/* ── SIDEBAR (desktop ≥1024px, shown via globals.css) ── */}
       <aside
@@ -135,46 +155,51 @@ export default function InnerLayout({ children, pageName }: InnerLayoutProps) {
         </Link>
 
         {/* Nav items */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
-          {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 12px',
-                  borderRadius: '8px',
-                  borderLeft: active ? '2px solid #4ade80' : '2px solid transparent',
-                  background: active ? 'rgba(74,222,128,0.08)' : 'transparent',
-                  color: active ? '#4ade80' : '#a0b0a0',
-                  textDecoration: 'none',
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: '14px',
-                  fontWeight: active ? 500 : 400,
-                  transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
-                }}
-                onMouseEnter={e => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
-                    (e.currentTarget as HTMLElement).style.color = '#f0ffe8';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.background = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = '#a0b0a0';
-                  }
-                }}
-              >
-                {item.icon(active)}
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav aria-label="Main navigation" role="navigation" style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+          <ul role="list" style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {NAV_ITEMS.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <li key={item.href} role="listitem">
+                  <Link
+                    href={item.href}
+                    aria-label={item.label}
+                    aria-current={active ? 'page' : undefined}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '10px 12px',
+                      borderRadius: '8px',
+                      borderLeft: active ? '2px solid #4ade80' : '2px solid transparent',
+                      background: active ? 'rgba(74,222,128,0.08)' : 'transparent',
+                      color: active ? '#4ade80' : '#a0b0a0',
+                      textDecoration: 'none',
+                      fontFamily: "'Space Grotesk', sans-serif",
+                      fontSize: '14px',
+                      fontWeight: active ? 500 : 400,
+                      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+                    }}
+                    onMouseEnter={e => {
+                      if (!active) {
+                        (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)';
+                        (e.currentTarget as HTMLElement).style.color = '#f0ffe8';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!active) {
+                        (e.currentTarget as HTMLElement).style.background = 'transparent';
+                        (e.currentTarget as HTMLElement).style.color = '#a0b0a0';
+                      }
+                    }}
+                  >
+                    {item.icon(active)}
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </nav>
 
         {/* Bottom info */}
@@ -194,10 +219,17 @@ export default function InnerLayout({ children, pageName }: InnerLayoutProps) {
             Week {userData.week} of {userData.totalWeeks} · {userData.phase}
           </div>
           <div>
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', color: '#506050', marginBottom: '6px' }}>
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '11px', color: '#708070', marginBottom: '6px' }}>
               {userData.spent.toFixed(1)} / {userData.budget} kg CO₂e
             </div>
-            <div style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '9999px', overflow: 'hidden' }}>
+            <div
+              role="progressbar"
+              aria-valuenow={userData.spent}
+              aria-valuemin={0}
+              aria-valuemax={userData.budget}
+              aria-label={`Carbon usage: ${userData.spent.toFixed(1)} of ${userData.budget} kg`}
+              style={{ height: '3px', background: 'rgba(255,255,255,0.06)', borderRadius: '9999px', overflow: 'hidden' }}
+            >
               <div style={{
                 height: '100%',
                 width: `${spentPct}%`,
@@ -283,6 +315,7 @@ export default function InnerLayout({ children, pageName }: InnerLayoutProps) {
 
       {/* ── MAIN CONTENT ── */}
       <main
+        id="main-content"
         className="inner-main"
         style={{
           flex: 1,
@@ -297,6 +330,8 @@ export default function InnerLayout({ children, pageName }: InnerLayoutProps) {
       {/* ── MOBILE BOTTOM TAB BAR (hidden on desktop via globals.css) ── */}
       <nav
         className="inner-bottomtabs"
+        aria-label="Bottom navigation"
+        role="navigation"
         style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, height: '56px',
           background: '#0f0f0f', borderTop: '1px solid rgba(255,255,255,0.06)',
@@ -306,14 +341,20 @@ export default function InnerLayout({ children, pageName }: InnerLayoutProps) {
         {NAV_ITEMS.map(item => {
           const active = pathname === item.href;
           return (
-            <Link key={item.href} href={item.href} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
-              gap: '3px', textDecoration: 'none', flex: 1, padding: '8px 0',
-            }}>
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-label={item.label}
+              aria-current={active ? 'page' : undefined}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                gap: '3px', textDecoration: 'none', flex: 1, padding: '8px 0',
+              }}
+            >
               {item.icon(active)}
               <span style={{
                 fontFamily: "'Space Grotesk', sans-serif", fontSize: '10px',
-                color: active ? '#4ade80' : '#506050',
+                color: active ? '#4ade80' : '#708070',
               }}>
                 {item.label}
               </span>

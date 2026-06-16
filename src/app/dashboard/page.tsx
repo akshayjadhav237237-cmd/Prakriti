@@ -24,11 +24,11 @@ const T = {
   borderActive: 'rgba(74,222,128,0.25)',
   text: '#f0ffe8',
   textSec: '#a0b0a0',
-  textMut: '#506050',
+  textMut: '#708070',
   green: '#4ade80',
   greenDim: '#22c55e',
   amber: '#f59e0b',
-  red: '#ef4444',
+  red: '#ff6b6b',
   gold: '#d4af37',
 };
 
@@ -78,7 +78,14 @@ function CircularRing({
   const circ = 2 * Math.PI * r;
   const dash = (pct / 100) * circ;
   return (
-    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+    <svg
+      width={size}
+      height={size}
+      style={{ transform: 'rotate(-90deg)' }}
+      aria-label={`Carbon usage: ${pct.toFixed(0)}% of weekly budget`}
+      role="img"
+    >
+
       <circle
         cx={size / 2}
         cy={size / 2}
@@ -128,24 +135,43 @@ export default function DashboardPage() {
     setMounted(true);
     try {
       const stored = localStorage.getItem('prakriti_user');
+      const storedUsername = localStorage.getItem('prakriti_username');
+      const storedCity = localStorage.getItem('prakriti_city');
+      
       if (!stored) {
-        localStorage.setItem('prakriti_user', JSON.stringify(SEED));
+        const initialData = {
+          ...SEED,
+          name: storedUsername || SEED.name,
+          city: storedCity || SEED.city,
+        };
+        localStorage.setItem('prakriti_user', JSON.stringify(initialData));
+        setData(initialData);
         // Seed auth keys so OnboardingGuard doesn't redirect
         if (!localStorage.getItem('prakriti_username')) {
           localStorage.setItem('prakriti_username', SEED.name);
           localStorage.setItem('prakriti_user_id', 'prakriti-demo-user');
         }
-
       } else {
         const parsed = JSON.parse(stored);
         // Validate structure — old format may lack envelopes/history
         const hasEnvelopes = parsed?.envelopes?.transport?.spent !== undefined;
         const hasHistory = Array.isArray(parsed?.history);
         if (hasEnvelopes && hasHistory) {
-          setData(parsed as SeedType);
+          const merged = {
+            ...parsed,
+            name: storedUsername || parsed.name || SEED.name,
+            city: storedCity || parsed.city || SEED.city,
+          };
+          setData(merged as SeedType);
         } else {
-          // Old format — reset to SEED
-          localStorage.setItem('prakriti_user', JSON.stringify(SEED));
+          // Merge username & city with SEED instead of resetting to hardcoded SEED
+          const mergedData = {
+            ...SEED,
+            name: storedUsername || parsed.name || SEED.name,
+            city: storedCity || parsed.city || SEED.city,
+          };
+          localStorage.setItem('prakriti_user', JSON.stringify(mergedData));
+          setData(mergedData);
         }
       }
     } catch {
@@ -160,10 +186,10 @@ export default function DashboardPage() {
   const isWarning = pct > 90;
 
   const envelopes = [
-    { key: 'transport', label: 'Transport', icon: '\ud83d\ude97', equiv: '� 371 km on petrol scooter' },
-    { key: 'food', label: 'Food', icon: '\ud83c\udf7d\ufe0f', equiv: '� 14 home-cooked meals' },
-    { key: 'energy', label: 'Energy', icon: '\u26a1', equiv: '� 11 kWh grid electricity' },
-    { key: 'lifestyle', label: 'Lifestyle', icon: '\ud83c\udfaf', equiv: '� 4 e-commerce deliveries' },
+    { key: 'transport', label: 'Transport', icon: '🚗', equiv: '→ 371 km on petrol scooter' },
+    { key: 'food', label: 'Food', icon: '🍽️', equiv: '→ 14 home-cooked meals' },
+    { key: 'energy', label: 'Energy', icon: '⚡', equiv: '→ 11 kWh grid electricity' },
+    { key: 'lifestyle', label: 'Lifestyle', icon: '🎯', equiv: '→ 4 e-commerce deliveries' },
   ];
 
   const safeHistory = Array.isArray(data?.history) ? data.history : SEED.history;
@@ -171,15 +197,15 @@ export default function DashboardPage() {
 
   const benchmarkData = [
     { name: 'You', value: totalSpent, fill: '#4ade80' },
-    { name: 'Mumbai', value: 45.2, fill: '#506050' },
+    { name: data.city || 'Mumbai', value: 45.2, fill: '#506050' },
     { name: 'India', value: 52.1, fill: '#506050' },
     { name: 'Global', value: 65.4, fill: '#506050' },
-    { name: 'Paris 1.5�C', value: 38.5, fill: '#22c55e' },
+    { name: 'Paris 1.5°C', value: 38.5, fill: '#22c55e' },
   ];
 
   return (
     <InnerLayout pageName="Dashboard">
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <main id="main-content" aria-label="Dashboard" style={{ maxWidth: 1200, margin: '0 auto' }}>
 
         {/* HEADER */}
         <motion.div
@@ -235,7 +261,7 @@ export default function DashboardPage() {
               color: T.green,
             }}
           >
-            Week {data.week} \u00b7 Phase:{' '}
+            Week {data.week} · Phase:{' '}
             {data.phase === 2 ? 'Budget' : data.phase === 1 ? 'Baseline' : 'Reduce'}
           </div>
         </motion.div>
@@ -251,11 +277,12 @@ export default function DashboardPage() {
           className="dash-row1"
         >
           {/* Budget Hero Card */}
-          <motion.div
+          <motion.section
             variants={fadeIn}
             initial="hidden"
             animate="visible"
             custom={1}
+            aria-label="Weekly carbon budget"
             style={{
               background: T.surface,
               border: `1px solid ${T.border}`,
@@ -290,6 +317,11 @@ export default function DashboardPage() {
                 </div>
 
                 <div
+                  role="progressbar"
+                  aria-valuenow={parseFloat(totalSpent.toFixed(1))}
+                  aria-valuemin={0}
+                  aria-valuemax={totalBudget}
+                  aria-label={`Total carbon usage: ${totalSpent.toFixed(1)} of ${totalBudget} kg`}
                   style={{
                     height: 6,
                     background: 'rgba(255,255,255,0.06)',
@@ -318,7 +350,7 @@ export default function DashboardPage() {
                     marginBottom: 4,
                   }}
                 >
-                  {pct.toFixed(1)}% spent \u00b7 {(totalBudget - totalSpent).toFixed(2)} kg remaining
+                  {pct.toFixed(1)}% spent · {(totalBudget - totalSpent).toFixed(2)} kg remaining
                 </div>
                 <div
                   style={{
@@ -335,14 +367,15 @@ export default function DashboardPage() {
                 <CircularRing pct={pct} color={isWarning ? T.amber : T.green} />
               </div>
             </div>
-          </motion.div>
+          </motion.section>
 
           {/* Companion Card */}
-          <motion.div
+          <motion.aside
             variants={fadeIn}
             initial="hidden"
             animate="visible"
             custom={2}
+            aria-label="Companion and insights"
             style={{
               background: `linear-gradient(135deg, rgba(34,197,94,0.04), transparent), ${T.surface}`,
               border: '1px solid rgba(74,222,128,0.12)',
@@ -363,10 +396,10 @@ export default function DashboardPage() {
                   marginBottom: 4,
                 }}
               >
-                \ud83d\udc12 {data.companion.name}
+                🐒 {data.companion.name}
               </div>
               <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: T.green }}>
-                Baby \u00b7 Stage {data.companion.stage}/5
+                Baby · Stage {data.companion.stage}/5
               </div>
               <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: T.textMut, marginTop: 2 }}>
                 {data.companion.species}
@@ -475,15 +508,16 @@ export default function DashboardPage() {
                 Adventure ?
               </button>
             </div>
-          </motion.div>
+          </motion.aside>
         </div>
 
         {/* ROW 2: Envelope Cards */}
-        <motion.div
+        <motion.section
           variants={fadeIn}
           initial="hidden"
           animate="visible"
           custom={3}
+          aria-label="Envelope budgets"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2,1fr)',
@@ -603,6 +637,11 @@ export default function DashboardPage() {
                 </div>
 
                 <div
+                  role="progressbar"
+                  aria-valuenow={parseFloat(envData.spent.toFixed(1))}
+                  aria-valuemin={0}
+                  aria-valuemax={envData.allocated}
+                  aria-label={`${env.label} carbon usage: ${envData.spent.toFixed(1)} of ${envData.allocated} kg`}
                   style={{
                     height: 4,
                     background: 'rgba(255,255,255,0.06)',
@@ -636,10 +675,11 @@ export default function DashboardPage() {
               </div>
             );
           })}
-        </motion.div>
+        </motion.section>
 
         {/* ROW 3: Sparkline + Benchmarks */}
-        <div
+        <section
+          aria-label="Emission trends"
           style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}
           className="dash-row3"
         >
@@ -675,48 +715,54 @@ export default function DashboardPage() {
                 Weekly Trend
               </div>
               <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: T.green }}>
-                \u2193 18% vs avg
+                ↓ 18% vs avg
               </span>
             </div>
-            <ResponsiveContainer width="100%" height={160}>
-              <AreaChart data={sparkData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#4ade80" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#4ade80" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="week"
-                  tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#506050' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#506050' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: '#161616',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 8,
-                    fontFamily: "'Space Mono',monospace",
-                    fontSize: 12,
-                    color: '#f0ffe8',
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="kg"
-                  stroke="#4ade80"
-                  strokeWidth={2}
-                  fill="url(#trendGrad)"
-                  dot={{ fill: '#4ade80', r: 4 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div
+              role="img"
+              aria-label="Area chart showing weekly carbon trend: Week 1: 42.1 kg, Week 2: 39.8 kg, Week 3: 34.8 kg"
+              style={{ width: '100%', height: 160 }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={sparkData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#4ade80" stopOpacity={0.2} />
+                      <stop offset="100%" stopColor="#4ade80" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis
+                    dataKey="week"
+                    tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#708070' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#708070' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: '#161616',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 8,
+                      fontFamily: "'Space Mono',monospace",
+                      fontSize: 12,
+                      color: '#f0ffe8',
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="kg"
+                    stroke="#4ade80"
+                    strokeWidth={2}
+                    fill="url(#trendGrad)"
+                    dot={{ fill: '#4ade80', r: 4 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </motion.div>
 
           <motion.div
@@ -743,51 +789,58 @@ export default function DashboardPage() {
             >
               Regional Benchmarks
             </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart
-                data={benchmarkData}
-                layout="vertical"
-                margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
-              >
-                <XAxis
-                  type="number"
-                  tick={{ fontFamily: "'Space Mono',monospace", fontSize: 10, fill: '#506050' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={75}
-                  tick={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 12, fill: '#a0b0a0' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: '#161616',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 8,
-                    fontFamily: "'Space Mono',monospace",
-                    fontSize: 12,
-                    color: '#f0ffe8',
-                  }}
-                />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
-                  {benchmarkData.map((entry, i) => (
-                    <Cell
-                      key={i}
-                      fill={entry.fill}
-                      fillOpacity={
-                        entry.name === 'You' || entry.name === 'Paris 1.5�C' ? 1 : 0.5
-                      }
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div
+              role="img"
+              aria-label={`Bar chart showing regional carbon benchmarks: You: ${totalSpent.toFixed(1)} kg, ${data.city || 'Mumbai'} average: 45.2 kg, India average: 52.1 kg, Global average: 65.4 kg`}
+              style={{ width: '100%', height: 180 }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={benchmarkData}
+                  layout="vertical"
+                  margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
+                >
+                  <XAxis
+                    type="number"
+                    tick={{ fontFamily: "'Space Mono',monospace", fontSize: 10, fill: '#708070' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={75}
+                    tick={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: 12, fill: '#a0b0a0' }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: '#161616',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 8,
+                      fontFamily: "'Space Mono',monospace",
+                      fontSize: 12,
+                      color: '#f0ffe8',
+                    }}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
+                    {benchmarkData.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={entry.fill}
+                        fillOpacity={
+                          entry.name === 'You' || entry.name === 'Paris 1.5C' ? 1 : 0.5
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </motion.div>
-        </div>
+        </section>
+
 
         {/* ROW 4: AI Coach */}
         <motion.div
@@ -816,7 +869,7 @@ export default function DashboardPage() {
               gap: 6,
             }}
           >
-            <span style={{ fontSize: 14 }}>\ud83e\udd16</span> AI Coach
+            <span style={{ fontSize: 14 }}>🤖</span> AI Coach
           </div>
           <p
             style={{
@@ -858,7 +911,7 @@ export default function DashboardPage() {
               gap: 6,
             }}
           >
-            <span style={{ fontSize: 14 }}>\u2600\ufe0f</span> Summer Mode
+            <span style={{ fontSize: 14 }}>☀️</span> Summer Mode
           </div>
           <p
             style={{
@@ -889,13 +942,13 @@ export default function DashboardPage() {
           className="dash-stats"
         >
           {[
-            { label: 'City', value: data.city, icon: '\ud83d\udccd' },
+            { label: 'City', value: data.city, icon: '📍' },
             {
               label: 'Phase',
               value: data.phase === 2 ? 'Budget' : data.phase === 1 ? 'Baseline' : 'Reduce',
-              icon: '\ud83d\udcca',
+              icon: '📊',
             },
-            { label: 'Pebbles', value: `? ${data.pebbles}`, icon: '\u2728' },
+            { label: 'Pebbles', value: `◆ ${data.pebbles}`, icon: '✨' },
           ].map((stat, i) => (
             <div
               key={i}
@@ -937,7 +990,7 @@ export default function DashboardPage() {
             </div>
           ))}
         </motion.div>
-      </div>
+      </main>
 
       <style>{`
         @media (max-width: 767px) {

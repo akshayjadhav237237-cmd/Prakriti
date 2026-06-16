@@ -23,9 +23,9 @@ interface ActivityEntry {
 }
 
 const DEMO_ACTIVITY: ActivityEntry[] = [
-  { id: 1, name: 'Scooter to office',       category: 'transport', kg: 2.1, time: '14:32', date: 'today',     icon: '\uD83D\uDE97' },
-  { id: 2, name: 'Lunch at dhaba',          category: 'food',      kg: 0.8, time: '13:15', date: 'today',     icon: '\uD83C\uDF7D\uFE0F' },
-  { id: 3, name: 'Electricity bill (MSEB)', category: 'energy',    kg: 8.4, time: '09:00', date: 'yesterday', icon: '\u26A1' },
+  { id: 1, name: 'Scooter to office',       category: 'transport', kg: 2.1, time: '14:32', date: 'today',     icon: '🚗' },
+  { id: 2, name: 'Lunch at dhaba',          category: 'food',      kg: 0.8, time: '13:15', date: 'today',     icon: '🍽️' },
+  { id: 3, name: 'Electricity bill (MSEB)', category: 'energy',    kg: 8.4, time: '09:00', date: 'yesterday', icon: '⚡' },
 ];
 
 const TABS: { key: ActiveTab; label: string }[] = [
@@ -50,7 +50,7 @@ export default function LogActivityPage() {
   const [showManual, setShowManual] = useState(false);
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [scanLoading, setScanLoading] = useState(false);
-  const [scanResult, setScanResult] = useState<null | { merchant: string; items: { name: string; kg: number }[]; total: number }>(null);
+  const [scanResult, setScanResult] = useState<null | { merchant: string; category: string; items: { name: string; kg: number }[]; total: number }>(null);
   const [scanError, setScanError] = useState<string | null>(null);
   const [distance, setDistance] = useState(10);
   const [transportMode, setTransportMode] = useState('Scooter');
@@ -117,6 +117,7 @@ export default function LogActivityPage() {
       const d = json.data;
       setScanResult({
         merchant: d.merchant || '',
+        category: d.category || 'lifestyle',
         total: d.co2eKg ?? 0,
         items: (d.items || []).map((item: { name: string; co2eKg: number }) => ({
           name: item.name,
@@ -131,10 +132,147 @@ export default function LogActivityPage() {
     }
   };
 
+  const catIcons: Record<string, string> = {
+    transport: '🚗',
+    food: '🍽️',
+    energy: '⚡',
+    lifestyle: '🎯',
+  };
+
+  const handleAddScanToEnvelope = async () => {
+    if (!scanResult) return;
+    try {
+      const storedUserId = localStorage.getItem("prakriti_user_id") || "arjun-mumbai-uuid";
+      const category = scanResult.category || "lifestyle";
+      const logObj = {
+        user_id: storedUserId,
+        date: new Date().toISOString().split("T")[0],
+        envelope: category as "transport" | "food" | "energy" | "lifestyle",
+        activity: `${scanResult.merchant || "Receipt"} (Scanned Bill)`,
+        co2_kg: scanResult.total,
+        source: "scan" as const,
+      };
+
+      // 1. Add log in DB
+      await dbService.addDailyLog(logObj);
+
+      // 2. Update envelopes spent in localStorage 'prakriti_user'
+      const storedUser = localStorage.getItem("prakriti_user");
+      if (storedUser) {
+        try {
+          const userObj = JSON.parse(storedUser);
+          if (!userObj.envelopes) {
+            userObj.envelopes = {
+              transport: { allocated: 15.0, spent: 0 },
+              food: { allocated: 10.0, spent: 0 },
+              energy: { allocated: 8.0, spent: 0 },
+              lifestyle: { allocated: 5.46, spent: 0 },
+            };
+          }
+          if (userObj.envelopes[category]) {
+            userObj.envelopes[category].spent = Number((userObj.envelopes[category].spent + scanResult.total).toFixed(2));
+          }
+          localStorage.setItem("prakriti_user", JSON.stringify(userObj));
+        } catch (e) {
+          console.error("Local user envelope sync error:", e);
+        }
+      }
+
+      // 3. Update 'prakriti_activity' in localStorage
+      const newEntry: ActivityEntry = {
+        id: Date.now(),
+        name: `${scanResult.merchant || "Receipt"} (Scanned)`,
+        category: category,
+        kg: scanResult.total,
+        time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }),
+        date: "today",
+        icon: catIcons[category] || '🎯'
+      };
+
+      const updatedActivity = [newEntry, ...activity];
+      setActivity(updatedActivity);
+      localStorage.setItem("prakriti_activity", JSON.stringify(updatedActivity));
+
+      // 4. Dispatch event
+      window.dispatchEvent(new Event("prakriti_state_changed"));
+
+      // 5. Clear scanResult
+      setScanResult(null);
+    } catch (e) {
+      console.error("Failed to add scan result:", e);
+      alert("Failed to save scan result. Try again.");
+    }
+  };
+
+  const handleManualLog = async () => {
+    try {
+      const storedUserId = localStorage.getItem("prakriti_user_id") || "arjun-mumbai-uuid";
+      const activityName = `${transportMode} Commute (${distance} km)`;
+      
+      const logObj = {
+        user_id: storedUserId,
+        date: new Date().toISOString().split("T")[0],
+        envelope: "transport" as const,
+        activity: activityName,
+        co2_kg: liveKg,
+        source: "manual" as const,
+      };
+
+      // 1. Add log in DB
+      await dbService.addDailyLog(logObj);
+
+      // 2. Update envelopes spent in localStorage 'prakriti_user'
+      const storedUser = localStorage.getItem("prakriti_user");
+      if (storedUser) {
+        try {
+          const userObj = JSON.parse(storedUser);
+          if (!userObj.envelopes) {
+            userObj.envelopes = {
+              transport: { allocated: 15.0, spent: 0 },
+              food: { allocated: 10.0, spent: 0 },
+              energy: { allocated: 8.0, spent: 0 },
+              lifestyle: { allocated: 5.46, spent: 0 },
+            };
+          }
+          if (userObj.envelopes.transport) {
+            userObj.envelopes.transport.spent = Number((userObj.envelopes.transport.spent + liveKg).toFixed(2));
+          }
+          localStorage.setItem("prakriti_user", JSON.stringify(userObj));
+        } catch (e) {
+          console.error("Local user envelope sync error:", e);
+        }
+      }
+
+      // 3. Update 'prakriti_activity' in localStorage
+      const newEntry: ActivityEntry = {
+        id: Date.now(),
+        name: activityName,
+        category: "transport",
+        kg: liveKg,
+        time: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false }),
+        date: "today",
+        icon: "🚗"
+      };
+      
+      const updatedActivity = [newEntry, ...activity];
+      setActivity(updatedActivity);
+      localStorage.setItem("prakriti_activity", JSON.stringify(updatedActivity));
+
+      // 4. Dispatch event
+      window.dispatchEvent(new Event("prakriti_state_changed"));
+
+      // 5. Hide manual entry panel or show success
+      setShowManual(false);
+    } catch (e) {
+      console.error("Failed manual log:", e);
+      alert("Failed to save log. Try again.");
+    }
+  };
+
 
   return (
     <InnerLayout pageName="Log Activity">
-      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+      <main id="main-content" aria-label="Log activity" style={{ maxWidth: 900, margin: '0 auto' }}>
 
         {/* HEADER */}
         <motion.div
@@ -193,7 +331,7 @@ export default function LogActivityPage() {
         >
           {!scanLoading && !scanResult && !scanError && (
             <>
-              <div style={{ fontSize: 56, marginBottom: 16, lineHeight: 1 }}>\uD83D\uDCF8</div>
+              <div style={{ fontSize: 56, marginBottom: 16, lineHeight: 1 }}>📷</div>
               <h2 style={{
                 fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 24,
                 color: '#f0ffe8', margin: '0 0 12px',
@@ -218,15 +356,20 @@ export default function LogActivityPage() {
               </label>
               <div style={{
                 fontFamily: "'Space Grotesk', sans-serif", fontSize: 12,
-                color: '#506050', marginTop: 16,
+                color: '#708070', marginTop: 16,
               }}>
-                Tata Power \u00B7 MSEB \u00B7 BESCOM \u00B7 Swiggy \u00B7 Zomato \u00B7 Petrol receipts \u00B7 Grocery
+                Tata Power · MSEB · BESCOM · Swiggy · Zomato · Petrol receipts · Grocery
               </div>
             </>
           )}
 
           {scanLoading && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '20px 0' }}>
+            <div
+              aria-live="polite"
+              aria-label="Loading Gemini analysis"
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '20px 0' }}
+            >
+              <span className="sr-only">Loading, please wait...</span>
               <div style={{
                 width: 32, height: 32, borderRadius: '50%',
                 border: '2px solid rgba(74,222,128,0.2)', borderTopColor: '#4ade80',
@@ -240,16 +383,20 @@ export default function LogActivityPage() {
           )}
 
           {scanError && (
-            <div>
+            <div
+              role="alert"
+              aria-live="assertive"
+              aria-atomic="true"
+            >
               <p style={{
                 fontFamily: "'Space Grotesk', sans-serif", fontSize: 14,
-                color: '#ef4444', marginBottom: 16,
+                color: '#ff6b6b', marginBottom: 16,
               }}>
                 {scanError}
               </p>
               <label style={{
                 display: 'inline-flex', padding: '10px 20px', borderRadius: 9999,
-                border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444',
+                border: '1px solid rgba(255,107,107,0.3)', color: '#ff6b6b',
                 fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, cursor: 'pointer',
               }}>
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileUpload} />
@@ -272,7 +419,7 @@ export default function LogActivityPage() {
               fontFamily: "'Space Mono', monospace", fontSize: 12,
               color: '#4ade80', marginBottom: 12,
             }}>
-              \u2713 Scan Complete
+              ✓ Scan Complete
             </div>
             {scanResult.items.map((item, i) => (
               <div key={i} style={{
@@ -294,19 +441,22 @@ export default function LogActivityPage() {
               TOTAL {scanResult.total.toFixed(2)} kg CO2e
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button style={{
-                padding: '10px 20px', borderRadius: 9999,
-                background: '#4ade80', color: '#080808',
-                fontFamily: "'Space Grotesk', sans-serif", fontSize: 14,
-                fontWeight: 600, border: 'none', cursor: 'pointer',
-              }}>
+              <button
+                onClick={handleAddScanToEnvelope}
+                style={{
+                  padding: '10px 20px', borderRadius: 9999,
+                  background: '#4ade80', color: '#080808',
+                  fontFamily: "'Space Grotesk', sans-serif", fontSize: 14,
+                  fontWeight: 600, border: 'none', cursor: 'pointer',
+                }}
+              >
                 Add to Envelope
               </button>
               <button
                 onClick={() => setScanResult(null)}
                 style={{
                   padding: '10px 20px', borderRadius: 9999,
-                  background: 'transparent', color: '#506050',
+                  background: 'transparent', color: '#708070',
                   fontFamily: "'Space Grotesk', sans-serif", fontSize: 14,
                   border: 'none', cursor: 'pointer',
                 }}
@@ -331,7 +481,7 @@ export default function LogActivityPage() {
                 borderRadius: 16, padding: '24px',
               }}>
                 <div style={{
-                  fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050',
+                  fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070',
                   textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16,
                 }}>
                   Manual Entry
@@ -348,7 +498,7 @@ export default function LogActivityPage() {
                           ? '1px solid rgba(74,222,128,0.25)'
                           : '1px solid rgba(255,255,255,0.06)',
                         background: activeTab === tab.key ? 'rgba(74,222,128,0.08)' : 'transparent',
-                        color: activeTab === tab.key ? '#4ade80' : '#506050',
+                        color: activeTab === tab.key ? '#4ade80' : '#708070',
                         fontFamily: "'Space Grotesk', sans-serif", fontSize: 13,
                         cursor: 'pointer', transition: 'all 0.2s',
                       }}
@@ -362,7 +512,7 @@ export default function LogActivityPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <div>
                       <div style={{
-                        fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050',
+                        fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070',
                         marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em',
                       }}>
                         Mode
@@ -393,7 +543,7 @@ export default function LogActivityPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                         <span style={{
                           fontFamily: "'Space Mono', monospace", fontSize: 11,
-                          color: '#506050', textTransform: 'uppercase', letterSpacing: '0.1em',
+                          color: '#708070', textTransform: 'uppercase', letterSpacing: '0.1em',
                         }}>
                           Distance
                         </span>
@@ -405,10 +555,14 @@ export default function LogActivityPage() {
                         type="range" min={1} max={100} value={distance}
                         onChange={e => setDistance(+e.target.value)}
                         style={{ width: '100%', accentColor: '#4ade80' }}
+                        aria-label="Commute distance in kilometers"
+                        aria-valuemin={1}
+                        aria-valuemax={100}
+                        aria-valuenow={distance}
                       />
                       <div style={{
                         fontFamily: "'Space Mono', monospace", fontSize: 11,
-                        color: '#506050', marginTop: 4,
+                        color: '#708070', marginTop: 4,
                       }}>
                         0.0334 kg/km (ARAI)
                       </div>
@@ -421,12 +575,15 @@ export default function LogActivityPage() {
                       {liveKg.toFixed(3)} kg CO2e
                     </div>
 
-                    <button style={{
-                      padding: '12px', borderRadius: 9999,
-                      background: '#4ade80', color: '#080808',
-                      fontFamily: "'Space Grotesk', sans-serif", fontSize: 15,
-                      fontWeight: 600, border: 'none', cursor: 'pointer',
-                    }}>
+                    <button
+                      onClick={handleManualLog}
+                      style={{
+                        padding: '12px', borderRadius: 9999,
+                        background: '#4ade80', color: '#080808',
+                        fontFamily: "'Space Grotesk', sans-serif", fontSize: 15,
+                        fontWeight: 600, border: 'none', cursor: 'pointer',
+                      }}
+                    >
                       Log {liveKg.toFixed(2)} kg to Transport
                     </button>
                   </div>
@@ -435,7 +592,7 @@ export default function LogActivityPage() {
                 {activeTab !== 'transport' && (
                   <div style={{
                     fontFamily: "'Space Grotesk', sans-serif", fontSize: 14,
-                    color: '#506050', padding: '20px 0',
+                    color: '#708070', padding: '20px 0',
                   }}>
                     Select a transport mode or use the scan card above to auto-detect from a receipt.
                   </div>
@@ -454,7 +611,7 @@ export default function LogActivityPage() {
           }}
         >
           <div style={{
-            fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050',
+            fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070',
             textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20,
           }}>
             Recent
@@ -463,7 +620,7 @@ export default function LogActivityPage() {
           {today.length > 0 && (
             <>
               <div style={{
-                fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050',
+                fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070',
                 textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 12,
               }}>
                 Today
@@ -489,13 +646,13 @@ export default function LogActivityPage() {
                       <span style={{
                         fontFamily: "'Space Mono', monospace", fontSize: 10,
                         textTransform: 'uppercase',
-                        color: catColors[item.category] || '#506050',
-                        background: `${catColors[item.category] || '#506050'}18`,
+                        color: catColors[item.category] || '#708070',
+                        background: `${catColors[item.category] || '#708070'}18`,
                         padding: '1px 6px', borderRadius: 4,
                       }}>
                         {item.category}
                       </span>
-                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: '#506050' }}>
+                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: '#708070' }}>
                         {item.time}
                       </span>
                     </div>
@@ -514,7 +671,7 @@ export default function LogActivityPage() {
           {yesterday.length > 0 && (
             <>
               <div style={{
-                fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050',
+                fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070',
                 textTransform: 'uppercase', letterSpacing: '0.12em', margin: '16px 0 12px',
               }}>
                 Yesterday
@@ -540,13 +697,13 @@ export default function LogActivityPage() {
                       <span style={{
                         fontFamily: "'Space Mono', monospace", fontSize: 10,
                         textTransform: 'uppercase',
-                        color: catColors[item.category] || '#506050',
-                        background: `${catColors[item.category] || '#506050'}18`,
+                        color: catColors[item.category] || '#708070',
+                        background: `${catColors[item.category] || '#708070'}18`,
                         padding: '1px 6px', borderRadius: 4,
                       }}>
                         {item.category}
                       </span>
-                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: '#506050' }}>
+                      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: '#708070' }}>
                         {item.time}
                       </span>
                     </div>
@@ -565,14 +722,14 @@ export default function LogActivityPage() {
           {activity.length === 0 && (
             <div style={{
               fontFamily: "'Space Grotesk', sans-serif", fontSize: 14,
-              color: '#506050', textAlign: 'center', padding: '24px 0',
+              color: '#708070', textAlign: 'center', padding: '24px 0',
             }}>
               No activity yet. Scan a receipt or log manually.
             </div>
           )}
         </motion.div>
 
-      </div>
+      </main>
     </InnerLayout>
   );
 }

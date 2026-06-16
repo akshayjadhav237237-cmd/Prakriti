@@ -20,8 +20,8 @@ const fadeIn = {
 
 const KPI = [
   { label: 'WEEK',      value: '3 / 13',   sub: 'Phase 2: Budget',    color: '#f0ffe8' },
-  { label: 'REDUCTION', value: '\u2193 18%',     sub: 'vs last month',      color: '#4ade80' },
-  { label: 'PEBBLES',   value: '? 45',      sub: 'earned total',       color: '#d4af37' },
+  { label: 'REDUCTION', value: '↓ 18%',     sub: 'vs last month',      color: '#4ade80' },
+  { label: 'PEBBLES',   value: '◆ 45',      sub: 'earned total',       color: '#d4af37' },
   { label: 'STREAK',    value: '2 weeks',   sub: 'under budget',       color: '#4ade80' },
 ];
 
@@ -76,7 +76,7 @@ export default function InsightsPage() {
 
   return (
     <InnerLayout pageName="Insights">
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <main id="main-content" aria-label="Insights" style={{ maxWidth: 1100, margin: '0 auto' }}>
 
         {/* ── HEADER ── */}
         <motion.div variants={fadeIn} initial="hidden" animate="visible" custom={0} style={{ marginBottom: 32 }}>
@@ -100,7 +100,7 @@ export default function InsightsPage() {
               border: '1px solid rgba(255,255,255,0.06)',
               borderRadius: 12, padding: '20px 24px',
             }}>
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#708070', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>
                 {k.label}
               </div>
               <div style={{ fontFamily: "'Space Mono', monospace", fontWeight: 700, fontSize: 28, color: k.color, marginBottom: 4 }}>
@@ -121,18 +121,20 @@ export default function InsightsPage() {
             variants={fadeIn} initial="hidden" animate="visible" custom={2}
             style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px' }}
           >
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
               Category Breakdown
             </div>
             <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-              <ResponsiveContainer width={200} height={200}>
-                <PieChart>
-                  <Pie data={DONUT_DATA} innerRadius={70} outerRadius={95} paddingAngle={3} dataKey="value" stroke="none">
-                    {DONUT_DATA.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                  </Pie>
-                  <Tooltip contentStyle={customTooltipStyle} />
-                </PieChart>
-              </ResponsiveContainer>
+              <div role="img" aria-label="Pie chart showing emissions by category: Transport is 12.4 kg, Food is 11.2 kg, Energy is 7.8 kg, Lifestyle is 3.4 kg" style={{ width: 200, height: 200 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={DONUT_DATA} innerRadius={70} outerRadius={95} paddingAngle={3} dataKey="value" stroke="none">
+                      {DONUT_DATA.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={customTooltipStyle} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, minWidth: 140 }}>
                 {DONUT_DATA.map((d, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -152,23 +154,25 @@ export default function InsightsPage() {
             variants={fadeIn} initial="hidden" animate="visible" custom={3}
             style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px' }}
           >
-            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
+            <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 16 }}>
               Weekly History
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={BAR_DATA} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                <XAxis dataKey="week" tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#506050' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#506050' }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={customTooltipStyle} />
-                <ReferenceLine y={38.46} stroke="rgba(74,222,128,0.4)" strokeDasharray="4 4"
-                  label={{ value: 'Budget', position: 'insideTopRight', fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#4ade80' }} />
-                <Bar dataKey="kg" radius={[4, 4, 0, 0]} barSize={32}>
-                  {BAR_DATA.map((entry, i) => (
-                    <Cell key={i} fill={entry.kg > 38.46 ? '#ef4444' : '#4ade80'} fillOpacity={0.8} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <div role="img" aria-label="Bar chart showing weekly carbon history: Week 1: 42.1 kg, Week 2: 39.8 kg, Week 3: 34.8 kg" style={{ width: '100%', height: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={BAR_DATA} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+                  <XAxis dataKey="week" tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#708070' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#708070' }} axisLine={false} tickLine={false} />
+                  <Tooltip contentStyle={customTooltipStyle} />
+                  <ReferenceLine y={38.46} stroke="rgba(74,222,128,0.4)" strokeDasharray="4 4"
+                    label={{ value: 'Budget', position: 'insideTopRight', fontFamily: "'Space Mono',monospace", fontSize: 11, fill: '#4ade80' }} />
+                  <Bar dataKey="kg" radius={[4, 4, 0, 0]} barSize={32}>
+                    {BAR_DATA.map((entry, i) => (
+                      <Cell key={i} fill={entry.kg > 38.46 ? '#ff6b6b' : '#4ade80'} fillOpacity={0.8} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </motion.div>
         </div>
 
@@ -177,7 +181,7 @@ export default function InsightsPage() {
           variants={fadeIn} initial="hidden" animate="visible" custom={4}
           style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '28px 32px', marginBottom: 24 }}
         >
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 24 }}>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 24 }}>
             Journey Progress
           </div>
 
@@ -201,8 +205,8 @@ export default function InsightsPage() {
 
             {/* Phase 3 */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: 80 }}>
-              <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#506050' }} />
-              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Reduce</div>
+              <div style={{ width: 16, height: 16, borderRadius: '50%', background: '#708070' }} />
+              <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 10, color: '#708070', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>Reduce</div>
             </div>
           </div>
 
@@ -219,12 +223,12 @@ export default function InsightsPage() {
           variants={fadeIn} initial="hidden" animate="visible" custom={5}
           style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '24px', marginBottom: 24 }}
         >
-          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#506050', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
+          <div style={{ fontFamily: "'Space Mono', monospace", fontSize: 11, color: '#708070', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 20 }}>
             Reduce Your Footprint
           </div>
           {ACTIONS.map((a, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 0', borderBottom: i < ACTIONS.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#506050', minWidth: 24, flexShrink: 0 }}>{a.num}</span>
+              <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 12, color: '#708070', minWidth: 24, flexShrink: 0 }}>{a.num}</span>
               <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, color: '#f0ffe8', flex: 1 }}>{a.action}</span>
               <span style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: '#4ade80', marginRight: 12, whiteSpace: 'nowrap' }}>{a.save}</span>
               <button
@@ -240,13 +244,13 @@ export default function InsightsPage() {
                 onMouseEnter={e => { if (!doneActions.includes(i)) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(74,222,128,0.08)'; }}
                 onMouseLeave={e => { if (!doneActions.includes(i)) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
               >
-                {doneActions.includes(i) ? '\u2713 Done' : 'Do'}
+                {doneActions.includes(i) ? '✓ Done' : 'Do'}
               </button>
             </div>
           ))}
         </motion.div>
 
-      </div>
+      </main>
 
       <style>{`
         @keyframes pulse-ring {

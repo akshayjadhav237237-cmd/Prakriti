@@ -206,3 +206,58 @@ input::placeholder                { color: var(--text-muted) !important; }
   .inner-bottomtabs{ display: flex !important; }
   .inner-main      { margin-left: 0; padding: 72px 16px 72px 16px; }
 }
+
+/* ── ACCESSIBILITY & CONTRAST UPGRADES ── */
+
+/* Visible focus ring — never remove outline */
+*:focus-visible {
+  outline: 2px solid #4ade80 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* Remove default outline only when using :focus-visible */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  padding: 8px 16px;
+  background: #4ade80;
+  color: #080808;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  z-index: 9999;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
